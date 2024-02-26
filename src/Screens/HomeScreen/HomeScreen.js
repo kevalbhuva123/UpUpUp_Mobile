@@ -1,0 +1,194 @@
+import {
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import React, {useState} from 'react';
+import Color from '../../Constants/Color';
+import {HomeData} from '../../Constants/StaticData';
+import {scale} from '../../utlis/Scale';
+import Fonts from '../../Constants/Fonts';
+import IMAGES from '../../Assets/Icons/index';
+// import CustomSidebar from '../../Components/CustomSidebar';
+
+const HomeScreen = ({navigation}) => {
+  const [hamburgerVisible, sethamburgerVisible] = useState(false);
+
+  const onClose = () => {
+    sethamburgerVisible(false);
+  };
+
+  const onHamburgerPress = () => {
+    sethamburgerVisible(true);
+  };
+
+  const renderHomes = ({item}) => {
+    return (
+      <TouchableOpacity
+        onPress={() => {
+          navigation.navigate(item.navigation);
+        }}
+        style={styles.card}>
+        <Image source={item.image} style={styles.image} />
+        <Text style={styles.title}>{item.name}</Text>
+      </TouchableOpacity>
+    );
+  };
+  return (
+    <View style={styles.main}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.menuBtn}
+          onPress={() => {
+            onHamburgerPress();
+          }}>
+          <Image source={IMAGES.Menu} style={styles.menu} />
+        </TouchableOpacity>
+        <View style={styles.profileView}>
+          <Image
+            source={{
+              uri: 'https://reactnative.dev/img/tiny_logo.png',
+            }}
+            style={styles.profile}
+          />
+          <View style={styles.detailContainer}>
+            <Text style={styles.firstName}>Keval</Text>
+            <Text style={styles.lastName}>Bhuva</Text>
+            <View style={styles.iconTextView}>
+              <Image source={IMAGES.Call} style={styles.icons} />
+              <Text style={styles.subText}>+91 9992223334</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.editBtn}>
+            <Image source={IMAGES.Pencil} style={styles.editIcon} />
+          </TouchableOpacity>
+        </View>
+      </View>
+      <View style={styles.master}>
+        <FlatList
+          data={HomeData}
+          renderItem={renderHomes}
+          keyExtractor={item => item.id.toString()}
+          style={{flexGrow: 1}}
+          contentContainerStyle={{
+            paddingHorizontal: scale(10),
+            paddingVertical: scale(10),
+          }}
+          showsVerticalScrollIndicator={false}
+          numColumns={3}
+        />
+      </View>
+      {/* <CustomSidebar
+        hamburgerVisible={hamburgerVisible}
+        onClose={() => {
+          onClose();
+        }}
+      /> */}
+    </View>
+  );
+};
+
+export default HomeScreen;
+
+const styles = StyleSheet.create({
+  main: {
+    flex: 1,
+  },
+  header: {
+    flex: 0.4,
+    backgroundColor: Color.main,
+    padding: scale(20),
+  },
+  master: {
+    flex: 0.6,
+    backgroundColor: Color.background,
+  },
+  profileView: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: scale(60),
+  },
+  profile: {
+    height: scale(90),
+    width: scale(90),
+    borderRadius: scale(10),
+  },
+  card: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Color.white,
+    elevation: 6,
+    borderRadius: scale(10),
+    flex: 1,
+    marginHorizontal: scale(5),
+    marginVertical: scale(10),
+    paddingVertical: scale(15),
+  },
+  image: {
+    height: scale(40),
+    width: scale(40),
+    resizeMode: 'contain',
+    tintColor: Color.subBg,
+  },
+  title: {
+    fontFamily: Fonts.bold,
+    color: Color.black,
+    fontSize: scale(10),
+    textAlign: 'center',
+    paddingTop: scale(7),
+    paddingHorizontal: scale(5),
+  },
+  menu: {
+    height: scale(25),
+    width: scale(25),
+    resizeMode: 'contain',
+    tintColor: Color.white,
+  },
+  menuBtn: {
+    height: scale(35),
+    width: scale(35),
+    paddingTop: scale(20),
+  },
+  iconTextView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: scale(3),
+  },
+  icons: {
+    width: scale(12),
+    height: scale(12),
+    resizeMode: 'contain',
+    marginRight: scale(5),
+  },
+  subText: {
+    fontSize: scale(12),
+    fontFamily: Fonts.regular,
+    color: Color.white,
+  },
+  firstName: {
+    fontSize: scale(18),
+    fontFamily: Fonts.regular,
+    color: Color.white,
+  },
+  lastName: {
+    fontSize: scale(18),
+    color: Color.white,
+    fontFamily: Fonts.bold,
+  },
+  editIcon: {
+    height: scale(20),
+    width: scale(20),
+    tintColor: Color.white,
+    resizeMode: 'contain',
+  },
+  detailContainer: {
+    paddingVertical: scale(10),
+  },
+  editBtn: {
+    paddingVertical: scale(10),
+    paddingLeft: scale(10),
+  },
+});
