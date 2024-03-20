@@ -23,6 +23,7 @@ import MySkillScreen from '../Screens/MySkillScreen';
 import MySportScreen from '../Screens/MySportScreen';
 import RateFriendScreen from '../Screens/RateFriendScreen';
 import VenueDetailScreen from '../Screens/VenueDetailScreen';
+import VendorHomeScreen from '../Screens/VendorHomeScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -52,6 +53,8 @@ const Navigator = () => {
         <Stack.Screen name="RateFriendScreen" component={RateFriendScreen} />
         <Stack.Screen name="MySportScreen" component={MySportScreen} />
         <Stack.Screen name="VenueDetailScreen" component={VenueDetailScreen} />
+        {/* vendor flow */}
+        <Stack.Screen name="VendorHomeScreen" component={VendorHomeScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

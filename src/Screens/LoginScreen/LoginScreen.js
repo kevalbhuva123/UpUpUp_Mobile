@@ -12,9 +12,24 @@ import IMAGES from '../../Assets/Icons/index';
 import {scale} from '../../utlis/Scale';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import Fonts from '../../Constants/Fonts';
+import auth from '@react-native-firebase/auth';
 
 const LoginScreen = ({navigation}) => {
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('+91 9924-685-972');
+
+  const sendVerificationCode = async () => {
+    console.log(':::::Pressed::::::');
+    navigation.navigate('OTPverifyScreen');
+    // try {
+    //   const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
+    //   setVerificationId(confirmation.verificationId);
+    //   console.log('>>>>>>>>', confirmation);
+    //   // navigation.navigate('OTPverifyScreen',{id: confirmation.verificationId});
+    // } catch (error) {
+    //   console.log(error);
+    //   Alert.alert('Error', 'Failed to send verification code');
+    // }
+  };
   return (
     <View style={styles.main}>
       <View style={styles.head}>
@@ -46,13 +61,13 @@ const LoginScreen = ({navigation}) => {
               style={styles.phoneInput}
               placeholder="Enter your mobile number"
               keyboardType="phone-pad"
-              maxLength={10}
+              // maxLength={10}
               placeholderTextColor={Color.lightGrey}
             />
           </View>
           <TouchableOpacity
             onPress={() => {
-              navigation.navigate('OTPverifyScreen');
+              sendVerificationCode();
             }}
             style={styles.loginBtn}>
             <Text style={styles.btnText}>LOGIN</Text>

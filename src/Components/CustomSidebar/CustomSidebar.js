@@ -28,56 +28,12 @@ const CustomSidebar = props => {
         }}>
         <TouchableWithoutFeedback>
           <View style={styles.main}>
-            <View style={styles.Header}>
-              <Image source={CNPLogo} style={styles.Logo} />
-            </View>
+            <View style={styles.Header}></View>
             <View style={styles.allView}>
-              <View style={styles.SupportView}>
-                <View style={{flexDirection: 'row', alignItems: 'center'}}>
-                  <QuestionMark />
-                  <Text
-                    style={[
-                      styles.headingText,
-                      {paddingHorizontal: 10, textAlign: 'center'},
-                    ]}>
-                    Help and Support
-                  </Text>
-                </View>
-                <TouchableOpacity
-                  onPress={() => {
-                    Linking.openURL(
-                      'https://360.articulate.com/review/content/a8754d04-2a84-4552-87f9-46a3af5101b8/review',
-                    );
-                  }}>
-                  <View style={styles.View1}>
-                    <Text style={styles.TextForVideo}>
-                      Interactive Training Video
-                    </Text>
-                    <Text style={styles.TextForArrow}>{'>'}</Text>
-                  </View>
-                </TouchableOpacity>
-                <View accessible style={{width: 240}}>
-                  <Text style={styles.TextForLink}>
-                    Click on this link to access quick and user-friendly
-                    tutorials on ‘how to’ perform various tasks with ease.
-                  </Text>
-                </View>
-                <View accessible style={styles.View2}>
-                  <Text style={styles.TextFor}>
-                    Can’t find what you are looking for?
-                  </Text>
-                </View>
-                <View accessible style={{width: 240}}>
-                  <Text style={styles.Text1}>
-                    Contact your Food Service Administrator for further
-                    assistance.
-                  </Text>
-                </View>
-              </View>
+              <View style={styles.SupportView}></View>
 
               <View>
                 <View
-                  accessible
                   style={{
                     flexDirection: 'row',
                     justifyContent: 'space-between',
@@ -89,7 +45,7 @@ const CustomSidebar = props => {
                     }}>
                     Version :
                   </Text>
-                  <Text
+                  {/* <Text
                     style={{
                       alignSelf: 'flex-start',
                       marginHorizontal: 20,
@@ -97,33 +53,9 @@ const CustomSidebar = props => {
                     {DeviceInfo.getVersion()
                       ? DeviceInfo.getVersion()
                       : '1.0.0'}
-                  </Text>
+                  </Text> */}
                 </View>
-                <View
-                  accessible
-                  style={{
-                    flexDirection: 'row',
-                    justifyContent: 'space-between',
-                    marginVertical: 10,
-                  }}>
-                  <Text
-                    style={{
-                      alignSelf: 'flex-start',
-                      marginHorizontal: 20,
-                    }}>
-                    Environment :
-                  </Text>
-                  <Text
-                    style={{
-                      alignSelf: 'flex-start',
-                      marginHorizontal: 20,
-                    }}>
-                    {apiConfigs.LOCAL_SERVER_API_URL ==
-                    'https://cnpapidev.azurewebsites.net/api/v1.0'
-                      ? 'Development'
-                      : 'QA'}
-                  </Text>
-                </View>
+
                 <TouchableOpacity
                   accessible
                   accessibilityLabel="Logout"
@@ -131,7 +63,7 @@ const CustomSidebar = props => {
                   accessibilityHint="Double tap to select"
                   style={styles.button}
                   onPress={() => {
-                    setmodalVisible(true);
+                    // setmodalVisible(true);
                   }}>
                   <Text style={styles.buttonText}>Logout</Text>
                 </TouchableOpacity>
@@ -140,7 +72,7 @@ const CustomSidebar = props => {
           </View>
         </TouchableWithoutFeedback>
       </TouchableOpacity>
-      <LogoutModal
+      {/* <LogoutModal
         title={CONSTANTS.LogoutMessageTitle}
         description={CONSTANTS.LogoutMessageDescription}
         modalVisible={modalVisible}
@@ -153,7 +85,7 @@ const CustomSidebar = props => {
           onClose();
           logoutUser();
         }}
-      />
+      /> */}
     </Modal>
   );
 };
@@ -163,21 +95,21 @@ export default CustomSidebar;
 const styles = StyleSheet.create({
   Modal: {
     flex: 1,
-    backgroundColor: COLORS.loaderBackground,
+    backgroundColor: Color.modalBG,
   },
   main: {
-    backgroundColor: COLORS.white,
+    backgroundColor: Color.white,
     width: '78%',
     height: '100%',
   },
   allView: {
-    backgroundColor: COLORS.white,
+    backgroundColor: Color.white,
     justifyContent: 'space-between',
     flex: 1,
   },
   Header: {
     height: '14%',
-    backgroundColor: COLORS.green,
+    backgroundColor: Color.subBg,
   },
   Logo: {
     height: scale(40),
@@ -188,11 +120,11 @@ const styles = StyleSheet.create({
   },
   headingText: {
     fontSize: scale(14),
-    fontFamily: FONTS.bold_700,
-    color: COLORS.textBlack,
+    fontFamily: Fonts.bold,
+    color: Color.textBlack,
   },
   button: {
-    backgroundColor: COLORS.green,
+    backgroundColor: Color.green,
     borderRadius: scale(100),
     padding: scale(10),
     paddingBottom: scale(10),
@@ -204,8 +136,8 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontSize: scale(16),
-    fontFamily: FONTS.semiBold_600,
-    color: COLORS.white,
+    fontFamily: Fonts.semibold,
+    color: Color.white,
     textAlign: 'center',
   },
   SupportView: {
@@ -220,18 +152,18 @@ const styles = StyleSheet.create({
   },
   TextForVideo: {
     fontSize: scale(12),
-    fontFamily: FONTS.bold_700,
+    fontFamily: Fonts.bold,
     lineHeight: 20,
   },
   TextForArrow: {
     fontSize: scale(15),
-    fontFamily: FONTS.bold_700,
+    fontFamily: Fonts.bold,
     right: 5,
   },
   TextForLink: {
     fontSize: scale(12),
     fontStyle: 'italic',
-    color: COLORS.textGray,
+    color: Color.textGray,
     lineHeight: 25,
     paddingLeft: 30,
   },
@@ -243,13 +175,13 @@ const styles = StyleSheet.create({
   },
   TextFor: {
     fontSize: scale(12),
-    fontFamily: FONTS.bold_700,
+    fontFamily: Fonts.bold,
     lineHeight: 20,
   },
   Text1: {
     fontSize: scale(12),
     fontStyle: 'italic',
-    color: COLORS.textGray,
+    color: Color.textGray,
     lineHeight: 25,
     paddingLeft: 30,
   },
@@ -261,18 +193,18 @@ const styles = StyleSheet.create({
   },
   TextForVideo: {
     fontSize: scale(12),
-    fontFamily: FONTS.bold_700,
+    fontFamily: Fonts.bold,
     lineHeight: 20,
   },
   TextForArrow: {
     fontSize: scale(15),
-    fontFamily: FONTS.bold_700,
+    fontFamily: Fonts.bold,
     right: 5,
   },
   TextForLink: {
     fontSize: scale(12),
     fontStyle: 'italic',
-    color: COLORS.textGray,
+    color: Color.textGray,
     lineHeight: 25,
     paddingLeft: 30,
   },
@@ -284,13 +216,13 @@ const styles = StyleSheet.create({
   },
   TextFor: {
     fontSize: scale(12),
-    fontFamily: FONTS.bold_700,
+    fontFamily: Fonts.bold,
     lineHeight: 20,
   },
   Text1: {
     fontSize: scale(12),
     fontStyle: 'italic',
-    color: COLORS.textGray,
+    color: Color.textGray,
     lineHeight: 25,
     paddingLeft: 30,
   },

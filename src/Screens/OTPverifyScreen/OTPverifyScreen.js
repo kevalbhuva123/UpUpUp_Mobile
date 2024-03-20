@@ -20,11 +20,13 @@ import {
 } from 'react-native-confirmation-code-field';
 import OTPInputView from '@twotalltotems/react-native-otp-input';
 import Fonts from '../../Constants/Fonts';
+import ConfirmationModal from '../../Components/ConfirmationModal';
 
 const OTPverifyScreen = ({navigation}) => {
   const ref = useBlurOnFulfill({value, cellCount: 4});
   const textInputRef = React.createRef(null);
   const [value, setValue] = useState('');
+  const [visible, setVisible] = useState(false);
 
   const [props] = useClearByFocusCell({
     value,
@@ -110,13 +112,25 @@ const OTPverifyScreen = ({navigation}) => {
           )}
           <TouchableOpacity
             onPress={() => {
-              navigation.navigate('HomeScreen');
+              setVisible(true);
             }}
             style={styles.loginBtn}>
             <Text style={styles.btnText}>VERIFY OTP</Text>
           </TouchableOpacity>
         </KeyboardAwareScrollView>
       </View>
+      <ConfirmationModal
+        isVisible={visible}
+        onClose={() => setVisible(false)}
+        asUser={() => {
+          setVisible(false);
+          navigation.navigate('HomeScreen');
+        }}
+        asVendor={() => {
+          setVisible(false);
+          navigation.navigate('VendorHomeScreen');
+        }}
+      />
     </View>
   );
 };

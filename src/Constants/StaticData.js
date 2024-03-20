@@ -559,3 +559,42 @@ export const HomeData = [
     navigation: 'HelpScreen',
   },
 ];
+
+export const VenueHome = [
+  {
+    id: 1,
+    image: IMAGES.MyBookings,
+    name: 'MY\nBOOKINGS',
+    navigation: 'HostMatchScreen',
+  },
+  {
+    id: 2,
+    image: IMAGES.MyBookings,
+    name: 'MY\nBOOKINGS',
+    navigation: 'HostMatchScreen',
+  },
+  {
+    id: 3,
+    image: IMAGES.Leave,
+    name: 'MY\nHOLIDAY',
+    navigation: 'HostMatchScreen',
+  },
+  {
+    id: 4,
+    image: IMAGES.Share,
+    name: 'SHARE\nMY VENUE',
+    navigation: 'HostMatchScreen',
+  },
+  {
+    id: 5,
+    image: IMAGES.Message,
+    name: 'MESSAGEU\nUPupup',
+    navigation: 'HostMatchScreen',
+  },
+  {
+    id: 6,
+    image: IMAGES.Offer,
+    name: 'MY\nOFFERS',
+    navigation: 'HostMatchScreen',
+  },
+];

@@ -40,4 +40,8 @@ export default IMAGES = {
   Menu: require('./menu.png'),
   Call: require('./call.png'),
   Pencil: require('./edit-text.png'),
+  Offer: require('./discount.png'),
+  Share: require('./share.png'),
+  Leave: require('./leave.png'),
+  Message: require('./comment.png'),
 };

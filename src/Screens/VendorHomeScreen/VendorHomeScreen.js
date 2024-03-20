@@ -8,13 +8,13 @@ import {
 } from 'react-native';
 import React, {useState} from 'react';
 import Color from '../../Constants/Color';
-import {HomeData} from '../../Constants/StaticData';
+import {VenueHome} from '../../Constants/StaticData';
 import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
 import IMAGES from '../../Assets/Icons/index';
-// import CustomSidebar from '../../Components/CustomSidebar';
+import CustomSidebar from '../../Components/CustomSidebar';
 
-const HomeScreen = ({navigation}) => {
+const VendorHomeScreen = ({navigation}) => {
   const [hamburgerVisible, sethamburgerVisible] = useState(false);
 
   const onClose = () => {
@@ -64,7 +64,7 @@ const HomeScreen = ({navigation}) => {
       </View>
       <View style={styles.master}>
         <FlatList
-          data={HomeData}
+          data={VenueHome}
           renderItem={renderHomes}
           keyExtractor={item => item.id.toString()}
           style={{flexGrow: 1}}
@@ -75,20 +75,39 @@ const HomeScreen = ({navigation}) => {
           showsVerticalScrollIndicator={false}
           numColumns={3}
         />
+        <TouchableOpacity style={styles.loginBtn}>
+          <Text style={styles.btnText}>Assign Managers</Text>
+        </TouchableOpacity>
       </View>
-      {/* <CustomSidebar
+      <CustomSidebar
         hamburgerVisible={hamburgerVisible}
         onClose={() => {
           onClose();
         }}
-      /> */}
+      />
     </View>
   );
 };
 
-export default HomeScreen;
+export default VendorHomeScreen;
 
 const styles = StyleSheet.create({
+  loginBtn: {
+    backgroundColor: Color.icon,
+    width: '85%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: scale(12),
+    borderRadius: scale(10),
+    alignSelf: 'center',
+    marginVertical: scale(30),
+  },
+  btnText: {
+    color: Color.background,
+    fontSize: scale(14),
+    fontFamily: Fonts.bold,
+    letterSpacing: 2,
+  },
   main: {
     flex: 1,
   },
