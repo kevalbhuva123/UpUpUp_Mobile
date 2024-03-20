@@ -569,8 +569,8 @@ export const VenueHome = [
   },
   {
     id: 2,
-    image: IMAGES.MyBookings,
-    name: 'MY\nBOOKINGS',
+    image: IMAGES.BookVenue,
+    name: 'MY\nVENUE',
     navigation: 'HostMatchScreen',
   },
   {
@@ -588,7 +588,7 @@ export const VenueHome = [
   {
     id: 5,
     image: IMAGES.Message,
-    name: 'MESSAGEU\nUPupup',
+    name: 'MESSAGE\nUPupup',
     navigation: 'HostMatchScreen',
   },
   {
