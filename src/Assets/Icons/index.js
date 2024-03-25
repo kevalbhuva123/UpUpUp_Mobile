@@ -44,4 +44,11 @@ export default IMAGES = {
   Share: require('./share.png'),
   Leave: require('./leave.png'),
   Message: require('./comment.png'),
+  Profile: require('./user.png'),
+  Home: require('./home.png'),
+  Notification: require('./notification.png'),
+  Feedback: require('./ratings.png'),
+  AboutUs: require('./info.png'),
+  Privacy: require('./danger.png'),
+  AboutApp: require('./mobile-service.png'),
 };
