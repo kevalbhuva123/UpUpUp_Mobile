@@ -7,17 +7,85 @@ import {
   View,
   Image,
   Linking,
+  FlatList,
 } from 'react-native';
 import React, {useState} from 'react';
 import Color from '../../Constants/Color';
 import {scale, verticalScale} from '../../utlis/Scale';
 import {useNavigation} from '@react-navigation/native';
 import Fonts from '../../Constants/Fonts';
+import IMAGES from '../../Assets/Icons/index';
+import LogoutModal from '../LogoutModal';
+import DeviceInfo from 'react-native-device-info';
+
+const SidebarOptions = [
+  {
+    id: 1,
+    title: 'My Profile',
+    navigation: '',
+    icon: IMAGES.Profile,
+  },
+  {
+    id: 2,
+    title: 'Home',
+    navigation: '',
+    icon: IMAGES.Home,
+  },
+  {
+    id: 3,
+    title: 'Notifications',
+    navigation: '',
+    icon: IMAGES.Notification,
+  },
+  {
+    id: 4,
+    title: 'Feedback',
+    navigation: '',
+    icon: IMAGES.Feedback,
+  },
+  {
+    id: 5,
+    title: 'Help',
+    navigation: '',
+    icon: IMAGES.Call,
+  },
+  {
+    id: 6,
+    title: 'About Us',
+    navigation: '',
+    icon: IMAGES.AboutUs,
+  },
+  {
+    id: 7,
+    title: 'Privacy & Terms',
+    navigation: '',
+    icon: IMAGES.Privacy,
+  },
+  {
+    id: 8,
+    title: 'About App',
+    navigation: '',
+    icon: IMAGES.AboutApp,
+  },
+];
 
 const CustomSidebar = props => {
   const navigation = useNavigation();
+  const [modalVisible, setmodalVisible] = useState(false);
   const {hamburgerVisible, onClose} = props;
 
+  const logoutUser = () => {
+    navigation.replace('LoginScreen');
+  };
+
+  const renderItem = ({item}) => {
+    return (
+      <TouchableOpacity style={styles.item}>
+        <Image style={styles.icon} source={item.icon} />
+        <Text style={styles.itemText}>{item.title}</Text>
+      </TouchableOpacity>
+    );
+  };
   return (
     <Modal animationType="none" transparent visible={hamburgerVisible}>
       <TouchableOpacity
@@ -28,9 +96,22 @@ const CustomSidebar = props => {
         }}>
         <TouchableWithoutFeedback>
           <View style={styles.main}>
-            <View style={styles.Header}></View>
+            <View style={styles.Header}>
+              <Image source={IMAGES.LogoText} style={styles.Logo} />
+            </View>
             <View style={styles.allView}>
-              <View style={styles.SupportView}></View>
+              <View style={{flex: 1}}>
+                <FlatList
+                  data={SidebarOptions}
+                  renderItem={renderItem}
+                  keyExtractor={item => item.id.toString()}
+                  style={{flexGrow: 1}}
+                  contentContainerStyle={{
+                    paddingVertical: scale(20),
+                  }}
+                  showsVerticalScrollIndicator={false}
+                />
+              </View>
 
               <View>
                 <View
@@ -45,7 +126,7 @@ const CustomSidebar = props => {
                     }}>
                     Version :
                   </Text>
-                  {/* <Text
+                  <Text
                     style={{
                       alignSelf: 'flex-start',
                       marginHorizontal: 20,
@@ -53,17 +134,13 @@ const CustomSidebar = props => {
                     {DeviceInfo.getVersion()
                       ? DeviceInfo.getVersion()
                       : '1.0.0'}
-                  </Text> */}
+                  </Text>
                 </View>
 
                 <TouchableOpacity
-                  accessible
-                  accessibilityLabel="Logout"
-                  accessibilityRole="button"
-                  accessibilityHint="Double tap to select"
                   style={styles.button}
                   onPress={() => {
-                    // setmodalVisible(true);
+                    setmodalVisible(true);
                   }}>
                   <Text style={styles.buttonText}>Logout</Text>
                 </TouchableOpacity>
@@ -72,9 +149,11 @@ const CustomSidebar = props => {
           </View>
         </TouchableWithoutFeedback>
       </TouchableOpacity>
-      {/* <LogoutModal
-        title={CONSTANTS.LogoutMessageTitle}
-        description={CONSTANTS.LogoutMessageDescription}
+      <LogoutModal
+        title={
+          'This action will delete all data stored in the device and cannot be retrieved.'
+        }
+        description={'Are you sure you want to '}
         modalVisible={modalVisible}
         onCancel={() => {
           setmodalVisible(false);
@@ -85,7 +164,7 @@ const CustomSidebar = props => {
           onClose();
           logoutUser();
         }}
-      /> */}
+      />
     </Modal>
   );
 };
@@ -93,6 +172,26 @@ const CustomSidebar = props => {
 export default CustomSidebar;
 
 const styles = StyleSheet.create({
+  itemText: {
+    fontSize: scale(16),
+    fontFamily: Fonts.semibold,
+    color: Color.main,
+    paddingLeft: scale(10),
+  },
+  item: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    paddingVertical: scale(16),
+    paddingHorizontal: scale(30),
+    borderBottomWidth: scale(0.5),
+    borderBottomColor: Color.lightGrey,
+  },
+  icon: {
+    height: scale(20),
+    width: scale(20),
+    resizeMode: 'contain',
+    tintColor: Color.main,
+  },
   Modal: {
     flex: 1,
     backgroundColor: Color.modalBG,
@@ -109,14 +208,15 @@ const styles = StyleSheet.create({
   },
   Header: {
     height: '14%',
-    backgroundColor: Color.subBg,
+    backgroundColor: Color.main,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   Logo: {
-    height: scale(40),
-    width: scale(114),
-    position: 'absolute',
-    marginLeft: scale(16),
-    marginTop: verticalScale(35),
+    width: scale(110),
+    height: scale(50),
+    resizeMode: 'contain',
+    tintColor: Color.background,
   },
   headingText: {
     fontSize: scale(14),
@@ -124,7 +224,7 @@ const styles = StyleSheet.create({
     color: Color.textBlack,
   },
   button: {
-    backgroundColor: Color.green,
+    backgroundColor: Color.main,
     borderRadius: scale(100),
     padding: scale(10),
     paddingBottom: scale(10),
