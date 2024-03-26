@@ -35,7 +35,7 @@ const apiHeaderData = {
  */
 const apiUrl = {
   // Upsmart Api's
-  LOCAL_SERVER_API_URL: '',
+  LOCAL_SERVER_API_URL: 'http://upupup.in/upsmart/api/',
 };
 
 /**

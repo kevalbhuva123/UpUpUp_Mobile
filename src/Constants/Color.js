@@ -1,4 +1,4 @@
-export default Color = {
+const COLORS = {
   white: '#ffff',
   main: '#0C2D57',
   background: '#EFECEC',
@@ -10,4 +10,6 @@ export default Color = {
   modalBG: 'rgba(0, 0, 0, 0.5)',
   green: '#7CFC00',
   violet: '#EE82EE',
+  red:'#FF5050',
 };
+export default COLORS;

@@ -20,24 +20,49 @@ import {
 } from 'react-native-confirmation-code-field';
 import OTPInputView from '@twotalltotems/react-native-otp-input';
 import Fonts from '../../Constants/Fonts';
+import COLORS from '../../Constants/Color';
 import ConfirmationModal from '../../Components/ConfirmationModal';
+import { useRoute } from "@react-navigation/native";
 
 const OTPverifyScreen = ({navigation}) => {
   const ref = useBlurOnFulfill({value, cellCount: 4});
   const textInputRef = React.createRef(null);
   const [value, setValue] = useState('');
   const [visible, setVisible] = useState(false);
+  const route = useRoute();
+  const [warning, setWarning] = useState("");
+  const phoneNumber = route.params.phoneNumber;
 
+// console.log("paramssssssssssss",route.params)
   const [props] = useClearByFocusCell({
     value,
     setValue,
   });
-
   useEffect(() => {
     textInputRef.current?.focus();
     setValue('');
   }, []);
-
+  const onVerifyPressed = async () => {
+    if (value.trim() == "") {
+      setWarning('CONSTANTS.EmptyOTPWarningMessage');
+      WarningMessageTimer();
+    } else {
+      const userID = route.params.mobileNumber;
+      const otp = value;
+      const params = {
+        userID,
+        otp,
+      };
+      const response = await Request.post("Login/otp_verify", params);
+      
+      if (response) {
+        Alert.alert("OTP Received , OTP is verified.");
+        navigation.navigate('HomeScreen',{mobileNumber:phoneNumber});
+      } else {
+        Alert.alert("Error", "Invalid OTP");
+      }
+    }
+  }
   return (
     <View style={styles.main}>
       <View style={styles.head}>
@@ -112,6 +137,7 @@ const OTPverifyScreen = ({navigation}) => {
           )}
           <TouchableOpacity
             onPress={() => {
+              onVerifyPressed();
               setVisible(true);
             }}
             style={styles.loginBtn}>
@@ -270,5 +296,10 @@ const styles = StyleSheet.create({
     color: Color.black,
     fontSize: scale(14),
     fontFamily: Fonts.bold,
+  },
+  warning: {
+    color: COLORS.red,
+    textAlign: "center",
+    fontSize: scale(14),
   },
 });
