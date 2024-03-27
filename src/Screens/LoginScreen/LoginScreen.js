@@ -49,13 +49,17 @@ const LoginScreen = ({navigation}) => {
         },
       })
         .then(response => response.json())
-        .then(data => {
+        .then(async data => {
           // Handle API response
-          console.log(data);
-          if (response) {
+          console.log(data.Data);
+          if (data) {
             Alert.alert(
               'OTP Sent',
               'An OTP has been sent to your mobile number.',
+            );
+            await StorageService.saveItem(
+              StorageService.STORAGE_KEYS.USER_DETAILS,
+              data.Data,
             );
             navigation.navigate('OTPverifyScreen', {phoneNumber: phoneNumber});
           } else {
