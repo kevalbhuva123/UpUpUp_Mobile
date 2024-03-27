@@ -5,58 +5,74 @@ import {
   View,
   Image,
   TextInput,
-  Alert
+  Alert,
 } from 'react-native';
-import React, {useState , useNavigation} from 'react';
+import React, {useState, useNavigation} from 'react';
 import Color from '../../Constants/Color';
 import IMAGES from '../../Assets/Icons/index';
 import {scale} from '../../utlis/Scale';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import Fonts from '../../Constants/Fonts';
-import COLORS from '../../Constants/Color'
+import COLORS from '../../Constants/Color';
 import auth from '@react-native-firebase/auth';
-import StorageService from "../../utlis/StorageService";
-import Request from "../../api/Request";
+import StorageService from '../../utlis/StorageService';
+import Request from '../../api/Request';
+import apiConfigs from '../../api/apiconfig';
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({navigation}) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [uderID, setuderID] = useState('');
   const [invalidPhoneNumber, setInvalidPhoneNumber] = useState(false);
-  const [warning, setWarning] = useState("");
+  const [warning, setWarning] = useState('');
 
   const sendVerificationCode = async () => {
     if (!phoneNumber.trim()) {
-      setWarning("Please enter your mobile number.");
+      setWarning('Please enter your mobile number.');
       return;
     }
-  
+
     if (!isValidPhoneNumber(phoneNumber)) {
       setInvalidPhoneNumber(true);
       return;
     }
-  
+
     setInvalidPhoneNumber(false);
     try {
-      const mobileNumber=phoneNumber
-      const params = {
-        phoneNumber: mobileNumber,
-      };
-      const response = await Request.post("Login/index", params);
-      console.log('1-->',response.data)
-      
-      if (response) {
-        Alert.alert("OTP Sent", "An OTP has been sent to your mobile number.")
-        navigation.navigate('OTPverifyScreen',{phoneNumber:phoneNumber});
-      } else {
-        Alert.alert("Error", "Failed to send OTP. Please try again later.");
-      }
+      let formData = new FormData();
+      formData.append('phone_no', phoneNumber);
+
+      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Login/index`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+        .then(response => response.json())
+        .then(data => {
+          // Handle API response
+          console.log(data);
+          if (response) {
+            Alert.alert(
+              'OTP Sent',
+              'An OTP has been sent to your mobile number.',
+            );
+            navigation.navigate('OTPverifyScreen', {phoneNumber: phoneNumber});
+          } else {
+            Alert.alert('Error', 'Failed to send OTP. Please try again later.');
+          }
+        })
+        .catch(error => {
+          // Handle error
+          console.error('Error:', error);
+        });
     } catch (error) {
       console.error(error);
-      Alert.alert("Error", "Failed to send OTP. Please try again later.");
+      Alert.alert('Error', 'Failed to send OTP. Please try again later.');
     }
   };
 
-  const isValidPhoneNumber = (number) => {
+  const isValidPhoneNumber = number => {
     // Implement your validation logic here
     // For simplicity, let's assume valid if the number starts with '+91' and has 10 digits
     return /^(\+91\s?)?[0-9]{10}$/.test(number);
@@ -86,7 +102,7 @@ const LoginScreen = ({ navigation }) => {
             <Text style={styles.countryCode}>+91</Text>
             <TextInput
               value={phoneNumber}
-              onChangeText={(text) => {
+              onChangeText={text => {
                 setPhoneNumber(text);
                 setInvalidPhoneNumber(false);
               }}
@@ -97,9 +113,11 @@ const LoginScreen = ({ navigation }) => {
               placeholderTextColor={Color.lightGrey}
             />
           </View>
-          {warning !== "" && <Text style={styles.warning}>{warning}</Text>}
+          {warning !== '' && <Text style={styles.warning}>{warning}</Text>}
           {invalidPhoneNumber && (
-            <Text style={styles.errorText}>Please enter a valid phone number.</Text>
+            <Text style={styles.errorText}>
+              Please enter a valid phone number.
+            </Text>
           )}
           <TouchableOpacity
             onPress={() => {
@@ -229,15 +247,15 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
   },
   errorText: {
-    marginTop:scale(5),
+    marginTop: scale(5),
     fontFamily: Fonts.regular_400,
     color: COLORS.red,
     fontSize: scale(14),
-    textAlign: "center",
+    textAlign: 'center',
   },
   warning: {
     color: COLORS.red,
-    textAlign: "center",
+    textAlign: 'center',
     fontSize: scale(14),
-  }
+  },
 });
