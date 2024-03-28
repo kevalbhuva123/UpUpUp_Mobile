@@ -1,4 +1,4 @@
-const COLORS = {
+const Color = {
   white: '#ffff',
   main: '#0C2D57',
   background: '#EFECEC',
@@ -12,4 +12,4 @@ const COLORS = {
   violet: '#EE82EE',
   red:'#FF5050',
 };
-export default COLORS;
+export default Color;

@@ -6,6 +6,7 @@ import {
   Image,
   TextInput,
   Platform,
+  Alert,
 } from 'react-native';
 import React, {useState, useEffect} from 'react';
 import Color from '../../Constants/Color';
@@ -20,48 +21,76 @@ import {
 } from 'react-native-confirmation-code-field';
 import OTPInputView from '@twotalltotems/react-native-otp-input';
 import Fonts from '../../Constants/Fonts';
-import COLORS from '../../Constants/Color';
 import ConfirmationModal from '../../Components/ConfirmationModal';
 import { useRoute } from "@react-navigation/native";
+import apiConfigs from '../../api/apiconfig';
 
 const OTPverifyScreen = ({navigation}) => {
   const ref = useBlurOnFulfill({value, cellCount: 4});
-  const textInputRef = React.createRef(null);
-  const [value, setValue] = useState('');
-  const [visible, setVisible] = useState(false);
-  const route = useRoute();
-  const [warning, setWarning] = useState("");
-  const phoneNumber = route.params.phoneNumber;
-
-// console.log("paramssssssssssss",route.params)
-  const [props] = useClearByFocusCell({
-    value,
-    setValue,
-  });
-  useEffect(() => {
-    textInputRef.current?.focus();
-    setValue('');
-  }, []);
-  const onVerifyPressed = async () => {
-    if (value.trim() == "") {
-      setWarning('CONSTANTS.EmptyOTPWarningMessage');
-      WarningMessageTimer();
-    } else {
-      const userID = route.params.mobileNumber;
-      const otp = value;
-      const params = {
-        userID,
-        otp,
-      };
-      const response = await Request.post("Login/otp_verify", params);
-      
-      if (response) {
-        Alert.alert("OTP Received , OTP is verified.");
-        navigation.navigate('HomeScreen',{mobileNumber:phoneNumber});
-      } else {
-        Alert.alert("Error", "Invalid OTP");
+    const textInputRef = React.createRef(null);
+    const route = useRoute();
+    const [UserId, setUserId] = useState(route.params.UserId ? route.params.UserId : "");
+    const [value, setValue] = useState('');
+    const [warning, setWarning] = useState('');
+    const [visible, setVisible] = useState(false);
+  
+    const [props] = useClearByFocusCell({
+      value,
+      setValue,
+    });
+    useEffect(() => {
+      if (route.params && route.params.UserId) {
+        setUserId(route.params.UserId);
       }
-    }
+      textInputRef.current?.focus();
+      setValue('');
+    }, []);
+  
+    const WarningMessageTimer = () => {
+      const timeoutId = setTimeout(() => {
+        setWarning("");
+      }, 3000);
+      return () => clearTimeout(timeoutId);
+    };
+  
+    const onVerifyPressed = async () => {
+      if (!value.trim()) {
+        setWarning('Please enter the OTP.');
+        WarningMessageTimer();
+        return;
+      }
+      else if (value.trim().length !== 4) {
+        setWarning('Please enter a valid 4-digit OTP.');
+        WarningMessageTimer();
+        return;
+      }
+      // Send OTP verification request to backend
+      const formData = new FormData();
+      formData.append('user_id', UserId);
+      formData.append('otp', value);
+  
+      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Login/otp_verify`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data && data.ErrorCode === 0 && data.Message === 'Success') {
+            // OTP verification successful
+            Alert.alert('Success', 'OTP verification successfull.');
+            navigation.navigate('HomeScreen');
+          } else {
+            // OTP verification failed
+            Alert.alert('Entered OTP is either incorrect or expired , Please try again');
+          }
+        })
+        .catch(error => {
+          console.error('Error:', error);
+          Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+        });
   }
   return (
     <View style={styles.main}>
@@ -135,10 +164,11 @@ const OTPverifyScreen = ({navigation}) => {
               )}
             />
           )}
+          {warning !== '' && <Text style={styles.warning}>{warning}</Text>}
           <TouchableOpacity
             onPress={() => {
               onVerifyPressed();
-              setVisible(true);
+              // setVisible(true);
             }}
             style={styles.loginBtn}>
             <Text style={styles.btnText}>VERIFY OTP</Text>
@@ -298,7 +328,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
   },
   warning: {
-    color: COLORS.red,
+    color: Color.red,
     textAlign: "center",
     fontSize: scale(14),
   },

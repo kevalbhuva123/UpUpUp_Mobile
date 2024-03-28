@@ -13,7 +13,6 @@ import IMAGES from '../../Assets/Icons/index';
 import {scale} from '../../utlis/Scale';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import Fonts from '../../Constants/Fonts';
-import COLORS from '../../Constants/Color';
 import auth from '@react-native-firebase/auth';
 import StorageService from '../../utlis/StorageService';
 import Request from '../../api/Request';
@@ -21,7 +20,7 @@ import apiConfigs from '../../api/apiconfig';
 
 const LoginScreen = ({navigation}) => {
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [uderID, setuderID] = useState('');
+  const [UserId, setUserId] = useState('');
   const [invalidPhoneNumber, setInvalidPhoneNumber] = useState(false);
   const [warning, setWarning] = useState('');
 
@@ -51,7 +50,8 @@ const LoginScreen = ({navigation}) => {
         .then(response => response.json())
         .then(async data => {
           // Handle API response
-          console.log(data.Data);
+          const id = (data.Data.id)
+          setUserId(id);
           if (data) {
             Alert.alert(
               'OTP Sent',
@@ -61,7 +61,7 @@ const LoginScreen = ({navigation}) => {
               StorageService.STORAGE_KEYS.USER_DETAILS,
               data.Data,
             );
-            navigation.navigate('OTPverifyScreen', {phoneNumber: phoneNumber});
+            navigation.navigate('OTPverifyScreen', {phoneNumber: phoneNumber , UserId : UserId});
           } else {
             Alert.alert('Error', 'Failed to send OTP. Please try again later.');
           }
@@ -253,12 +253,12 @@ const styles = StyleSheet.create({
   errorText: {
     marginTop: scale(5),
     fontFamily: Fonts.regular_400,
-    color: COLORS.red,
+    color: Color.red,
     fontSize: scale(14),
     textAlign: 'center',
   },
   warning: {
-    color: COLORS.red,
+    color: Color.red,
     textAlign: 'center',
     fontSize: scale(14),
   },
