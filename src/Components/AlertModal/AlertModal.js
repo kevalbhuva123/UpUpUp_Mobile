@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   contentText: {
     fontSize: scale(14),
     fontFamily: Fonts.regular,
-    color: Color.lightGrey,
+    color: Color.black,
     textAlign: 'center',
     marginTop: scale(16),
     paddingHorizontal: scale(8),
