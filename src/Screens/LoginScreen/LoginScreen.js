@@ -17,25 +17,42 @@ import auth from '@react-native-firebase/auth';
 import StorageService from '../../utlis/StorageService';
 import Request from '../../api/Request';
 import apiConfigs from '../../api/apiconfig';
+import { ActivityLoader } from '../../Components/Loader/Loader';
+import AlertModal from '../../Components/AlertModal/AlertModal';
 
 const LoginScreen = ({navigation}) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [UserId, setUserId] = useState('');
   const [invalidPhoneNumber, setInvalidPhoneNumber] = useState(false);
   const [warning, setWarning] = useState('');
+  const [Loader, setLoader] = useState(false); 
+  const [modalVisible, setModalVisible] = useState(false); 
+  const [alertMessage, setAlertMessage] = useState('');
+  const [otpSentSuccessfully, setOtpSentSuccessfully] = useState(false);
 
   const sendVerificationCode = async () => {
+    
+    const WarningMessageTimer = () => {
+      const timeoutId = setTimeout(() => {
+        setWarning("");
+      }, 3000);
+      return () => clearTimeout(timeoutId);
+    };
+
     if (!phoneNumber.trim()) {
       setWarning('Please enter your mobile number.');
+      WarningMessageTimer();
       return;
     }
 
     if (!isValidPhoneNumber(phoneNumber)) {
       setInvalidPhoneNumber(true);
+      WarningMessageTimer();
       return;
     }
 
     setInvalidPhoneNumber(false);
+    setLoader(true);
     try {
       let formData = new FormData();
       formData.append('phone_no', phoneNumber);
@@ -49,30 +66,34 @@ const LoginScreen = ({navigation}) => {
       })
         .then(response => response.json())
         .then(async data => {
+          setLoader(false);
           // Handle API response
           const id = (data.Data.id)
           setUserId(id);
           if (data) {
-            Alert.alert(
-              'OTP Sent',
-              'An OTP has been sent to your mobile number.',
-            );
+            setOtpSentSuccessfully(true);
+            setAlertMessage('An OTP has been sent to your mobile number.');
+            setModalVisible(true);
             await StorageService.saveItem(
               StorageService.STORAGE_KEYS.USER_DETAILS,
               data.Data,
             );
-            navigation.navigate('OTPverifyScreen', {phoneNumber: phoneNumber , UserId : UserId});
+            
           } else {
-            Alert.alert('Error', 'Failed to send OTP. Please try again later.');
+            setAlertMessage('Failed to send OTP. Please try again later.');
+            setModalVisible(true);
           }
         })
         .catch(error => {
           // Handle error
-          console.error('Error:', error);
+          setLoader(false); // Hide ActivityLoader
+          setAlertMessage('Failed to send OTP. Please try again later.');
+          setModalVisible(true);
         });
     } catch (error) {
-      console.error(error);
-      Alert.alert('Error', 'Failed to send OTP. Please try again later.');
+      setLoader(false); // Hide ActivityLoader
+      setAlertMessage('Failed to send OTP. Please try again later.');
+      setModalVisible(true);
     }
   };
 
@@ -142,6 +163,16 @@ const LoginScreen = ({navigation}) => {
           </Text>
         </KeyboardAwareScrollView>
       </View>
+      <ActivityLoader loading={Loader} />
+      <AlertModal
+        modalVisible={modalVisible}
+        onClose={() => {setModalVisible(false);
+        if(otpSentSuccessfully==true){
+          navigation.navigate('OTPverifyScreen', {phoneNumber: phoneNumber , UserId : UserId});
+        }
+        }}
+        content={alertMessage}
+      />
     </View>
   );
 };

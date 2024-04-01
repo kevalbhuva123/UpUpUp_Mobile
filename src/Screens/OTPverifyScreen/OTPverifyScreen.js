@@ -24,6 +24,8 @@ import Fonts from '../../Constants/Fonts';
 import ConfirmationModal from '../../Components/ConfirmationModal';
 import { useRoute } from "@react-navigation/native";
 import apiConfigs from '../../api/apiconfig';
+import AlertModal from '../../Components/AlertModal/AlertModal';
+import { ActivityLoader } from '../../Components/Loader/Loader';
 
 const OTPverifyScreen = ({navigation}) => {
   const ref = useBlurOnFulfill({value, cellCount: 4});
@@ -33,6 +35,9 @@ const OTPverifyScreen = ({navigation}) => {
     const [value, setValue] = useState('');
     const [warning, setWarning] = useState('');
     const [visible, setVisible] = useState(false);
+    const [Loader, setLoader] = useState(false);
+    const [modalVisible, setmodalVisible] = useState(false);
+    const [OTPVerifySuccessfull, setOTPVerifySuccessfull] = useState(false);
   
     const [props] = useClearByFocusCell({
       value,
@@ -64,6 +69,7 @@ const OTPverifyScreen = ({navigation}) => {
         WarningMessageTimer();
         return;
       }
+      setLoader(true);
       // Send OTP verification request to backend
       const formData = new FormData();
       formData.append('user_id', UserId);
@@ -76,20 +82,26 @@ const OTPverifyScreen = ({navigation}) => {
           'Content-Type': 'multipart/form-data',
         },
       })
+      // setLoader(true)
         .then(response => response.json())
         .then(data => {
-          if (data && data.ErrorCode === 0 && data.Message === 'Success') {
+          setLoader(false);
+          if (data && data.ErrorCode === 0 && data.Message === 'OTP Verified Successfully') {
             // OTP verification successful
-            Alert.alert('Success', 'OTP verification successfull.');
-            navigation.navigate('HomeScreen');
+            setOTPVerifySuccessfull(true)
+            setmodalVisible(true);
+            
           } else {
             // OTP verification failed
-            Alert.alert('Entered OTP is either incorrect or expired , Please try again');
+            setOTPVerifySuccessfull(false)
+            setmodalVisible(true);
           }
         })
         .catch(error => {
+          setLoader(false);
           console.error('Error:', error);
-          Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+          // Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+          setAlertMessage('An unexpected error occurred. Please try again.')
         });
   }
   return (
@@ -175,6 +187,21 @@ const OTPverifyScreen = ({navigation}) => {
           </TouchableOpacity>
         </KeyboardAwareScrollView>
       </View>
+      <ActivityLoader loading={Loader} />
+      <AlertModal
+        modalVisible={modalVisible}
+        onClose={() => {
+          setmodalVisible(false);
+          if(OTPVerifySuccessfull == true){
+            setVisible(true)
+          }
+        }}
+        content={
+          OTPVerifySuccessfull == true
+            ? "OTP verification successful."
+            : "Entered OTP is either incorrect or expired , Please try again"
+        }
+      />
       <ConfirmationModal
         isVisible={visible}
         onClose={() => setVisible(false)}

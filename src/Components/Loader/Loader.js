@@ -26,13 +26,18 @@ export const ActivityLoader = ({loading, color}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    // alignSelf:'center',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'absolute',
     backgroundColor: Color.modalBG,
+    position:'absolute',
+    width:'100%',
+    height:'100%'
   },
   subView: {
     alignItems: 'center',
+    alignSelf:'center',
     justifyContent: 'center',
     backgroundColor: Color.white,
     padding: scale(20),
