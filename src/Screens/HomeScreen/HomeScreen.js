@@ -12,6 +12,7 @@ import {HomeData} from '../../Constants/StaticData';
 import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
 import IMAGES from '../../Assets/Icons/index';
+import CustomSidebar from '../../Components/CustomSidebar';
 // import CustomSidebar from '../../Components/CustomSidebar';
 
 const HomeScreen = ({navigation}) => {
@@ -76,12 +77,12 @@ const HomeScreen = ({navigation}) => {
           numColumns={3}
         />
       </View>
-      {/* <CustomSidebar
+      <CustomSidebar
         hamburgerVisible={hamburgerVisible}
         onClose={() => {
           onClose();
         }}
-      /> */}
+      />
     </View>
   );
 };
