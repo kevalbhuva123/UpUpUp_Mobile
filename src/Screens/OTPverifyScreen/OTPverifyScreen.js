@@ -22,88 +22,93 @@ import {
 import OTPInputView from '@twotalltotems/react-native-otp-input';
 import Fonts from '../../Constants/Fonts';
 import ConfirmationModal from '../../Components/ConfirmationModal';
-import { useRoute } from "@react-navigation/native";
+import {useRoute} from '@react-navigation/native';
 import apiConfigs from '../../api/apiconfig';
 import AlertModal from '../../Components/AlertModal/AlertModal';
-import { ActivityLoader } from '../../Components/Loader/Loader';
+import {ActivityLoader} from '../../Components/Loader/Loader';
+import StorageService from '../../utlis/StorageService';
 
 const OTPverifyScreen = ({navigation}) => {
   const ref = useBlurOnFulfill({value, cellCount: 4});
-    const textInputRef = React.createRef(null);
-    const route = useRoute();
-    const [UserId, setUserId] = useState(route.params.UserId ? route.params.UserId : "");
-    const [value, setValue] = useState('');
-    const [warning, setWarning] = useState('');
-    const [visible, setVisible] = useState(false);
-    const [Loader, setLoader] = useState(false);
-    const [modalVisible, setmodalVisible] = useState(false);
-    const [OTPVerifySuccessfull, setOTPVerifySuccessfull] = useState(false);
-  
-    const [props] = useClearByFocusCell({
-      value,
-      setValue,
-    });
-    useEffect(() => {
-      if (route.params && route.params.UserId) {
-        setUserId(route.params.UserId);
-      }
-      textInputRef.current?.focus();
-      setValue('');
-    }, []);
-  
-    const WarningMessageTimer = () => {
-      const timeoutId = setTimeout(() => {
-        setWarning("");
-      }, 3000);
-      return () => clearTimeout(timeoutId);
-    };
-  
-    const onVerifyPressed = async () => {
-      if (!value.trim()) {
-        setWarning('Please enter the OTP.');
-        WarningMessageTimer();
-        return;
-      }
-      else if (value.trim().length !== 4) {
-        setWarning('Please enter a valid 4-digit OTP.');
-        WarningMessageTimer();
-        return;
-      }
-      setLoader(true);
-      // Send OTP verification request to backend
-      const formData = new FormData();
-      formData.append('user_id', UserId);
-      formData.append('otp', value);
-  
-      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Login/otp_verify`, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
+  const textInputRef = React.createRef(null);
+  const route = useRoute();
+  const [UserId, setUserId] = useState(
+    route.params.UserId ? route.params.UserId : '',
+  );
+  const [value, setValue] = useState('');
+  const [warning, setWarning] = useState('');
+  const [visible, setVisible] = useState(false);
+  const [Loader, setLoader] = useState(false);
+  const [modalVisible, setmodalVisible] = useState(false);
+  const [OTPVerifySuccessfull, setOTPVerifySuccessfull] = useState(false);
+
+  const [props] = useClearByFocusCell({
+    value,
+    setValue,
+  });
+  useEffect(() => {
+    if (route.params && route.params.UserId) {
+      setUserId(route.params.UserId);
+    }
+    textInputRef.current?.focus();
+    setValue('');
+  }, []);
+
+  const WarningMessageTimer = () => {
+    const timeoutId = setTimeout(() => {
+      setWarning('');
+    }, 3000);
+    return () => clearTimeout(timeoutId);
+  };
+
+  const onVerifyPressed = async () => {
+    if (!value.trim()) {
+      setWarning('Please enter the OTP.');
+      WarningMessageTimer();
+      return;
+    } else if (value.trim().length !== 4) {
+      setWarning('Please enter a valid 4-digit OTP.');
+      WarningMessageTimer();
+      return;
+    }
+    setLoader(true);
+    // Send OTP verification request to backend
+    const formData = new FormData();
+    formData.append('user_id', UserId);
+    formData.append('otp', value);
+
+    fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Login/otp_verify`, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    })
       // setLoader(true)
-        .then(response => response.json())
-        .then(data => {
-          setLoader(false);
-          if (data && data.ErrorCode === 0 && data.Message === 'OTP Verified Successfully') {
-            // OTP verification successful
-            setOTPVerifySuccessfull(true)
-            setmodalVisible(true);
-            
-          } else {
-            // OTP verification failed
-            setOTPVerifySuccessfull(false)
-            setmodalVisible(true);
-          }
-        })
-        .catch(error => {
-          setLoader(false);
-          console.error('Error:', error);
-          // Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-          setAlertMessage('An unexpected error occurred. Please try again.')
-        });
-  }
+      .then(response => response.json())
+      .then(data => {
+        setLoader(false);
+        if (
+          data &&
+          data.ErrorCode === 0 &&
+          data.Message === 'OTP Verified Successfully'
+        ) {
+          // OTP verification successful
+          setOTPVerifySuccessfull(true);
+          setmodalVisible(true);
+        } else {
+          // OTP verification failed
+          setOTPVerifySuccessfull(false);
+          setmodalVisible(true);
+        }
+      })
+      .catch(error => {
+        setLoader(false);
+        console.error('Error:', error);
+        // Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+        setAlertMessage('An unexpected error occurred. Please try again.');
+      });
+  };
   return (
     <View style={styles.main}>
       <View style={styles.head}>
@@ -192,14 +197,14 @@ const OTPverifyScreen = ({navigation}) => {
         modalVisible={modalVisible}
         onClose={() => {
           setmodalVisible(false);
-          if(OTPVerifySuccessfull == true){
-            setVisible(true)
+          if (OTPVerifySuccessfull == true) {
+            setVisible(true);
           }
         }}
         content={
           OTPVerifySuccessfull == true
-            ? "OTP verification successful."
-            : "Entered OTP is either incorrect or expired , Please try again"
+            ? 'OTP verification successful.'
+            : 'Entered OTP is either incorrect or expired , Please try again'
         }
       />
       <ConfirmationModal
@@ -207,10 +212,19 @@ const OTPverifyScreen = ({navigation}) => {
         onClose={() => setVisible(false)}
         asUser={() => {
           setVisible(false);
+          StorageService.saveItem(
+            StorageService.STORAGE_KEYS.USER_TYPE,
+            'USER',
+          );
           navigation.navigate('HomeScreen');
         }}
         asVendor={() => {
           setVisible(false);
+          StorageService.saveItem(
+            StorageService.STORAGE_KEYS.USER_TYPE,
+            'VENDOR',
+          );
+
           navigation.navigate('VendorHomeScreen');
         }}
       />
@@ -356,7 +370,7 @@ const styles = StyleSheet.create({
   },
   warning: {
     color: Color.red,
-    textAlign: "center",
+    textAlign: 'center',
     fontSize: scale(14),
   },
 });

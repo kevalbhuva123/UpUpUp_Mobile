@@ -51,4 +51,6 @@ export default IMAGES = {
   AboutUs: require('./info.png'),
   Privacy: require('./danger.png'),
   AboutApp: require('./mobile-service.png'),
+  Add: require('./add.png'),
+  Empty: require('./empty-box.png'),
 };
