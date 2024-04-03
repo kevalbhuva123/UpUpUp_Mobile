@@ -17,7 +17,7 @@ import auth from '@react-native-firebase/auth';
 import StorageService from '../../utlis/StorageService';
 import Request from '../../api/Request';
 import apiConfigs from '../../api/apiconfig';
-import { ActivityLoader } from '../../Components/Loader/Loader';
+import {ActivityLoader} from '../../Components/Loader/Loader';
 import AlertModal from '../../Components/AlertModal/AlertModal';
 
 const LoginScreen = ({navigation}) => {
@@ -25,16 +25,15 @@ const LoginScreen = ({navigation}) => {
   const [UserId, setUserId] = useState('');
   const [invalidPhoneNumber, setInvalidPhoneNumber] = useState(false);
   const [warning, setWarning] = useState('');
-  const [Loader, setLoader] = useState(false); 
-  const [modalVisible, setModalVisible] = useState(false); 
+  const [Loader, setLoader] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [otpSentSuccessfully, setOtpSentSuccessfully] = useState(false);
 
   const sendVerificationCode = async () => {
-    
     const WarningMessageTimer = () => {
       const timeoutId = setTimeout(() => {
-        setWarning("");
+        setWarning('');
       }, 3000);
       return () => clearTimeout(timeoutId);
     };
@@ -68,7 +67,7 @@ const LoginScreen = ({navigation}) => {
         .then(async data => {
           setLoader(false);
           // Handle API response
-          const id = (data.Data.id)
+          const id = data.Data.id;
           setUserId(id);
           if (data) {
             setOtpSentSuccessfully(true);
@@ -78,7 +77,6 @@ const LoginScreen = ({navigation}) => {
               StorageService.STORAGE_KEYS.USER_DETAILS,
               data.Data,
             );
-            
           } else {
             setAlertMessage('Failed to send OTP. Please try again later.');
             setModalVisible(true);
@@ -166,10 +164,14 @@ const LoginScreen = ({navigation}) => {
       <ActivityLoader loading={Loader} />
       <AlertModal
         modalVisible={modalVisible}
-        onClose={() => {setModalVisible(false);
-        if(otpSentSuccessfully==true){
-          navigation.navigate('OTPverifyScreen', {phoneNumber: phoneNumber , UserId : UserId});
-        }
+        onClose={() => {
+          setModalVisible(false);
+          if (otpSentSuccessfully == true) {
+            navigation.navigate('OTPverifyScreen', {
+              phoneNumber: phoneNumber,
+              UserId: UserId,
+            });
+          }
         }}
         content={alertMessage}
       />
@@ -263,7 +265,7 @@ const styles = StyleSheet.create({
   },
   phoneInput: {
     color: Color.black,
-    fontSize: scale(18),
+    fontSize: scale(16),
     width: '100%',
     fontFamily: Fonts.bold,
   },
