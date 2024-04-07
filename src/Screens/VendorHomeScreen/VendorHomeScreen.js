@@ -57,7 +57,11 @@ const VendorHomeScreen = ({navigation}) => {
               <Text style={styles.subText}>+91 9992223334</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.editBtn}>
+          <TouchableOpacity
+            style={styles.editBtn}
+            onPress={() => {
+              navigation.navigate('MyProfileEdit');
+            }}>
             <Image source={IMAGES.Pencil} style={styles.editIcon} />
           </TouchableOpacity>
         </View>

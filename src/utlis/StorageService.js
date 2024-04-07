@@ -56,6 +56,7 @@ export default class StorageService {
       this.STORAGE_KEYS.AUTH_TOKEN,
       this.STORAGE_KEYS.USER_PROFILE_SETUP_STATUS,
       this.STORAGE_KEYS.USER_DETAILS,
+      this.STORAGE_KEYS.USER_TYPE,
     ];
     return AsyncStorage.multiRemove(keys);
   }

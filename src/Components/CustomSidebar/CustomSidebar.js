@@ -23,7 +23,7 @@ const SidebarOptionsForUser = [
   {
     id: 1,
     title: 'My Profile',
-    navigation: '',
+    navigation: 'MyProfile',
     icon: IMAGES.Profile,
   },
   {
@@ -74,7 +74,7 @@ const SidebarOptionsForVendor = [
   {
     id: 1,
     title: 'My Profile',
-    navigation: '',
+    navigation: 'MyProfile',
     icon: IMAGES.Profile,
   },
   {
@@ -137,13 +137,23 @@ const CustomSidebar = props => {
     setUserType(userType);
   };
 
-  const logoutUser = () => {
+  const logoutUser = async () => {
+    try {
+      await StorageService.clear();
+    } catch (err) {
+      console.log(err);
+    }
     navigation.replace('LoginScreen');
   };
 
   const renderItem = ({item}) => {
     return (
-      <TouchableOpacity style={styles.item}>
+      <TouchableOpacity
+        style={styles.item}
+        onPress={() => {
+          onClose(),
+            item.navigation ? navigation.navigate(item.navigation) : null;
+        }}>
         <Image style={styles.icon} source={item.icon} />
         <Text style={styles.itemText}>{item.title}</Text>
       </TouchableOpacity>

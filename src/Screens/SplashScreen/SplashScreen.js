@@ -1,19 +1,32 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Image} from 'react-native';
 import Color from '../../Constants/Color';
 import IMAGES from '../../Assets/Icons/index';
 import {scale} from '../../utlis/Scale';
+import StorageService from '../../utlis/StorageService';
+
 const SplashScreen = ({navigation}) => {
   useEffect(() => {
-    // Simulate a delay, e.g., fetching data or performing initialization
     const splashTimer = setTimeout(() => {
-      // Navigate to the main screen or any other screen after the delay
-      navigation.replace('LoginScreen'); // Replace with your actual main screen name
+      userDetails();
     }, 3000); // Adjust the delay as needed
 
     // Clear the timer when the component unmounts
     return () => clearTimeout(splashTimer);
   }, []);
+
+  const userDetails = async () => {
+    let userType = await StorageService.getItem(
+      StorageService.STORAGE_KEYS.USER_TYPE,
+    );
+    if (userType == 'VENDOR') {
+      navigation.replace('VendorHomeScreen');
+    } else if (userType == 'USER') {
+      navigation.replace('HomeScreen');
+    } else {
+      navigation.replace('LoginScreen');
+    }
+  };
 
   return (
     <View style={styles.container}>

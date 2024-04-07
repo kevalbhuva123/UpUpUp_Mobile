@@ -53,4 +53,8 @@ export default IMAGES = {
   AboutApp: require('./mobile-service.png'),
   Add: require('./add.png'),
   Empty: require('./empty-box.png'),
+  Setting: require('./setting.png'),
+  Camera: require('./photo.png'),
+  Cam: require('./camera.png'),
+  Gallery: require('./gallery.png'),
 };
