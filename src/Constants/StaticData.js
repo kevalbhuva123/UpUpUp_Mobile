@@ -577,7 +577,7 @@ export const VenueHome = [
     id: 3,
     image: IMAGES.Leave,
     name: 'MY\nHOLIDAY',
-    navigation: 'HostMatchScreen',
+    navigation: 'MyHolidays',
   },
   {
     id: 4,
@@ -596,5 +596,56 @@ export const VenueHome = [
     image: IMAGES.Offer,
     name: 'MY\nOFFERS',
     navigation: 'HostMatchScreen',
+  },
+];
+
+export const ownerVenues = [
+  {key: 'MK Gandhi Stadium', value: 'MK Gandhi Stadium'},
+  {key: 'Lalbhai Stadium', value: 'Lalbhai Stadium'},
+  {key: 'MK Gandhi Stadium', value: 'MK Gandhi Stadium'},
+  {key: 'Lalbhai Stadium', value: 'Lalbhai Stadium'},
+  {key: 'MK Gandhi Stadium', value: 'MK Gandhi Stadium'},
+  {key: 'Lalbhai Stadium', value: 'Lalbhai Stadium'},
+  {key: 'MK Gandhi Stadium', value: 'MK Gandhi Stadium'},
+  {key: 'Lalbhai Stadium', value: 'Lalbhai Stadium'},
+  {key: 'MK Gandhi Stadium', value: 'MK Gandhi Stadium'},
+  {key: 'Lalbhai Stadium', value: 'Lalbhai Stadium'},
+];
+
+export const HolidaysList = [
+  {
+    id: 1,
+    venue: 'Chinnaswami Stadium',
+    Date: '2024-04-25',
+    Reason:
+      'Lorem epsum no reason construction re-build etc pitch pool renovation',
+  },
+  {
+    id: 2,
+    venue: 'Chinnaswami Stadium',
+    Date: '2024-04-25',
+    Reason:
+      'Lorem epsum no reason construction re-build etc pitch pool renovation',
+  },
+  {
+    id: 3,
+    venue: 'Chinnaswami Stadium',
+    Date: '2024-04-25',
+    Reason:
+      'Lorem epsum no reason construction re-build etc pitch pool renovation',
+  },
+  {
+    id: 4,
+    venue: 'Chinnaswami Stadium',
+    Date: '2024-04-25',
+    Reason:
+      'Lorem epsum no reason construction re-build etc pitch pool renovation',
+  },
+  {
+    id: 5,
+    venue: 'Chinnaswami Stadium',
+    Date: '2024-04-25',
+    Reason:
+      'Lorem epsum no reason construction re-build etc pitch pool renovation',
   },
 ];

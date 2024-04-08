@@ -9,7 +9,7 @@ import {
   Linking,
   FlatList,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Color from '../../Constants/Color';
 import {scale, verticalScale} from '../../utlis/Scale';
 import {useNavigation} from '@react-navigation/native';
@@ -17,18 +17,19 @@ import Fonts from '../../Constants/Fonts';
 import IMAGES from '../../Assets/Icons/index';
 import LogoutModal from '../LogoutModal';
 import DeviceInfo from 'react-native-device-info';
+import StorageService from '../../utlis/StorageService';
 
-const SidebarOptions = [
+const SidebarOptionsForUser = [
   {
     id: 1,
     title: 'My Profile',
-    navigation: '',
+    navigation: 'MyProfile',
     icon: IMAGES.Profile,
   },
   {
     id: 2,
     title: 'Home',
-    navigation: '',
+    navigation: 'HomeScreen',
     icon: IMAGES.Home,
   },
   {
@@ -40,13 +41,64 @@ const SidebarOptions = [
   {
     id: 4,
     title: 'Feedback',
-    navigation: '',
+    navigation: 'FeedBackScreen',
     icon: IMAGES.Feedback,
   },
   {
     id: 5,
     title: 'Help',
+    navigation: 'HelpScreen',
+    icon: IMAGES.Call,
+  },
+  {
+    id: 6,
+    title: 'About Us',
     navigation: '',
+    icon: IMAGES.AboutUs,
+  },
+  {
+    id: 7,
+    title: 'Privacy & Terms',
+    navigation: '',
+    icon: IMAGES.Privacy,
+  },
+  {
+    id: 8,
+    title: 'About App',
+    navigation: '',
+    icon: IMAGES.AboutApp,
+  },
+];
+
+const SidebarOptionsForVendor = [
+  {
+    id: 1,
+    title: 'My Profile',
+    navigation: 'MyProfile',
+    icon: IMAGES.Profile,
+  },
+  {
+    id: 2,
+    title: 'Home',
+    navigation: 'VendorHomeScreen',
+    icon: IMAGES.Home,
+  },
+  {
+    id: 3,
+    title: 'Notifications',
+    navigation: '',
+    icon: IMAGES.Notification,
+  },
+  {
+    id: 4,
+    title: 'Feedback',
+    navigation: 'FeedBackScreen',
+    icon: IMAGES.Feedback,
+  },
+  {
+    id: 5,
+    title: 'Help',
+    navigation: 'HelpScreen',
     icon: IMAGES.Call,
   },
   {
@@ -73,14 +125,35 @@ const CustomSidebar = props => {
   const navigation = useNavigation();
   const [modalVisible, setmodalVisible] = useState(false);
   const {hamburgerVisible, onClose} = props;
+  const [userType, setUserType] = useState('');
+  useEffect(() => {
+    userDetails();
+  }, []);
 
-  const logoutUser = () => {
+  const userDetails = async () => {
+    let userType = await StorageService.getItem(
+      StorageService.STORAGE_KEYS.USER_TYPE,
+    );
+    setUserType(userType);
+  };
+
+  const logoutUser = async () => {
+    try {
+      await StorageService.clear();
+    } catch (err) {
+      console.log(err);
+    }
     navigation.replace('LoginScreen');
   };
 
   const renderItem = ({item}) => {
     return (
-      <TouchableOpacity style={styles.item}>
+      <TouchableOpacity
+        style={styles.item}
+        onPress={() => {
+          onClose(),
+            item.navigation ? navigation.navigate(item.navigation) : null;
+        }}>
         <Image style={styles.icon} source={item.icon} />
         <Text style={styles.itemText}>{item.title}</Text>
       </TouchableOpacity>
@@ -102,7 +175,11 @@ const CustomSidebar = props => {
             <View style={styles.allView}>
               <View style={{flex: 1}}>
                 <FlatList
-                  data={SidebarOptions}
+                  data={
+                    userType == 'VENDOR'
+                      ? SidebarOptionsForVendor
+                      : SidebarOptionsForUser
+                  }
                   renderItem={renderItem}
                   keyExtractor={item => item.id.toString()}
                   style={{flexGrow: 1}}

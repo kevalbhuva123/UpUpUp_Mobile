@@ -11,6 +11,7 @@ import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {scale} from '../../utlis/Scale';
 import IMAGES from '../../Assets/Icons/index';
+import Fonts from '../../Constants/Fonts';
 
 const MyAreaScreen = ({navigation}) => {
   const options = [
@@ -124,7 +125,7 @@ const styles = StyleSheet.create({
   headingText: {
     fontSize: scale(16),
     color: Color.black,
-    fontWeight: '600',
+    fontFamily: Fonts.bold,
   },
   checkedIcon: {
     height: scale(20),
