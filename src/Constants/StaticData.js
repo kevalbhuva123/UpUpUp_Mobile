@@ -565,13 +565,13 @@ export const VenueHome = [
     id: 1,
     image: IMAGES.MyBookings,
     name: 'MY\nBOOKINGS',
-    navigation: 'HostMatchScreen',
+    navigation: 'MyBookingVendor',
   },
   {
     id: 2,
     image: IMAGES.BookVenue,
     name: 'MY\nVENUE',
-    navigation: 'HostMatchScreen',
+    navigation: 'MyVenueVendorScreen',
   },
   {
     id: 3,

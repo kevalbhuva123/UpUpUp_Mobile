@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {scale} from '../../utlis/Scale';
@@ -15,9 +15,37 @@ import IMAGES from '../../Assets/Icons/index';
 import LinearGradient from 'react-native-linear-gradient';
 import {Sports} from '../../Constants/StaticData';
 import Fonts from '../../Constants/Fonts';
+import apiConfigs from '../../api/apiconfig';
 
 const MySportScreen = ({navigation}) => {
   const [editEnable, setEditEnable] = useState(false);
+  const [sportsData, setSportsData] = useState([]);
+
+  useEffect(() => {
+    fetchSportsData();
+  }, []);
+
+  const fetchSportsData = () => {
+    fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Sports/index`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.ErrorCode === 0) {
+          const formattedData = data.Data.map(item => ({
+            id: item.id,
+            name: item.sports,
+            image: { uri: item.image },
+          }));
+          setSportsData(formattedData);
+        }
+      })
+      .catch(error => console.error('Error fetching sports data:', error));
+  };
+
   const renderItem = ({item}) =>
     item.image && (
       <TouchableOpacity style={styles.item} disabled={!editEnable}>
@@ -49,7 +77,7 @@ const MySportScreen = ({navigation}) => {
               </TouchableOpacity>
             </View>
             <FlatList
-              data={Sports}
+              data={sportsData}
               renderItem={renderItem}
               keyExtractor={item => item.id.toString()}
               numColumns={3}

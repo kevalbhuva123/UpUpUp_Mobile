@@ -6,18 +6,70 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {Venues} from '../../Constants/StaticData';
 import {scale} from '../../utlis/Scale';
 import IMAGES from '../../Assets/Icons/index';
 import Fonts from '../../Constants/Fonts';
+import StorageService from '../../utlis/StorageService';
+import apiConfigs from '../../api/apiconfig';
 
 const BookVenueScreen = ({navigation}) => {
-  const renderImageItem = ({item}) => (
-    <Image style={styles.image} source={item.image} />
-  );
+  const [venues, setVenues] = useState([]);
+  const [UserId, setUserId] = useState(779);
+  const [venueId, setvenueId] = useState("");
+  const [sports, setsports] = useState(true);
+  const [area, setarea] = useState(true);
+
+  useEffect(() => {
+    // Fetch venues data when the component mounts
+    fetchVenues();
+  }, []);
+
+  const fetchVenues = async () => {
+    try {
+      // Retrieve user_id from storage
+      // const userData = await StorageService.getItem(
+      // //   StorageService.STORAGE_KEYS.USER_DETAILS
+      // // );
+      const UserID = "779";
+      // setUserId(userId.user_id);
+      // Create formData object
+      const formData = new FormData();
+      formData.append('user_id', UserID);
+      formData.append('venue_id', venueId);
+      formData.append('sports', sports);
+      formData.append('area', area);
+
+      // Make API request with formData and content type 'multipart/form-data'
+      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Venue/index`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+
+      .then(response => response.json())
+      .then(data => {
+        if (data.ErrorCode === 0) {
+          setVenues(data.Data);
+          console.error('succuss',)
+        } else {
+          console.error('Failed to fetch venues:', data.message);
+        }
+      })
+      .catch(error => console.error('Error fetching venues:', error));
+  } catch (error) {
+    console.error('Error fetching venues:', error);
+  }
+};
+
+const renderImageItem = ({ item }) => (
+  <Image style={styles.image} source={{ uri: item }} />
+);
 
   const renderRemainingCount = item => {
     const remainingCount = item.length - 4;
@@ -34,21 +86,20 @@ const BookVenueScreen = ({navigation}) => {
         onPress={() => {
           navigation.navigate('VenueDetailScreen');
         }}>
-        <Image source={item.venueImage} style={styles.venueImage} />
-        <Text style={styles.heading}>{item.venueName}</Text>
+        <Image source={{ uri: item.venue_image[0] }} style={styles.venueImage} />
+        <Text style={styles.heading}>{item.venue}</Text>
         <View style={styles.iconTextView}>
           <Image source={IMAGES.Location} style={styles.icons} />
-          <Text style={styles.subText}>{item.location}</Text>
+          <Text style={styles.subText}>{item.area}</Text>
         </View>
         <View style={styles.container}>
           <View style={styles.subContainer}>
             <FlatList
-              data={item.availableSports.slice(0, 4)}
+              data={item.venue_sports}
               renderItem={renderImageItem}
-              keyExtractor={item => item.id}
+              keyExtractor={(item, index) => index.toString()}
               horizontal
             />
-            {renderRemainingCount(item.availableSports)}
           </View>
           <View style={styles.bookNow}>
             <Text style={styles.buttonText}>BOOK NOW</Text>
@@ -64,10 +115,10 @@ const BookVenueScreen = ({navigation}) => {
         onBackPress={() => navigation.goBack()}
       />
       <View style={styles.master}>
-        <FlatList
-          data={Venues}
+      <FlatList
+          data={venues}
           renderItem={renderVenues}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={(item, index) => index.toString()}
           style={{flexGrow: 1}}
           contentContainerStyle={{
             padding: scale(10),

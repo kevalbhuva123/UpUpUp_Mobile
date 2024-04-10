@@ -28,6 +28,8 @@ import MyHolidays from '../Screens/MyHolidays';
 import AddHoliday from '../Screens/AddHoliday';
 import MyProfile from '../Screens/MyProfile';
 import MyProfileEdit from '../Screens/MyProfileEdit';
+import MyVenueVendorScreen from '../Screens/MyVenueVendorScreen';
+import MyBookingVendor from '../Screens/MyBookingVendor';
 
 const Stack = createNativeStackNavigator();
 
@@ -63,6 +65,8 @@ const Navigator = () => {
         <Stack.Screen name="AddHoliday" component={AddHoliday} />
         <Stack.Screen name="MyProfile" component={MyProfile} />
         <Stack.Screen name="MyProfileEdit" component={MyProfileEdit} />
+        <Stack.Screen name="MyVenueVendorScreen" component={MyVenueVendorScreen} />
+        <Stack.Screen name="MyBookingVendor" component={MyBookingVendor} />
       </Stack.Navigator>
     </NavigationContainer>
   );

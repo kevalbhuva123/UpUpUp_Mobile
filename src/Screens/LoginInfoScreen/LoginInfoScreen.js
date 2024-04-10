@@ -7,7 +7,7 @@ import {
   ScrollView,
   FlatList,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {Dropdown} from 'react-native-element-dropdown';
@@ -15,8 +15,80 @@ import IMAGES from '../../Assets/Icons/index';
 import {Regions, Sports} from '../../Constants/StaticData';
 import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
+import apiConfigs from '../../api/apiconfig';
+
 const LoginInfoScreen = ({navigation}) => {
   const [region, setRegion] = useState('');
+  const [regionsData, setRegionsData] = useState([]);
+  const [areasData, setAreasData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [options, setOptions] = useState([]);
+  const [selectedOptions, setSelectedOptions] = useState([]);
+
+  useEffect(() => {
+    // Fetch region data
+    fetchRegionData();
+    // Fetch area/place data for region with ID 19
+    fetchAreaData(19);
+  }, []);
+
+  const fetchRegionData = () => {
+    setLoading(true);
+    fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Place/region`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.ErrorCode === 0) {
+          setRegionsData(
+            data.Data.map(item => ({id: item.id, label: item.location})),
+          );
+          setLoading(false);
+        } else {
+          setError(data.ErrorMessage);
+          setLoading(false);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching region data:', error);
+        setError(error.message);
+        setLoading(false);
+      });
+  };
+
+  const fetchAreaData = () => {
+    setLoading(true);
+    fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Place/area/19`, {
+      method: 'GET', // Assuming this endpoint supports GET method
+      headers: {
+        'Content-Type': 'application/json', // Change content type to application/json
+      },
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.ErrorCode === 0) {
+          setAreasData(
+            data.Data
+          );
+        }
+      })
+      .catch(error => console.error('Error fetching data:', error));
+  };
+
+
+  const renderItem2 = ({item}) => {
+    return (
+    <View
+      style={{padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc'}}>
+      <Text style={{fontSize: 16, fontWeight: 'bold', color:'black'}}>{item.location}</Text>
+      <Text style={{fontSize: 14, color:'black'}}>{item.area}</Text>
+    </View>
+  );
+    };
 
   const renderRegion = item => {
     return (
@@ -61,7 +133,7 @@ const LoginInfoScreen = ({navigation}) => {
             selectedTextStyle={styles.selectedTextStyle}
             inputSearchStyle={styles.inputSearchStyle}
             iconStyle={styles.iconStyle}
-            data={Regions}
+            data={regionsData}
             search
             maxHeight={scale(300)}
             labelField="label"
@@ -89,17 +161,23 @@ const LoginInfoScreen = ({navigation}) => {
             />
           </View>
           <Text style={styles.heading}>Choose Area/ Place</Text>
-          <View style={styles.mainBox}>
+          <View style={styles.area1}>
             <FlatList
-              data={Sports}
-              renderItem={renderItem}
-              keyExtractor={item => item.id.toString()}
-              numColumns={4}
-              contentContainerStyle={{
-                backgroundColor: Color.white,
-                width: '100%',
-                borderRadius: scale(10),
-              }}
+              data={areasData}
+              renderItem={renderItem2}
+              keyExtractor={item => item.id}
+              ListEmptyComponent={() => (
+                <View
+                  style={{
+                    flex: 1,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                  <Text>No data available</Text>
+                </View>
+              )}
+              refreshing={loading}
+              onRefresh={fetchAreaData}
             />
           </View>
         </ScrollView>
@@ -121,6 +199,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Color.background,
   },
+  area1: {
+    flex: 1,
+    backgroundColor: Color.background,
+    paddingHorizontal: scale(20),
+    paddingVertical: scale(20),
+  },
   heading: {
     fontFamily: Fonts.bold,
     fontSize: scale(14),
@@ -133,6 +217,12 @@ const styles = StyleSheet.create({
     width: scale(16),
     resizeMode: 'contain',
     tintColor: Color.subBg,
+  },
+  unCheckedIcon: {
+    height: scale(20),
+    width: scale(20),
+    resizeMode: 'contain',
+    tintColor: Color.lightGrey,
   },
   dropdown: {
     height: scale(40),

@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,26 +9,30 @@ import {
 } from 'react-native';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
-import {scale} from '../../utlis/Scale';
+import { scale } from '../../utlis/Scale';
 import IMAGES from '../../Assets/Icons/index';
 import Fonts from '../../Constants/Fonts';
+import apiConfigs from '../../api/apiconfig';
 
-const MyAreaScreen = ({navigation}) => {
-  const options = [
-    {id: 1, label: 'Kaloor'},
-    {id: 2, label: 'Nettoor'},
-    {id: 3, label: 'Kadavantra'},
-    {id: 4, label: 'Palluruthy'},
-    {id: 5, label: 'Ernakulam'},
-    {id: 6, label: 'Fort Kochi'},
-    {id: 7, label: 'Thrissur'},
-    {id: 8, label: 'Munnar'},
-    {id: 9, label: 'Ernakulam'},
-    {id: 10, label: 'Fort Kochi'},
-    {id: 11, label: 'Thrissur'},
-    {id: 12, label: 'Munnar'},
-  ];
+const MyAreaScreen = ({ navigation }) => {
+  const [options, setOptions] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState([]);
+
+  useEffect(() => {
+    fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Place/region`, {
+      method: 'GET', // Assuming this endpoint supports GET method
+      headers: {
+        'Content-Type': 'application/json', // Change content type to application/json
+      },
+    })
+      .then(response => response.json())
+      .then(data => {
+        if (data.ErrorCode === 0) {
+          setOptions(data.Data.map(item => ({ id: item.id, label: item.location })));
+        }
+      })
+      .catch(error => console.error('Error fetching data:', error));
+  }, []);
 
   const toggleOption = optionId => {
     if (selectedOptions.includes(optionId)) {
@@ -71,7 +75,7 @@ const MyAreaScreen = ({navigation}) => {
         />
         <TouchableOpacity
           onPress={() => {
-            navigation.navigate('OTPverifyScreen');
+            navigation.navigate('LoginInfoScreen');
           }}
           style={styles.loginBtn}>
           <Text style={styles.btnText}>FINISH</Text>
