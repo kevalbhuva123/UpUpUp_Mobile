@@ -595,7 +595,7 @@ export const VenueHome = [
     id: 6,
     image: IMAGES.Offer,
     name: 'MY\nOFFERS',
-    navigation: 'HostMatchScreen',
+    navigation: 'VendorMyOfferScreen',
   },
 ];
 

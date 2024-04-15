@@ -57,4 +57,5 @@ export default IMAGES = {
   Camera: require('./photo.png'),
   Cam: require('./camera.png'),
   Gallery: require('./gallery.png'),
+  Down: require('./down.png'),
 };
