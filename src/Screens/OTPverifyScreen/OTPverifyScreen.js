@@ -33,7 +33,7 @@ const OTPverifyScreen = ({navigation}) => {
   const textInputRef = React.createRef(null);
   const route = useRoute();
   const [UserId, setUserId] = useState(
-    route.params.UserId ? route.params.UserId : '',
+    route.params?.UserId ? route.params?.UserId : '',
   );
   const [value, setValue] = useState('');
   const [warning, setWarning] = useState('');
@@ -47,8 +47,8 @@ const OTPverifyScreen = ({navigation}) => {
     setValue,
   });
   useEffect(() => {
-    if (route.params && route.params.UserId) {
-      setUserId(route.params.UserId);
+    if (route.params && route.params?.UserId) {
+      setUserId(route.params?.UserId);
     }
     textInputRef.current?.focus();
     setValue('');

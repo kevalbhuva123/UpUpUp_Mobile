@@ -61,7 +61,7 @@ const VendorMyOfferScreen = ({navigation}) => {
   return (
     <View style={styles.main}>
       <CustomHeader
-        heading={'Match Hosting'}
+        heading={'My Offers'}
         onBackPress={() => navigation.goBack()}
       />
       <View style={styles.master}>
