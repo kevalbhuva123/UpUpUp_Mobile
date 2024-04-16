@@ -1,4 +1,5 @@
 import {
+  Dimensions,
   FlatList,
   Image,
   StyleSheet,
@@ -8,14 +9,16 @@ import {
 } from 'react-native';
 import React, {useState} from 'react';
 import Color from '../../Constants/Color';
-import {HomeData} from '../../Constants/StaticData';
+import {HomeData, Venues} from '../../Constants/StaticData';
 import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
 import IMAGES from '../../Assets/Icons/index';
 import CustomSidebar from '../../Components/CustomSidebar';
-// import CustomSidebar from '../../Components/CustomSidebar';
+import Carousel from 'react-native-reanimated-carousel';
 
 const HomeScreen = ({navigation}) => {
+  const width = Dimensions.get('window').width;
+
   const [hamburgerVisible, sethamburgerVisible] = useState(false);
 
   const onClose = () => {
@@ -48,27 +51,51 @@ const HomeScreen = ({navigation}) => {
           }}>
           <Image source={IMAGES.Menu} style={styles.menu} />
         </TouchableOpacity>
-        <View style={styles.profileView}>
-          <Image source={IMAGES.Person} style={styles.profile} />
-          <View style={styles.detailContainer}>
-            <Text style={styles.firstName}>Keval</Text>
-            <Text style={styles.lastName}>Bhuva</Text>
-            <View style={styles.iconTextView}>
-              <Image source={IMAGES.Call} style={styles.icons} />
-              <Text style={styles.subText}>+91 9992223334</Text>
-            </View>
-          </View>
-          <TouchableOpacity style={styles.editBtn}>
-            <Image source={IMAGES.Pencil} style={styles.editIcon} />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          style={styles.menuBtn}
+          onPress={() => {
+            navigation.navigate('MyProfile');
+          }}>
+          <Image source={IMAGES.Person} style={styles.editIcon} />
+        </TouchableOpacity>
       </View>
       <View style={styles.master}>
+        <Carousel
+          loop
+          mode="parallax"
+          style={{backgroundColor: Color.main}}
+          width={width}
+          height={scale(200)}
+          autoPlay={true}
+          data={Venues}
+          scrollAnimationDuration={1000}
+          onSnapToItem={index => {}}
+          renderItem={({item, index}) => (
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                borderWidth: scale(0.5),
+                justifyContent: 'center',
+                borderRadius: scale(10),
+                borderColor: Color.main,
+              }}>
+              <Image
+                source={item.venueImage}
+                style={{
+                  height: '100%',
+                  width: '100%',
+                  resizeMode: 'cover',
+                  borderRadius: scale(10),
+                }}
+              />
+            </TouchableOpacity>
+          )}
+        />
         <FlatList
           data={HomeData}
           renderItem={renderHomes}
           keyExtractor={item => item.id.toString()}
-          style={{flexGrow: 1}}
+          style={{flex: 1, marginTop: scale(-250)}}
           contentContainerStyle={{
             paddingHorizontal: scale(10),
             paddingVertical: scale(10),
@@ -94,12 +121,16 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    flex: 0.4,
     backgroundColor: Color.main,
-    padding: scale(20),
+    paddingHorizontal: scale(20),
+    paddingTop: scale(20),
+    paddingBottom: scale(10),
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   master: {
-    flex: 0.6,
+    flex: 1,
     backgroundColor: Color.background,
   },
   profileView: {
@@ -146,7 +177,7 @@ const styles = StyleSheet.create({
   menuBtn: {
     height: scale(35),
     width: scale(35),
-    paddingTop: scale(20),
+    // paddingTop: scale(20),
   },
   iconTextView: {
     flexDirection: 'row',
@@ -175,16 +206,16 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
   },
   editIcon: {
-    height: scale(20),
-    width: scale(20),
-    tintColor: Color.white,
-    resizeMode: 'contain',
+    height: scale(30),
+    width: scale(30),
+    resizeMode: 'cover',
+    borderRadius: scale(100),
   },
   detailContainer: {
     paddingVertical: scale(10),
   },
   editBtn: {
-    paddingVertical: scale(10),
-    paddingLeft: scale(10),
+    height: scale(35),
+    width: scale(35),
   },
 });

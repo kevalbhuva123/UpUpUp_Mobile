@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
   },
   phoneInput: {
     color: Color.black,
-    fontSize: scale(18),
+    fontSize: scale(16),
     width: '100%',
     fontFamily: Fonts.bold,
   },
