@@ -38,7 +38,7 @@ const MySportScreen = ({navigation}) => {
           const formattedData = data.Data.map(item => ({
             id: item.id,
             name: item.sports,
-            image: { uri: item.image },
+            image: {uri: item.image},
           }));
           setSportsData(formattedData);
         }
@@ -46,16 +46,23 @@ const MySportScreen = ({navigation}) => {
       .catch(error => console.error('Error fetching sports data:', error));
   };
 
-  const renderItem = ({item}) =>
-    item.image && (
-      <TouchableOpacity style={styles.item} disabled={!editEnable}>
-        <View style={styles.closeView}>
-          <Image source={IMAGES.Close} style={styles.closeIcon} />
-        </View>
-        <Image source={item.image} style={styles.sportIcon} />
-        <Text style={styles.label}>{item.name}</Text>
-      </TouchableOpacity>
+  const renderItem = ({item}) => {
+    console.log('>>>>>>>>>>>>>>', (item?.image?.uri).replace(/\s+/g, ''));
+    return (
+      item.image && (
+        <TouchableOpacity style={styles.item} disabled={!editEnable}>
+          <View style={styles.closeView}>
+            <Image source={IMAGES.Close} style={styles.closeIcon} />
+          </View>
+          <Image
+            source={{uri: (item?.image?.uri).replace(/\s+/g, '')}}
+            style={styles.sportIcon}
+          />
+          <Text style={styles.label}>{item.name}</Text>
+        </TouchableOpacity>
+      )
     );
+  };
 
   return (
     <View style={styles.main}>

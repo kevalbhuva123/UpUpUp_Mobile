@@ -87,6 +87,7 @@ const OTPverifyScreen = ({navigation}) => {
       // setLoader(true)
       .then(response => response.json())
       .then(data => {
+        console.log('>>>>DATA>>>>', data);
         setLoader(false);
         if (
           data &&
