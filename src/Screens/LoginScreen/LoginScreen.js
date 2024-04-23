@@ -29,6 +29,24 @@ const LoginScreen = ({navigation}) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [otpSentSuccessfully, setOtpSentSuccessfully] = useState(false);
+  const [confirm, setConfirm] = useState(null);
+
+  async function signIn() {
+    setLoader(true);
+    try {
+      const confirmation = await auth().signInWithPhoneNumber('+91 9924685972');
+      console.log('>>>>>>>>', confirmation);
+      setLoader(false);
+      setConfirm(confirmation);
+
+      // navigation.navigate('OTPverifyScreen', {
+      //   data: confirmation,
+      // });
+    } catch (error) {
+      setLoader(false);
+      console.log('>>>>ERROR>>>>', error);
+    }
+  }
 
   const sendVerificationCode = async () => {
     const WarningMessageTimer = () => {
@@ -100,6 +118,15 @@ const LoginScreen = ({navigation}) => {
     // For simplicity, let's assume valid if the number starts with '+91' and has 10 digits
     return /^(\+91\s?)?[0-9]{10}$/.test(number);
   };
+
+  async function confirmCode() {
+    try {
+      await confirm.confirm('1234');
+    } catch (error) {
+      console.log('Invalid code.');
+    }
+  }
+
   return (
     <View style={styles.main}>
       <View style={styles.head}>
@@ -144,7 +171,8 @@ const LoginScreen = ({navigation}) => {
           )}
           <TouchableOpacity
             onPress={() => {
-              sendVerificationCode();
+              // sendVerificationCode();
+              signIn();
             }}
             style={styles.loginBtn}>
             <Text style={styles.btnText}>LOGIN</Text>
@@ -154,7 +182,8 @@ const LoginScreen = ({navigation}) => {
             <Text
               style={styles.createAcc}
               onPress={() => {
-                navigation.navigate('SignUpScreen');
+                // navigation.navigate('SignUpScreen');
+                confirmCode();
               }}>
               Create Account
             </Text>

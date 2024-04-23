@@ -27,7 +27,7 @@ import apiConfigs from '../../api/apiconfig';
 import AlertModal from '../../Components/AlertModal/AlertModal';
 import {ActivityLoader} from '../../Components/Loader/Loader';
 import StorageService from '../../utlis/StorageService';
-
+import auth from '@react-native-firebase/auth';
 const OTPverifyScreen = ({navigation}) => {
   const ref = useBlurOnFulfill({value, cellCount: 4});
   const textInputRef = React.createRef(null);
@@ -110,6 +110,18 @@ const OTPverifyScreen = ({navigation}) => {
         setAlertMessage('An unexpected error occurred. Please try again.');
       });
   };
+
+  async function confirmCode() {
+    try {
+      await route.params.data.confirm('1111');
+      auth().onAuthStateChanged(user => {
+        console.log('>>>>>>>>>>>>>>>>', user);
+      });
+    } catch (error) {
+      console.log('Invalid code.');
+    }
+  }
+
   return (
     <View style={styles.main}>
       <View style={styles.head}>
@@ -185,8 +197,9 @@ const OTPverifyScreen = ({navigation}) => {
           {warning !== '' && <Text style={styles.warning}>{warning}</Text>}
           <TouchableOpacity
             onPress={() => {
-              onVerifyPressed();
-              // setVisible(true);
+              // onVerifyPressed();
+              // setVisible(true);/
+              confirmCode();
             }}
             style={styles.loginBtn}>
             <Text style={styles.btnText}>VERIFY OTP</Text>

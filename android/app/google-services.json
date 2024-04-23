@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "775614534091",
-    "project_id": "upupup-55b6f",
-    "storage_bucket": "upupup-55b6f.appspot.com"
+    "project_number": "833608849539",
+    "project_id": "upupupsports",
+    "storage_bucket": "upupupsports.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:775614534091:android:49994a3ad30160fde0264e",
+        "mobilesdk_app_id": "1:833608849539:android:6e4f19557f4b85b99be3b6",
         "android_client_info": {
           "package_name": "com.upupup"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBgxnfcfzp96Yin8agLxOD1q2K5ZZDz6_Q"
+          "current_key": "AIzaSyBRPBrYXO04HHqfaC6gMwYy8s76PoFTj3Q"
         }
       ],
       "services": {
