@@ -35,9 +35,9 @@ const LoginScreen = ({navigation}) => {
     setLoader(true);
     try {
       const confirmation = await auth().signInWithPhoneNumber('+91 9924685972');
-      console.log('>>>>>>>>', confirmation);
+      console.log('>>>>>>>>', confirmation.verificationId);
       setLoader(false);
-      setConfirm(confirmation);
+      setConfirm(confirmation.verificationId);
 
       // navigation.navigate('OTPverifyScreen', {
       //   data: confirmation,
@@ -48,14 +48,14 @@ const LoginScreen = ({navigation}) => {
     }
   }
 
-  const sendVerificationCode = async () => {
-    const WarningMessageTimer = () => {
-      const timeoutId = setTimeout(() => {
-        setWarning('');
-      }, 3000);
-      return () => clearTimeout(timeoutId);
-    };
+  const WarningMessageTimer = () => {
+    const timeoutId = setTimeout(() => {
+      setWarning('');
+    }, 3000);
+    return () => clearTimeout(timeoutId);
+  };
 
+  const sendVerificationCode = async () => {
     if (!phoneNumber.trim()) {
       setWarning('Please enter your mobile number.');
       WarningMessageTimer();
@@ -83,21 +83,34 @@ const LoginScreen = ({navigation}) => {
       })
         .then(response => response.json())
         .then(async data => {
-          setLoader(false);
+          // setLoader(false);
           // Handle API response
+          console.log('>>>>>>>>', data);
+
           const id = data.Data.id;
           setUserId(id);
-          if (data) {
-            setOtpSentSuccessfully(true);
-            setAlertMessage('An OTP has been sent to your mobile number.');
-            setModalVisible(true);
-            await StorageService.saveItem(
-              StorageService.STORAGE_KEYS.USER_DETAILS,
-              data.Data,
+          try {
+            const confirmation = await auth().signInWithPhoneNumber(
+              '+91 ' + phoneNumber,
             );
-          } else {
-            setAlertMessage('Failed to send OTP. Please try again later.');
-            setModalVisible(true);
+            console.log('>>>>>>>>', confirmation.verificationId);
+            setLoader(false);
+            setConfirm(confirmation.verificationId);
+            if (data) {
+              setOtpSentSuccessfully(true);
+              setAlertMessage('An OTP has been sent to your mobile number.');
+              setModalVisible(true);
+              await StorageService.saveItem(
+                StorageService.STORAGE_KEYS.USER_DETAILS,
+                data.Data,
+              );
+            } else {
+              setAlertMessage('Failed to send OTP. Please try again later.');
+              setModalVisible(true);
+            }
+          } catch (error) {
+            setLoader(false);
+            console.log('>>>>ERROR>>>>', error);
           }
         })
         .catch(error => {
@@ -118,14 +131,6 @@ const LoginScreen = ({navigation}) => {
     // For simplicity, let's assume valid if the number starts with '+91' and has 10 digits
     return /^(\+91\s?)?[0-9]{10}$/.test(number);
   };
-
-  async function confirmCode() {
-    try {
-      await confirm.confirm('1234');
-    } catch (error) {
-      console.log('Invalid code.');
-    }
-  }
 
   return (
     <View style={styles.main}>
@@ -171,23 +176,23 @@ const LoginScreen = ({navigation}) => {
           )}
           <TouchableOpacity
             onPress={() => {
-              // sendVerificationCode();
-              signIn();
+              sendVerificationCode();
+              //signIn();
             }}
             style={styles.loginBtn}>
             <Text style={styles.btnText}>LOGIN</Text>
           </TouchableOpacity>
-          <Text style={styles.bottomText}>
+          {/* <Text style={styles.bottomText}>
             Don't have an account?{' '}
             <Text
               style={styles.createAcc}
               onPress={() => {
-                // navigation.navigate('SignUpScreen');
-                confirmCode();
+                navigation.navigate('SignUpScreen');
+                //verifyOTP();
               }}>
               Create Account
             </Text>
-          </Text>
+          </Text> */}
         </KeyboardAwareScrollView>
       </View>
       <ActivityLoader loading={Loader} />
@@ -197,6 +202,8 @@ const LoginScreen = ({navigation}) => {
           setModalVisible(false);
           if (otpSentSuccessfully == true) {
             navigation.navigate('OTPverifyScreen', {
+              data: confirm,
+
               phoneNumber: phoneNumber,
               UserId: UserId,
             });

@@ -19,6 +19,7 @@ import {launchCamera, launchImageLibrary} from 'react-native-image-picker';
 import IMAGES from '../../Assets/Icons/index';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import MediaModal from '../../Components/MediaModal';
+import apiConfigs from '../../api/apiconfig';
 
 const MyProfileEdit = ({navigation}) => {
   const [name, setName] = useState('');
@@ -26,6 +27,8 @@ const MyProfileEdit = ({navigation}) => {
   const [email, setEmail] = useState('');
   const [avatarSource, setAvatarSource] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [warning, setWarning] = useState('');
+  const [Loader, setLoader] = useState(false);
 
   const requestCameraPermission = async () => {
     if (Platform.OS === 'android') {
@@ -111,6 +114,37 @@ const MyProfileEdit = ({navigation}) => {
     });
   };
 
+  const WarningMessageTimer = () => {
+    const timeoutId = setTimeout(() => {
+      setWarning('');
+    }, 3000);
+    return () => clearTimeout(timeoutId);
+  };
+
+  const submitProfile = () => {
+    try {
+      const formdata = new FormData();
+      formdata.append('user_id', '2281');
+      formdata.append('name', 'Keval');
+      formdata.append('email', 'keval.bhuva@upsmartsolutions.com');
+
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Users/update_profile`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => console.log(result))
+        .catch(error => console.error(error));
+    } catch (error) {
+      console.log('Error:', error);
+    }
+  };
   return (
     <View style={styles.main}>
       <CustomHeader
@@ -157,7 +191,11 @@ const MyProfileEdit = ({navigation}) => {
             onChangeText={text => setEmail(text)}
             keyboardType="email-address"
           />
-          <TouchableOpacity onPress={() => {}} style={styles.loginBtn}>
+          <TouchableOpacity
+            onPress={() => {
+              submitProfile();
+            }}
+            style={styles.loginBtn}>
             <Text style={styles.btnText}>EDIT</Text>
           </TouchableOpacity>
         </View>

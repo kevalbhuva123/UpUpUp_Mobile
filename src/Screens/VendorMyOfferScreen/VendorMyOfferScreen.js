@@ -19,6 +19,8 @@ import {Sports, ownerVenues} from '../../Constants/StaticData';
 import DatePicker from 'react-native-date-picker';
 import Slider from '@react-native-community/slider';
 import moment from 'moment';
+import StorageService from '../../utlis/StorageService';
+import apiConfigs from '../../api/apiconfig';
 
 const VendorMyOfferScreen = ({navigation}) => {
   const [activeTab, setActiveTab] = useState(1);
@@ -36,11 +38,75 @@ const VendorMyOfferScreen = ({navigation}) => {
   const [endTime, setEndTime] = useState('');
   const [isFromSTime, setIsFromSTime] = useState(false);
   const [isFromETime, setIsFromETime] = useState(false);
+  const [venueList, setVenueList] = useState([]);
+  const [offerList, setOfferList] = useState([]);
+
+  useEffect(() => {
+    getVenueList();
+  }, []);
+
+  const getVenueList = async () => {
+    try {
+      let vendorDetails = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.VENDOR_DETAILS,
+      );
+
+      console.log('>>>Vendor Details>>>', vendorDetails);
+
+      const formdata = new FormData();
+      formdata.append('user_id', vendorDetails?.user_id);
+      formdata.append('venue_id', '');
+      formdata.append('sports', 'true');
+      formdata.append('area', 'true');
+
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Venue/index`, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+          console.log('>>>>VENUE Result:::', result);
+          setVenueList(result.Data);
+        })
+        .catch(error => console.error(error));
+    } catch (error) {
+      console.log('Error::', error);
+    }
+  };
+
+  const offersListById = id => {
+    try {
+      const formdata = new FormData();
+      formdata.append('venue_id', id);
+
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Offer/offerlist`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          console.log('>>>>RESULT OFFER>>>>', result);
+          setOfferList(result.Data);
+        })
+        .catch(error => console.error(error));
+    } catch (error) {
+      console.log('Error::', error);
+    }
+  };
 
   const renderVenues = item => {
     return (
       <View style={styles.item}>
-        <Text style={styles.textItem}>{item.value}</Text>
+        <Text style={styles.textItem}>{item.venue}</Text>
       </View>
     );
   };
@@ -91,19 +157,27 @@ const VendorMyOfferScreen = ({navigation}) => {
               selectedTextStyle={styles.selectedTextStyle}
               inputSearchStyle={styles.inputSearchStyle}
               iconStyle={styles.iconStyle}
-              data={ownerVenues}
+              data={venueList}
               search
               maxHeight={scale(300)}
-              labelField="key"
-              valueField="value"
+              labelField="id"
+              valueField="venue"
               placeholder="Select item"
               searchPlaceholder="Search..."
               value={selectedVenue}
               onChange={item => {
                 console.log('>>>>>>>', item);
-                setSelectedVenue(item.value);
+                offersListById(item?.id);
+                setSelectedVenue(item.venue);
               }}
               renderItem={renderVenues}
+            />
+            <FlatList
+              data={offerList}
+              renderItem={renderOffers}
+              ListEmptyComponent={EmptyComponent}
+              keyExtractor={item => item.id.toString()}
+              showsVerticalScrollIndicator={false}
             />
             <TouchableOpacity
               style={styles.addBtn}

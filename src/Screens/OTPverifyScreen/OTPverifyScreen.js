@@ -41,6 +41,7 @@ const OTPverifyScreen = ({navigation}) => {
   const [Loader, setLoader] = useState(false);
   const [modalVisible, setmodalVisible] = useState(false);
   const [OTPVerifySuccessfull, setOTPVerifySuccessfull] = useState(false);
+  const [isVendor, setIsVendor] = useState(false);
 
   const [props] = useClearByFocusCell({
     value,
@@ -66,61 +67,62 @@ const OTPverifyScreen = ({navigation}) => {
       setWarning('Please enter the OTP.');
       WarningMessageTimer();
       return;
-    } else if (value.trim().length !== 4) {
+    } else if (value.trim().length !== 6) {
       setWarning('Please enter a valid 4-digit OTP.');
       WarningMessageTimer();
       return;
     }
     setLoader(true);
     // Send OTP verification request to backend
-    const formData = new FormData();
-    formData.append('user_id', UserId);
-    formData.append('otp', value);
-
-    fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Login/otp_verify`, {
-      method: 'POST',
-      body: formData,
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    })
-      // setLoader(true)
-      .then(response => response.json())
-      .then(data => {
-        console.log('>>>>DATA>>>>', data);
-        setLoader(false);
-        if (
-          data &&
-          data.ErrorCode === 0 &&
-          data.Message === 'OTP Verified Successfully'
-        ) {
-          // OTP verification successful
-          setOTPVerifySuccessfull(true);
-          setmodalVisible(true);
-        } else {
-          // OTP verification failed
-          setOTPVerifySuccessfull(false);
-          setmodalVisible(true);
-        }
-      })
-      .catch(error => {
-        setLoader(false);
-        console.error('Error:', error);
-        // Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-        setAlertMessage('An unexpected error occurred. Please try again.');
-      });
-  };
-
-  async function confirmCode() {
+    console.log('>>>>', route.params?.data, '#########', value);
     try {
-      await route.params.data.confirm('1111');
-      auth().onAuthStateChanged(user => {
-        console.log('>>>>>>>>>>>>>>>>', user);
-      });
+      const credential = auth.PhoneAuthProvider.credential(
+        route.params?.data,
+        value,
+      );
+      await auth().signInWithCredential(credential);
+      console.log('Phone number verified successfully');
+      try {
+        let formData = new FormData();
+        console.log('>>>>>>>>PHONE>>>', route?.params?.phoneNumber);
+        formData.append('phone', route?.params?.phoneNumber);
+
+        fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Vendor/index`, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        })
+          .then(response => response.json())
+          .then(async data => {
+            console.log('>>>>VENDOR DATA>>>>>', data);
+            if (data == 'not exist') {
+              setIsVendor(false);
+            } else {
+              await StorageService.saveItem(
+                StorageService.STORAGE_KEYS.VENDOR_DETAILS,
+                data[0],
+              );
+              setIsVendor(true);
+            }
+            setOTPVerifySuccessfull(true);
+            setmodalVisible(true);
+            setLoader(false);
+          });
+      } catch (error) {
+        console.error('Error verifying OTP:', error);
+        setOTPVerifySuccessfull(false);
+        setmodalVisible(true);
+        setAlertMessage(error);
+      }
     } catch (error) {
-      console.log('Invalid code.');
+      console.error('Error verifying OTP:', error);
+      setOTPVerifySuccessfull(false);
+      setmodalVisible(true);
+      setAlertMessage(error);
     }
-  }
+  };
 
   return (
     <View style={styles.main}>
@@ -146,7 +148,7 @@ const OTPverifyScreen = ({navigation}) => {
           {Platform.OS == 'android' ? (
             <OTPInputView
               style={styles.OTPinput}
-              pinCount={4}
+              pinCount={6}
               code={value}
               onCodeChanged={v => {
                 setValue(v.replace(/[^0-9]/g, ''));
@@ -166,7 +168,7 @@ const OTPverifyScreen = ({navigation}) => {
               // Use `caretHidden={false}` when users can't paste a text value, because context menu doesn't appear
               value={value}
               onChangeText={setValue}
-              cellCount={4}
+              cellCount={6}
               autoFocus
               caretHidden={false}
               rootStyle={styles.codeFieldRoot}
@@ -197,9 +199,9 @@ const OTPverifyScreen = ({navigation}) => {
           {warning !== '' && <Text style={styles.warning}>{warning}</Text>}
           <TouchableOpacity
             onPress={() => {
-              // onVerifyPressed();
-              // setVisible(true);/
-              confirmCode();
+              onVerifyPressed();
+              // setVisible(true);
+              //confirmCode();
             }}
             style={styles.loginBtn}>
             <Text style={styles.btnText}>VERIFY OTP</Text>
@@ -209,10 +211,42 @@ const OTPverifyScreen = ({navigation}) => {
       <ActivityLoader loading={Loader} />
       <AlertModal
         modalVisible={modalVisible}
-        onClose={() => {
+        onClose={async () => {
           setmodalVisible(false);
-          if (OTPVerifySuccessfull == true) {
-            setVisible(true);
+          if (OTPVerifySuccessfull == true && isVendor == true) {
+            let userDetails = await StorageService.getItem(
+              StorageService.STORAGE_KEYS.USER_DETAILS,
+            );
+            if (userDetails?.id) {
+              setVisible(true);
+            } else {
+              StorageService.saveItem(
+                StorageService.STORAGE_KEYS.USER_TYPE,
+                'VENDOR',
+              );
+
+              navigation.navigate('VendorHomeScreen');
+            }
+          } else if (OTPVerifySuccessfull == true) {
+            let userDetails = await StorageService.getItem(
+              StorageService.STORAGE_KEYS.USER_DETAILS,
+            );
+
+            console.log('>>>>>>', userDetails);
+            if (userDetails?.id) {
+              StorageService.saveItem(
+                StorageService.STORAGE_KEYS.USER_TYPE,
+                'USER',
+              );
+              navigation.navigate('HomeScreen');
+            } else {
+              navigation.navigate('MyProfileEdit');
+            }
+            // StorageService.saveItem(
+            //   StorageService.STORAGE_KEYS.USER_TYPE,
+            //   'USER',
+            // );
+            // navigation.navigate('HomeScreen');
           }
         }}
         content={
@@ -343,13 +377,14 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   underlineStyleBase: {
-    width: scale(45),
-    height: scale(45),
+    width: scale(35),
+    height: scale(35),
     borderWidth: scale(0),
     color: Color.black,
     borderWidth: scale(1),
     borderRadius: scale(8),
     borderColor: Color.lightGrey,
+    marginHorizontal: scale(4),
   },
   underlineStyleHighLighted: {
     borderColor: Color.subBg,
