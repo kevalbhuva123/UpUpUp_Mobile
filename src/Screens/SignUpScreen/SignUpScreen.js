@@ -12,11 +12,13 @@ import IMAGES from '../../Assets/Icons/index';
 import {scale} from '../../utlis/Scale';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import Fonts from '../../Constants/Fonts';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const SignUpScreen = ({navigation}) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <View style={styles.head}>
         <Image source={IMAGES.Logo} style={styles.logo} />
         <Image source={IMAGES.LogoText} style={styles.logoText} />

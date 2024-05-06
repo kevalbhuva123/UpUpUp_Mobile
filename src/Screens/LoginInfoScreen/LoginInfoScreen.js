@@ -16,6 +16,7 @@ import {Regions, Sports} from '../../Constants/StaticData';
 import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
 import apiConfigs from '../../api/apiconfig';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const LoginInfoScreen = ({navigation}) => {
   const [region, setRegion] = useState('');
@@ -71,24 +72,23 @@ const LoginInfoScreen = ({navigation}) => {
       .then(response => response.json())
       .then(data => {
         if (data.ErrorCode === 0) {
-          setAreasData(
-            data.Data
-          );
+          setAreasData(data.Data);
         }
       })
       .catch(error => console.error('Error fetching data:', error));
   };
 
-
   const renderItem2 = ({item}) => {
     return (
-    <View
-      style={{padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc'}}>
-      <Text style={{fontSize: 16, fontWeight: 'bold', color:'black'}}>{item.location}</Text>
-      <Text style={{fontSize: 14, color:'black'}}>{item.area}</Text>
-    </View>
-  );
-    };
+      <View
+        style={{padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc'}}>
+        <Text style={{fontSize: 16, fontWeight: 'bold', color: 'black'}}>
+          {item.location}
+        </Text>
+        <Text style={{fontSize: 14, color: 'black'}}>{item.area}</Text>
+      </View>
+    );
+  };
 
   const renderRegion = item => {
     return (
@@ -117,6 +117,7 @@ const LoginInfoScreen = ({navigation}) => {
 
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'Login Information'}
         onBackPress={() => navigation.goBack()}

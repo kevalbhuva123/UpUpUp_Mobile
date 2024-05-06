@@ -18,6 +18,7 @@ import IMAGES from '../../Assets/Icons/index';
 import LogoutModal from '../LogoutModal';
 import DeviceInfo from 'react-native-device-info';
 import StorageService from '../../utlis/StorageService';
+import auth from '@react-native-firebase/auth';
 
 const SidebarOptionsForUser = [
   {
@@ -139,6 +140,7 @@ const CustomSidebar = props => {
 
   const logoutUser = async () => {
     try {
+      await auth().signOut();
       await StorageService.clear();
     } catch (err) {
       console.log(err);

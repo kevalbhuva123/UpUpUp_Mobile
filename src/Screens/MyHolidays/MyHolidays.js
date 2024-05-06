@@ -14,6 +14,7 @@ import Fonts from '../../Constants/Fonts';
 import {Dropdown} from 'react-native-element-dropdown';
 import {HolidaysList, ownerVenues} from '../../Constants/StaticData';
 import IMAGES from '../../Assets/Icons/index';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const MyHolidays = ({navigation}) => {
   const [selectedVenue, setSelectedVenue] = useState('');
@@ -42,6 +43,7 @@ const MyHolidays = ({navigation}) => {
   );
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'My Holidays'}
         onBackPress={() => navigation.goBack()}

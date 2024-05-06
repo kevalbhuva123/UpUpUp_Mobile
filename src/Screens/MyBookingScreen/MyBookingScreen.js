@@ -14,6 +14,7 @@ import Fonts from '../../Constants/Fonts';
 import {UpcomingBooking} from '../../Constants/StaticData';
 import IMAGES from '../../Assets/Icons/index';
 import RatingModal from '../../Components/RatingModal';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const MyBookingScreen = ({navigation}) => {
   const [activeTab, setActiveTab] = useState(1);
@@ -109,6 +110,7 @@ const MyBookingScreen = ({navigation}) => {
   };
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'My Bookings'}
         onBackPress={() => navigation.goBack()}

@@ -28,6 +28,7 @@ import AlertModal from '../../Components/AlertModal/AlertModal';
 import {ActivityLoader} from '../../Components/Loader/Loader';
 import StorageService from '../../utlis/StorageService';
 import auth from '@react-native-firebase/auth';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 const OTPverifyScreen = ({navigation}) => {
   const ref = useBlurOnFulfill({value, cellCount: 4});
   const textInputRef = React.createRef(null);
@@ -126,6 +127,7 @@ const OTPverifyScreen = ({navigation}) => {
 
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <View style={styles.head}>
         <Image source={IMAGES.Logo} style={styles.logo} />
         <Image source={IMAGES.LogoText} style={styles.logoText} />
@@ -240,7 +242,9 @@ const OTPverifyScreen = ({navigation}) => {
               );
               navigation.navigate('HomeScreen');
             } else {
-              navigation.navigate('MyProfileEdit');
+              navigation.navigate('MyProfileEdit', {
+                data: route?.params?.phoneNumber,
+              });
             }
             // StorageService.saveItem(
             //   StorageService.STORAGE_KEYS.USER_TYPE,
@@ -258,13 +262,24 @@ const OTPverifyScreen = ({navigation}) => {
       <ConfirmationModal
         isVisible={visible}
         onClose={() => setVisible(false)}
-        asUser={() => {
+        asUser={async () => {
           setVisible(false);
-          StorageService.saveItem(
-            StorageService.STORAGE_KEYS.USER_TYPE,
-            'USER',
+          let userDetails = await StorageService.getItem(
+            StorageService.STORAGE_KEYS.USER_DETAILS,
           );
-          navigation.navigate('HomeScreen');
+
+          console.log('>>>>>>', userDetails);
+          if (userDetails?.id) {
+            StorageService.saveItem(
+              StorageService.STORAGE_KEYS.USER_TYPE,
+              'USER',
+            );
+            navigation.navigate('HomeScreen');
+          } else {
+            navigation.navigate('MyProfileEdit', {
+              data: route?.params?.phoneNumber,
+            });
+          }
         }}
         asVendor={() => {
           setVisible(false);

@@ -13,6 +13,7 @@ import {Connections} from '../../Constants/StaticData';
 import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
 import RatingModal from '../../Components/RatingModal';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const MyConnectionScreen = ({navigation}) => {
   const [visible, setVisible] = useState(false);
@@ -35,6 +36,7 @@ const MyConnectionScreen = ({navigation}) => {
   };
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'My Connections'}
         onBackPress={() => navigation.goBack()}

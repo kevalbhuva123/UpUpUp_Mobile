@@ -20,6 +20,7 @@ import {Calendar} from 'react-native-calendars';
 import moment from 'moment';
 import Slider from '@react-native-community/slider';
 import DatePicker from 'react-native-date-picker';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const AddOffer = ({navigation}) => {
   const [selectedVenue, setSelectedVenue] = useState('');
@@ -59,6 +60,7 @@ const AddOffer = ({navigation}) => {
   };
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'My Holidays'}
         onBackPress={() => navigation.goBack()}

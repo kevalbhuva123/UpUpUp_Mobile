@@ -21,6 +21,7 @@ import {Calendar} from 'react-native-calendars';
 import moment from 'moment';
 import Slider from '@react-native-community/slider';
 import DatePicker from 'react-native-date-picker';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const MyBookingVendor = ({navigation}) => {
   const [region, setRegion] = useState('');
@@ -59,6 +60,7 @@ const MyBookingVendor = ({navigation}) => {
 
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'My Bookings'}
         onBackPress={() => navigation.goBack()}

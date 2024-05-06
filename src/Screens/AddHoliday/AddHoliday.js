@@ -17,6 +17,7 @@ import IMAGES from '../../Assets/Icons/index';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Calendar} from 'react-native-calendars';
 import moment from 'moment';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const AddHoliday = ({navigation}) => {
   const [selectedVenue, setSelectedVenue] = useState('');
@@ -32,6 +33,7 @@ const AddHoliday = ({navigation}) => {
   };
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'My Holidays'}
         onBackPress={() => navigation.goBack()}

@@ -11,11 +11,13 @@ import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {scale} from '../../utlis/Scale';
 import IMAGES from '../../Assets/Icons/index';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const FeedBackScreen = ({navigation}) => {
   const [value, setValue] = useState('');
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'Feedback'}
         onBackPress={() => navigation.goBack()}

@@ -19,6 +19,7 @@ import apiConfigs from '../../api/apiconfig';
 import DatePicker from 'react-native-date-picker';
 import Slider from '@react-native-community/slider';
 import moment from 'moment';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const MyVenueVendorScreen = ({navigation}) => {
   const [region, setRegion] = useState('');
@@ -57,6 +58,7 @@ const MyVenueVendorScreen = ({navigation}) => {
 
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'My Venue'}
         onBackPress={() => navigation.goBack()}

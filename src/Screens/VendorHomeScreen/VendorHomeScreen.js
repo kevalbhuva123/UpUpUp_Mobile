@@ -13,6 +13,7 @@ import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
 import IMAGES from '../../Assets/Icons/index';
 import CustomSidebar from '../../Components/CustomSidebar';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const VendorHomeScreen = ({navigation}) => {
   const [hamburgerVisible, sethamburgerVisible] = useState(false);
@@ -39,6 +40,7 @@ const VendorHomeScreen = ({navigation}) => {
   };
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.menuBtn}

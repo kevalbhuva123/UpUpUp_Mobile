@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {Venues} from '../../Constants/StaticData';
@@ -15,11 +15,12 @@ import IMAGES from '../../Assets/Icons/index';
 import Fonts from '../../Constants/Fonts';
 import StorageService from '../../utlis/StorageService';
 import apiConfigs from '../../api/apiconfig';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const BookVenueScreen = ({navigation}) => {
   const [venues, setVenues] = useState([]);
   const [UserId, setUserId] = useState(779);
-  const [venueId, setvenueId] = useState("");
+  const [venueId, setvenueId] = useState('');
   const [sports, setsports] = useState(true);
   const [area, setarea] = useState(true);
 
@@ -34,7 +35,7 @@ const BookVenueScreen = ({navigation}) => {
       // const userData = await StorageService.getItem(
       // //   StorageService.STORAGE_KEYS.USER_DETAILS
       // // );
-      const UserID = "779";
+      const UserID = '779';
       // setUserId(userId.user_id);
       // Create formData object
       const formData = new FormData();
@@ -51,25 +52,24 @@ const BookVenueScreen = ({navigation}) => {
           'Content-Type': 'multipart/form-data',
         },
       })
+        .then(response => response.json())
+        .then(data => {
+          if (data.ErrorCode === 0) {
+            setVenues(data.Data);
+            console.error('succuss');
+          } else {
+            console.error('Failed to fetch venues:', data.message);
+          }
+        })
+        .catch(error => console.error('Error fetching venues:', error));
+    } catch (error) {
+      console.error('Error fetching venues:', error);
+    }
+  };
 
-      .then(response => response.json())
-      .then(data => {
-        if (data.ErrorCode === 0) {
-          setVenues(data.Data);
-          console.error('succuss',)
-        } else {
-          console.error('Failed to fetch venues:', data.message);
-        }
-      })
-      .catch(error => console.error('Error fetching venues:', error));
-  } catch (error) {
-    console.error('Error fetching venues:', error);
-  }
-};
-
-const renderImageItem = ({ item }) => (
-  <Image style={styles.image} source={{ uri: item }} />
-);
+  const renderImageItem = ({item}) => (
+    <Image style={styles.image} source={{uri: item}} />
+  );
 
   const renderRemainingCount = item => {
     const remainingCount = item.length - 4;
@@ -86,7 +86,7 @@ const renderImageItem = ({ item }) => (
         onPress={() => {
           navigation.navigate('VenueDetailScreen');
         }}>
-        <Image source={{ uri: item.venue_image[0] }} style={styles.venueImage} />
+        <Image source={{uri: item.venue_image[0]}} style={styles.venueImage} />
         <Text style={styles.heading}>{item.venue}</Text>
         <View style={styles.iconTextView}>
           <Image source={IMAGES.Location} style={styles.icons} />
@@ -110,12 +110,13 @@ const renderImageItem = ({ item }) => (
   };
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'Book Venue'}
         onBackPress={() => navigation.goBack()}
       />
       <View style={styles.master}>
-      <FlatList
+        <FlatList
           data={venues}
           renderItem={renderVenues}
           keyExtractor={(item, index) => index.toString()}

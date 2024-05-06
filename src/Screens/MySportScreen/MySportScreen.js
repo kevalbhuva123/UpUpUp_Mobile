@@ -16,6 +16,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import {Sports} from '../../Constants/StaticData';
 import Fonts from '../../Constants/Fonts';
 import apiConfigs from '../../api/apiconfig';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const MySportScreen = ({navigation}) => {
   const [editEnable, setEditEnable] = useState(false);
@@ -66,6 +67,7 @@ const MySportScreen = ({navigation}) => {
 
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'My Sports'}
         onBackPress={() => navigation.goBack()}

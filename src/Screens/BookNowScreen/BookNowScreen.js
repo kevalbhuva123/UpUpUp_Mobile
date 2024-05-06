@@ -2,10 +2,12 @@ import {StyleSheet, Text, View} from 'react-native';
 import React from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const BookNowScreen = ({navigation}) => {
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'Book Now'}
         onBackPress={() => navigation.goBack()}

@@ -6,6 +6,7 @@ import {
   Image,
   TextInput,
   Alert,
+  BackHandler,
 } from 'react-native';
 import React, {useState, useNavigation} from 'react';
 import Color from '../../Constants/Color';
@@ -19,6 +20,7 @@ import Request from '../../api/Request';
 import apiConfigs from '../../api/apiconfig';
 import {ActivityLoader} from '../../Components/Loader/Loader';
 import AlertModal from '../../Components/AlertModal/AlertModal';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const LoginScreen = ({navigation}) => {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -131,9 +133,16 @@ const LoginScreen = ({navigation}) => {
     // For simplicity, let's assume valid if the number starts with '+91' and has 10 digits
     return /^(\+91\s?)?[0-9]{10}$/.test(number);
   };
-
+  const backAction = () => {
+    BackHandler.exitApp();
+    return true;
+  };
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior
+        isSelectionModeEnabled
+        disableSelectionMode={() => backAction()}
+      />
       <View style={styles.head}>
         <Image source={IMAGES.Logo} style={styles.logo} />
         <Image source={IMAGES.LogoText} style={styles.logoText} />

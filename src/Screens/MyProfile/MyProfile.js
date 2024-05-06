@@ -14,6 +14,7 @@ import Fonts from '../../Constants/Fonts';
 import Color from '../../Constants/Color';
 import IMAGES from '../../Assets/Icons/index';
 import {Sports} from '../../Constants/StaticData';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const MyProfile = ({navigation}) => {
   const options = [
@@ -44,6 +45,7 @@ const MyProfile = ({navigation}) => {
   };
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'My Profile'}
         onBackPress={() => navigation.goBack()}

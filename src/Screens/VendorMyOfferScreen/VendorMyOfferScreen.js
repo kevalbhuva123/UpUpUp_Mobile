@@ -21,6 +21,7 @@ import Slider from '@react-native-community/slider';
 import moment from 'moment';
 import StorageService from '../../utlis/StorageService';
 import apiConfigs from '../../api/apiconfig';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const VendorMyOfferScreen = ({navigation}) => {
   const [activeTab, setActiveTab] = useState(1);
@@ -126,6 +127,7 @@ const VendorMyOfferScreen = ({navigation}) => {
 
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'My Offers'}
         onBackPress={() => navigation.goBack()}

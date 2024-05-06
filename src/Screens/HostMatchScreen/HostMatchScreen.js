@@ -14,6 +14,7 @@ import Fonts from '../../Constants/Fonts';
 import {Sports, UpComingMyMatches} from '../../Constants/StaticData';
 import IMAGES from '../../Assets/Icons/index';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const HostMatchScreen = ({navigation}) => {
   const [activeTab, setActiveTab] = useState(1);
@@ -116,6 +117,7 @@ const HostMatchScreen = ({navigation}) => {
 
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'Match Hosting'}
         onBackPress={() => navigation.goBack()}

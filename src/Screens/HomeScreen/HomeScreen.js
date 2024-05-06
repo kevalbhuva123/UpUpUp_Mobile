@@ -1,4 +1,5 @@
 import {
+  BackHandler,
   Dimensions,
   FlatList,
   Image,
@@ -15,6 +16,7 @@ import Fonts from '../../Constants/Fonts';
 import IMAGES from '../../Assets/Icons/index';
 import CustomSidebar from '../../Components/CustomSidebar';
 import Carousel from 'react-native-reanimated-carousel';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const HomeScreen = ({navigation}) => {
   const width = Dimensions.get('window').width;
@@ -41,8 +43,16 @@ const HomeScreen = ({navigation}) => {
       </TouchableOpacity>
     );
   };
+  const backAction = () => {
+    BackHandler.exitApp();
+    return true;
+  };
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior
+        isSelectionModeEnabled
+        disableSelectionMode={() => backAction()}
+      />
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.menuBtn}

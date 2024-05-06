@@ -12,6 +12,7 @@ import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import IMAGES from '../../Assets/Icons/index';
 import {scale} from '../../utlis/Scale';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const HelpScreen = ({navigation}) => {
   const [data, setData] = useState([
@@ -51,6 +52,7 @@ const HelpScreen = ({navigation}) => {
 
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader heading={'Help'} onBackPress={() => navigation.goBack()} />
       <View style={styles.master}>
         <View style={styles.heading}>

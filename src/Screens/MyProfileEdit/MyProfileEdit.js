@@ -20,15 +20,24 @@ import IMAGES from '../../Assets/Icons/index';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import MediaModal from '../../Components/MediaModal';
 import apiConfigs from '../../api/apiconfig';
+import moment from 'moment';
+import DatePicker from 'react-native-date-picker';
+import {isValidEmail} from '../../utlis/CommonUtils';
+import {ActivityLoader} from '../../Components/Loader/Loader';
+import StorageService from '../../utlis/StorageService';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
-const MyProfileEdit = ({navigation}) => {
+const MyProfileEdit = ({navigation, route}) => {
   const [name, setName] = useState('');
-  const [mobile, setMobile] = useState('');
+  const [mobile, setMobile] = useState(route?.params?.data);
+  const [address, setAddress] = useState('');
   const [email, setEmail] = useState('');
+  const [DOB, setDOB] = useState('');
   const [avatarSource, setAvatarSource] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [warning, setWarning] = useState('');
   const [Loader, setLoader] = useState(false);
+  const [isDateOpen, setIsDateOpen] = useState(false);
 
   const requestCameraPermission = async () => {
     if (Platform.OS === 'android') {
@@ -89,6 +98,7 @@ const MyProfileEdit = ({navigation}) => {
           }
 
           console.log(response.assets[0]);
+          setAvatarSource(response.assets[0]);
         });
       }, 1000);
     }
@@ -111,6 +121,7 @@ const MyProfileEdit = ({navigation}) => {
       }
 
       console.log(response.assets[0]);
+      setAvatarSource(response.assets[0]);
     });
   };
 
@@ -122,11 +133,42 @@ const MyProfileEdit = ({navigation}) => {
   };
 
   const submitProfile = () => {
+    if (!name.trim()) {
+      setWarning('Please enter your name.');
+      WarningMessageTimer();
+      return;
+    }
+    if (!address.trim()) {
+      setWarning('Please enter your address.');
+      WarningMessageTimer();
+      return;
+    }
+    if (!email.trim()) {
+      setWarning('Please enter your email.');
+      WarningMessageTimer();
+      return;
+    }
+    if (!DOB.trim()) {
+      setWarning('Please enter your birth date.');
+      WarningMessageTimer();
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setWarning('Please enter valid email.');
+      WarningMessageTimer();
+      return;
+    }
+
     try {
+      setLoader(true);
       const formdata = new FormData();
-      formdata.append('user_id', '2281');
-      formdata.append('name', 'Keval');
-      formdata.append('email', 'keval.bhuva@upsmartsolutions.com');
+      formdata.append('name', name);
+      formdata.append('phone_no', mobile);
+      formdata.append('address', address);
+      formdata.append('email', email);
+      formdata.append('device_id', '');
+      formdata.append('dob', DOB);
+      formdata.append('file', avatarSource);
 
       const requestOptions = {
         method: 'POST',
@@ -135,18 +177,35 @@ const MyProfileEdit = ({navigation}) => {
       };
 
       fetch(
-        `${apiConfigs.LOCAL_SERVER_API_URL}/Users/update_profile`,
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Login/crate_users`,
         requestOptions,
       )
         .then(response => response.json())
-        .then(result => console.log(result))
-        .catch(error => console.error(error));
+        .then(async result => {
+          setLoader(false);
+          console.log(result);
+          await StorageService.saveItem(
+            StorageService.STORAGE_KEYS.USER_DETAILS,
+            result.Data,
+          );
+          await StorageService.saveItem(
+            StorageService.STORAGE_KEYS.USER_TYPE,
+            'USER',
+          );
+          navigation.replace('HomeScreen');
+        })
+        .catch(error => {
+          setLoader(false);
+
+          console.error(error);
+        });
     } catch (error) {
       console.log('Error:', error);
     }
   };
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'Edit Profile'}
         onBackPress={() => navigation.goBack()}
@@ -182,6 +241,14 @@ const MyProfileEdit = ({navigation}) => {
             placeholderTextColor={Color.lightGrey}
             onChangeText={text => setMobile(text)}
             keyboardType="phone-pad"
+            editable={false}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Address"
+            value={address}
+            placeholderTextColor={Color.lightGrey}
+            onChangeText={text => setAddress(text)}
           />
           <TextInput
             style={styles.input}
@@ -192,6 +259,16 @@ const MyProfileEdit = ({navigation}) => {
             keyboardType="email-address"
           />
           <TouchableOpacity
+            style={[styles.input, {justifyContent: 'center'}]}
+            onPress={() => {
+              setIsDateOpen(true);
+            }}>
+            <Text style={styles.dateText}>
+              {DOB != '' ? DOB : 'Select Date of Birth'}
+            </Text>
+          </TouchableOpacity>
+          {warning !== '' && <Text style={styles.warning}>{warning}</Text>}
+          <TouchableOpacity
             onPress={() => {
               submitProfile();
             }}
@@ -200,6 +277,23 @@ const MyProfileEdit = ({navigation}) => {
           </TouchableOpacity>
         </View>
       </KeyboardAwareScrollView>
+      <DatePicker
+        modal
+        open={isDateOpen}
+        date={new Date()}
+        onConfirm={date => {
+          console.log(date);
+          setDOB(moment(date).format('YYYY-MM-DD'));
+        }}
+        onCancel={() => {
+          setIsDateOpen(false);
+        }}
+        mode="date"
+        buttonColor={Color.icon}
+        dividerColor={Color.icon}
+      />
+      <ActivityLoader loading={Loader} />
+
       <MediaModal
         modalVisible={modalVisible}
         onCancel={() => {
@@ -249,7 +343,12 @@ const styles = StyleSheet.create({
     color: Color.black,
     fontSize: scale(14),
   },
-
+  warning: {
+    color: Color.red,
+    textAlign: 'center',
+    fontSize: scale(14),
+    marginTop: scale(10),
+  },
   input: {
     height: scale(40),
     width: '100%',
@@ -273,6 +372,7 @@ const styles = StyleSheet.create({
     elevation: 6,
     backgroundColor: Color.white,
   },
+  dateText: {fontFamily: Fonts.bold, color: Color.black, fontSize: scale(12)},
   profilePhoto: {
     width: scale(100), // adjust dimensions as needed
     height: scale(100),

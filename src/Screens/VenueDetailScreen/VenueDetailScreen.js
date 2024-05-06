@@ -14,6 +14,7 @@ import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
 import IMAGES from '../../Assets/Icons/index';
 import {Facilities, Sports} from '../../Constants/StaticData';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 const VenueDetailScreen = ({navigation}) => {
   const renderItem = ({item}) => (
     <View style={styles.iconContainer}>
@@ -28,6 +29,7 @@ const VenueDetailScreen = ({navigation}) => {
 
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'Book a Venue'}
         onBackPress={() => navigation.goBack()}

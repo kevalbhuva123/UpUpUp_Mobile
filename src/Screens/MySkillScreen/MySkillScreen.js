@@ -13,6 +13,7 @@ import {RateFriend} from '../../Constants/StaticData';
 import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
 import {Rating} from 'react-native-ratings'; // Assuming you have a Rating component library installed
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const MySkillScreen = ({navigation}) => {
   const renderSkills = ({item}) => {
@@ -39,6 +40,7 @@ const MySkillScreen = ({navigation}) => {
   };
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'My Skills'}
         onBackPress={() => navigation.goBack()}

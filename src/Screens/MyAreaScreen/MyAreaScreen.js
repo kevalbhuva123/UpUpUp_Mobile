@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,13 @@ import {
 } from 'react-native';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
-import { scale } from '../../utlis/Scale';
+import {scale} from '../../utlis/Scale';
 import IMAGES from '../../Assets/Icons/index';
 import Fonts from '../../Constants/Fonts';
 import apiConfigs from '../../api/apiconfig';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
-const MyAreaScreen = ({ navigation }) => {
+const MyAreaScreen = ({navigation}) => {
   const [options, setOptions] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState([]);
 
@@ -28,7 +29,9 @@ const MyAreaScreen = ({ navigation }) => {
       .then(response => response.json())
       .then(data => {
         if (data.ErrorCode === 0) {
-          setOptions(data.Data.map(item => ({ id: item.id, label: item.location })));
+          setOptions(
+            data.Data.map(item => ({id: item.id, label: item.location})),
+          );
         }
       })
       .catch(error => console.error('Error fetching data:', error));
@@ -59,6 +62,7 @@ const MyAreaScreen = ({ navigation }) => {
   };
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'My Areas'}
         onBackPress={() => navigation.goBack()}

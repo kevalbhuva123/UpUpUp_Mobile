@@ -13,6 +13,7 @@ import {RateFriend} from '../../Constants/StaticData';
 import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
 import {Rating} from 'react-native-ratings';
+import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 
 const RateFriendScreen = ({navigation}) => {
   const renderItem = ({item}) => {
@@ -47,6 +48,7 @@ const RateFriendScreen = ({navigation}) => {
   };
   return (
     <View style={styles.main}>
+      <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'Rate a friend'}
         onBackPress={() => navigation.goBack()}
