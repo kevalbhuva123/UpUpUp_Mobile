@@ -58,4 +58,5 @@ export default IMAGES = {
   Cam: require('./camera.png'),
   Gallery: require('./gallery.png'),
   Down: require('./down.png'),
+  Email: require('./email.png'),
 };

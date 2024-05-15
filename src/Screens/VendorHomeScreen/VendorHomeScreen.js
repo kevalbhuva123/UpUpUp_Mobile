@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import Color from '../../Constants/Color';
 import {VenueHome} from '../../Constants/StaticData';
 import {scale} from '../../utlis/Scale';
@@ -14,9 +14,22 @@ import Fonts from '../../Constants/Fonts';
 import IMAGES from '../../Assets/Icons/index';
 import CustomSidebar from '../../Components/CustomSidebar';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import StorageService from '../../utlis/StorageService';
 
 const VendorHomeScreen = ({navigation}) => {
   const [hamburgerVisible, sethamburgerVisible] = useState(false);
+  const [vendorProfile, setVendorProfile] = useState();
+  useEffect(() => {
+    vendorData();
+  }, []);
+
+  const vendorData = async () => {
+    let vendorDetails = await StorageService.getItem(
+      StorageService.STORAGE_KEYS.VENDOR_DETAILS,
+    );
+
+    setVendorProfile(vendorDetails);
+  };
 
   const onClose = () => {
     sethamburgerVisible(false);
@@ -50,13 +63,26 @@ const VendorHomeScreen = ({navigation}) => {
           <Image source={IMAGES.Menu} style={styles.menu} />
         </TouchableOpacity>
         <View style={styles.profileView}>
-          <Image source={IMAGES.Person} style={styles.profile} />
+          <Image
+            source={
+              vendorProfile?.image != 0
+                ? {uri: vendorProfile?.image}
+                : IMAGES.Person
+            }
+            style={styles.profile}
+          />
           <View style={styles.detailContainer}>
-            <Text style={styles.firstName}>Keval</Text>
-            <Text style={styles.lastName}>Bhuva</Text>
+            <Text style={styles.lastName}>{vendorProfile?.name}</Text>
             <View style={styles.iconTextView}>
               <Image source={IMAGES.Call} style={styles.icons} />
-              <Text style={styles.subText}>+91 9992223334</Text>
+              <Text style={styles.subText}>+91 {vendorProfile?.phone}</Text>
+            </View>
+            <View style={styles.iconTextView}>
+              <Image
+                source={IMAGES.Email}
+                style={[styles.icons, {tintColor: Color.white}]}
+              />
+              <Text style={styles.subText}>{vendorProfile?.email}</Text>
             </View>
           </View>
           <TouchableOpacity

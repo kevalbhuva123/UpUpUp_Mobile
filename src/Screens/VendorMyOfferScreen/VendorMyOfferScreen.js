@@ -7,7 +7,7 @@ import {
   View,
   TextInput,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {scale} from '../../utlis/Scale';
@@ -22,13 +22,14 @@ import moment from 'moment';
 import StorageService from '../../utlis/StorageService';
 import apiConfigs from '../../api/apiconfig';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import {ActivityLoader} from '../../Components/Loader/Loader';
 
 const VendorMyOfferScreen = ({navigation}) => {
   const [activeTab, setActiveTab] = useState(1);
   const [selectedVenue, setSelectedVenue] = useState('');
   const [selectedDays, setSelectedDays] = useState('');
   const [offerName, setOfferName] = useState('');
-  const [offerPercentage, setOfferPercentage] = useState(0);
+  const [offerPercentage, setOfferPercentage] = useState(25);
   const [isDateOpen, setIsDateOpen] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
@@ -41,6 +42,12 @@ const VendorMyOfferScreen = ({navigation}) => {
   const [isFromETime, setIsFromETime] = useState(false);
   const [venueList, setVenueList] = useState([]);
   const [offerList, setOfferList] = useState([]);
+  const [Loader, setLoader] = useState(false);
+  const [selectedSport, setSelectedSport] = useState([]);
+  const [selectedCourt, setSelectedCourt] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [warning, setWarning] = useState('');
 
   useEffect(() => {
     getVenueList();
@@ -48,6 +55,7 @@ const VendorMyOfferScreen = ({navigation}) => {
 
   const getVenueList = async () => {
     try {
+      setLoader(true);
       let vendorDetails = await StorageService.getItem(
         StorageService.STORAGE_KEYS.VENDOR_DETAILS,
       );
@@ -69,17 +77,27 @@ const VendorMyOfferScreen = ({navigation}) => {
       fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Venue/index`, requestOptions)
         .then(response => response.json())
         .then(result => {
+          setLoader(false);
+
           console.log('>>>>VENUE Result:::', result);
-          setVenueList(result.Data);
+          setVenueList(result?.Data);
+          setSelectedVenue(result?.Data[0]);
+          offersListById(result?.Data[0]?.id);
         })
-        .catch(error => console.error(error));
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
     } catch (error) {
       console.log('Error::', error);
+      setLoader(false);
     }
   };
 
   const offersListById = id => {
     try {
+      setLoader(true);
+
       const formdata = new FormData();
       formdata.append('venue_id', id);
 
@@ -95,11 +113,18 @@ const VendorMyOfferScreen = ({navigation}) => {
       )
         .then(response => response.json())
         .then(result => {
+          setLoader(false);
+
           console.log('>>>>RESULT OFFER>>>>', result);
-          setOfferList(result.Data);
+          setOfferList(result);
         })
-        .catch(error => console.error(error));
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
     } catch (error) {
+      setLoader(false);
+
       console.log('Error::', error);
     }
   };
@@ -113,17 +138,83 @@ const VendorMyOfferScreen = ({navigation}) => {
   };
 
   const renderSports = ({item}) => {
-    if (item.name != 'More\nSports') {
-      return (
-        <TouchableOpacity style={styles.items}>
-          <Image source={item.image} style={styles.sportIcon} />
-          <Text style={styles.label} numberOfLines={1}>
-            {item.name}
-          </Text>
-        </TouchableOpacity>
-      );
-    }
+    const isSelected = selectedSport.includes(item.sports_id);
+    return (
+      <TouchableOpacity
+        style={styles.items}
+        onPress={() => {
+          setSelectedSport(prevSelectedItems => {
+            if (prevSelectedItems.includes(item?.sports_id)) {
+              return prevSelectedItems.filter(
+                itemId => itemId !== item?.sports_id,
+              );
+            } else {
+              return [...prevSelectedItems, item?.sports_id];
+            }
+          });
+        }}>
+        <Image source={{uri: item?.image}} style={styles.sportIcon} />
+        <Text style={styles.label} numberOfLines={1}>
+          {item.sports}
+        </Text>
+        <Image
+          source={isSelected ? IMAGES.Checked : IMAGES.Unchecked}
+          style={isSelected ? styles.checkedIcon : styles.unCheckedIcon}
+        />
+      </TouchableOpacity>
+    );
   };
+
+  const renderCourt = ({item}) => {
+    const isSelected = selectedCourt.includes(item?.court_id);
+
+    return (
+      <TouchableOpacity
+        style={styles.items}
+        onPress={() => {
+          setSelectedCourt(prevSelectedItems => {
+            if (prevSelectedItems.includes(item?.court_id)) {
+              return prevSelectedItems.filter(
+                itemId => itemId !== item?.court_id,
+              );
+            } else {
+              return [...prevSelectedItems, item?.court_id];
+            }
+          });
+        }}>
+        <Text style={styles.label} numberOfLines={1}>
+          {item.court}
+        </Text>
+        <Text
+          style={[styles.label, {fontFamily: Fonts.bold}]}
+          numberOfLines={1}>
+          Rs.{item.cost}
+        </Text>
+        <Image
+          source={isSelected ? IMAGES.Checked : IMAGES.Unchecked}
+          style={isSelected ? styles.checkedIcon : styles.unCheckedIcon}
+        />
+      </TouchableOpacity>
+    );
+  };
+
+  const renderOffers = ({item}) => (
+    <View style={styles.itemContainer}>
+      <Text style={styles.date}>
+        Date: {item.start} - {item?.end}
+      </Text>
+
+      <Text style={styles.venueName}>Offer: {item.offer}</Text>
+      <Text style={styles.reasonText}>Discount: {item.percentage}%</Text>
+    </View>
+  );
+
+  const EmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Image source={IMAGES.Empty} style={styles.emptyImage} />
+      <Text style={styles.emptyText}>No data available</Text>
+    </View>
+  );
 
   return (
     <View style={styles.main}>
@@ -157,20 +248,21 @@ const VendorMyOfferScreen = ({navigation}) => {
               style={styles.dropdown}
               placeholderStyle={styles.placeholderStyle}
               selectedTextStyle={styles.selectedTextStyle}
+              selectedTextProps={{numberOfLines: 1}}
               inputSearchStyle={styles.inputSearchStyle}
               iconStyle={styles.iconStyle}
               data={venueList}
               search
               maxHeight={scale(300)}
-              labelField="id"
-              valueField="venue"
+              labelField="venue"
+              valueField="id"
               placeholder="Select item"
               searchPlaceholder="Search..."
-              value={selectedVenue}
+              value={selectedVenue?.id}
               onChange={item => {
                 console.log('>>>>>>>', item);
                 offersListById(item?.id);
-                setSelectedVenue(item.venue);
+                setSelectedVenue(item);
               }}
               renderItem={renderVenues}
             />
@@ -204,19 +296,20 @@ const VendorMyOfferScreen = ({navigation}) => {
                   style={styles.dropdown}
                   placeholderStyle={styles.placeholderStyle}
                   selectedTextStyle={styles.selectedTextStyle}
+                  selectedTextProps={{numberOfLines: 1}}
                   inputSearchStyle={styles.inputSearchStyle}
                   iconStyle={styles.iconStyle}
-                  data={ownerVenues}
+                  data={venueList}
                   search
                   maxHeight={scale(300)}
-                  labelField="key"
-                  valueField="value"
+                  labelField="venue"
+                  valueField="id"
                   placeholder="Select item"
                   searchPlaceholder="Search..."
-                  value={selectedVenue}
+                  value={selectedVenue?.id}
                   onChange={item => {
                     console.log('>>>>>>>', item);
-                    setSelectedVenue(item.value);
+                    setSelectedVenue(item);
                   }}
                   renderItem={renderVenues}
                 />
@@ -235,7 +328,7 @@ const VendorMyOfferScreen = ({navigation}) => {
                         setIsDateOpen(true);
                       }}>
                       <Text style={styles.value}>
-                        {moment(startDate).format('MM-DD-YYYY')}
+                        {moment(startDate).format('YYYY-MM-DD')}
                       </Text>
                       <Image source={IMAGES.Down} style={styles.iconStyle} />
                     </TouchableOpacity>
@@ -245,9 +338,9 @@ const VendorMyOfferScreen = ({navigation}) => {
                 <Text style={styles.title}>Choose Sport</Text>
                 <View style={styles.mainBox}>
                   <FlatList
-                    data={Sports}
+                    data={selectedVenue?.venue_sports_2}
                     renderItem={renderSports}
-                    keyExtractor={item => item.id.toString()}
+                    keyExtractor={item => item.sports_id.toString()}
                     numColumns={4}
                     contentContainerStyle={{
                       backgroundColor: Color.white,
@@ -262,7 +355,7 @@ const VendorMyOfferScreen = ({navigation}) => {
                 <View style={styles.sliderView}>
                   <Slider
                     style={{width: '100%', height: scale(50)}}
-                    minimumValue={0}
+                    minimumValue={25}
                     maximumValue={100}
                     minimumTrackTintColor={Color.subBg}
                     maximumTrackTintColor="#000000"
@@ -274,20 +367,27 @@ const VendorMyOfferScreen = ({navigation}) => {
                     thumbTintColor={Color.icon}
                   />
                 </View>
-                <Text style={styles.title}>Choose Court</Text>
-                <View style={styles.mainBox}>
-                  <FlatList
-                    data={Sports}
-                    renderItem={renderSports}
-                    keyExtractor={item => item.id.toString()}
-                    numColumns={4}
-                    contentContainerStyle={{
-                      backgroundColor: Color.white,
-                      width: '100%',
-                      borderRadius: scale(10),
-                    }}
-                  />
-                </View>
+                {selectedVenue?.court?.length > 0 && (
+                  <>
+                    <Text style={styles.title}>Choose Court</Text>
+                    <View style={styles.mainBox}>
+                      <FlatList
+                        data={selectedVenue?.court}
+                        renderItem={renderCourt}
+                        keyExtractor={item => item.court_id.toString()}
+                        numColumns={4}
+                        contentContainerStyle={{
+                          backgroundColor: Color.white,
+                          width: '100%',
+                          borderRadius: scale(10),
+                        }}
+                      />
+                    </View>
+                  </>
+                )}
+                {warning !== '' && (
+                  <Text style={styles.warning}>{warning}</Text>
+                )}
 
                 <TouchableOpacity onPress={() => {}} style={styles.loginBtn}>
                   <Text style={styles.btnText}>ADD HOT OFFER</Text>
@@ -334,6 +434,7 @@ const VendorMyOfferScreen = ({navigation}) => {
           </>
         )}
       </View>
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };
@@ -362,6 +463,48 @@ const styles = StyleSheet.create({
     color: Color.background,
     fontSize: scale(14),
     fontFamily: Fonts.bold,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyImage: {
+    width: scale(150),
+    height: scale(150),
+    resizeMode: 'contain',
+    marginTop: scale(100),
+    marginBottom: scale(20),
+  },
+  emptyText: {
+    fontSize: scale(14),
+    color: Color.lightGrey,
+    fontFamily: Fonts.semibold,
+  },
+  itemContainer: {
+    padding: 20,
+    borderWidth: scale(0.5),
+    borderColor: Color.lightGrey,
+    backgroundColor: Color.white,
+    marginTop: scale(15),
+
+    borderRadius: scale(10),
+  },
+  date: {
+    fontFamily: Fonts.semibold,
+    color: Color.black,
+    fontSize: scale(12),
+  },
+  venueName: {
+    fontFamily: Fonts.semibold,
+    color: Color.black,
+    fontSize: scale(12),
+    marginVertical: scale(5),
+  },
+  reasonText: {
+    fontFamily: Fonts.regular,
+    color: Color.black,
+    fontSize: scale(12),
   },
   title: {
     fontSize: scale(14),
@@ -607,7 +750,7 @@ const styles = StyleSheet.create({
     padding: scale(10),
     backgroundColor: Color.white,
     width: '25%',
-    height: scale(65),
+    height: scale(85),
     borderRadius: scale(10),
   },
   label: {
@@ -617,9 +760,37 @@ const styles = StyleSheet.create({
     fontSize: scale(10),
     color: Color.black,
   },
-  sportIcon: {
-    height: scale(20),
-    width: scale(20),
+  checkedIcon: {
+    height: scale(16),
+    width: scale(16),
     resizeMode: 'contain',
+    tintColor: Color.subBg,
+    marginTop: scale(3),
+  },
+  unCheckedIcon: {
+    height: scale(16),
+    width: scale(16),
+    resizeMode: 'contain',
+    tintColor: Color.lightGrey,
+    marginTop: scale(3),
+  },
+  sportIcon: {
+    height: scale(40),
+    width: scale(40),
+    resizeMode: 'contain',
+  },
+  warning: {
+    color: Color.red,
+    textAlign: 'center',
+    fontSize: scale(14),
+    fontFamily: Fonts.regular,
+    marginVertical: scale(10),
+  },
+  warning: {
+    color: Color.red,
+    textAlign: 'center',
+    fontSize: scale(14),
+    fontFamily: Fonts.regular,
+    marginVertical: scale(10),
   },
 });
