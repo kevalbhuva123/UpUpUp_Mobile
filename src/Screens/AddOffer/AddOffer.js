@@ -235,7 +235,7 @@ const AddOffer = ({navigation}) => {
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
       <CustomHeader
-        heading={'My Holidays'}
+        heading={'Add Offer'}
         onBackPress={() => navigation.goBack()}
       />
       <KeyboardAwareScrollView
@@ -415,7 +415,9 @@ const AddOffer = ({navigation}) => {
         onConfirm={date => {
           console.log(date);
           setIsDateOpen(false);
-          isFromSDate ? setStartDate(date) : setEndDate(date);
+          isFromSDate
+            ? (setStartDate(date), setEndDate(date))
+            : setEndDate(date);
           setIsFromEDate(false);
           setIsFromSDate(false);
         }}

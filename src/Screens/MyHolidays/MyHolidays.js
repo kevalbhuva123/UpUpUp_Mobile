@@ -6,7 +6,7 @@ import {
   View,
   FlatList,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import CustomHeader from '../../Components/CustomHeader';
 import Color from '../../Constants/Color';
 import {scale} from '../../utlis/Scale';
@@ -15,9 +15,106 @@ import {Dropdown} from 'react-native-element-dropdown';
 import {HolidaysList, ownerVenues} from '../../Constants/StaticData';
 import IMAGES from '../../Assets/Icons/index';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import {useFocusEffect} from '@react-navigation/native';
+import {ActivityLoader} from '../../Components/Loader/Loader';
+import AlertModal from '../../Components/AlertModal';
+import StorageService from '../../utlis/StorageService';
+import apiConfigs from '../../api/apiconfig';
 
 const MyHolidays = ({navigation}) => {
   const [selectedVenue, setSelectedVenue] = useState('');
+  const [venueList, setVenueList] = useState([]);
+  const [holidayList, setHolidayList] = useState([]);
+  const [Loader, setLoader] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [warning, setWarning] = useState('');
+
+  useEffect(() => {
+    getVenueList();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      getVenueList();
+    }, []),
+  );
+  const getVenueList = async () => {
+    try {
+      setLoader(true);
+      let vendorDetails = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.VENDOR_DETAILS,
+      );
+
+      console.log('>>>Vendor Details>>>', vendorDetails);
+
+      const formdata = new FormData();
+      formdata.append('user_id', vendorDetails?.user_id);
+      formdata.append('venue_id', '');
+      formdata.append('sports', 'true');
+      formdata.append('area', 'true');
+
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Venue/index`, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+
+          console.log('>>>>VENUE Result:::', result);
+          setVenueList(result?.Data);
+          setSelectedVenue(result?.Data[0]);
+          holidayListById(result?.Data[0]?.id);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.log('Error::', error);
+      setLoader(false);
+    }
+  };
+
+  const holidayListById = id => {
+    try {
+      setLoader(true);
+
+      const formdata = new FormData();
+      formdata.append('venue_id', id);
+
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Holiday/holidayslist`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+
+          console.log('>>>>RESULT OFFER>>>>', result);
+          setHolidayList(result?.data);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      setLoader(false);
+
+      console.log('Error::', error);
+    }
+  };
+
   const renderVenues = item => {
     return (
       <View style={styles.item}>
@@ -35,10 +132,9 @@ const MyHolidays = ({navigation}) => {
 
   const renderHolidays = ({item}) => (
     <View style={styles.itemContainer}>
-      <Text style={styles.date}>Date: {item.Date}</Text>
+      <Text style={styles.date}>Date: {item.date}</Text>
 
-      <Text style={styles.venueName}>{item.venue}</Text>
-      <Text style={styles.reasonText}>{item.Reason}</Text>
+      <Text style={styles.venueName}>Reason: {item.description}</Text>
     </View>
   );
   return (
@@ -54,25 +150,27 @@ const MyHolidays = ({navigation}) => {
           style={styles.dropdown}
           placeholderStyle={styles.placeholderStyle}
           selectedTextStyle={styles.selectedTextStyle}
+          selectedTextProps={{numberOfLines: 1}}
           inputSearchStyle={styles.inputSearchStyle}
           iconStyle={styles.iconStyle}
-          data={ownerVenues}
+          data={venueList}
           search
           maxHeight={scale(300)}
-          labelField="key"
-          valueField="value"
+          labelField="venue"
+          valueField="id"
           placeholder="Select item"
           searchPlaceholder="Search..."
-          value={selectedVenue}
+          value={selectedVenue?.id}
           onChange={item => {
             console.log('>>>>>>>', item);
-            setSelectedVenue(item.value);
+            holidayListById(item?.id);
+            setSelectedVenue(item);
           }}
           renderItem={renderVenues}
         />
         <Text style={styles.title}>Upcoming Holidays</Text>
         <FlatList
-          data={HolidaysList}
+          data={holidayList}
           renderItem={renderHolidays}
           ListEmptyComponent={EmptyComponent}
           keyExtractor={item => item.id.toString()}
@@ -86,6 +184,14 @@ const MyHolidays = ({navigation}) => {
           <Image source={IMAGES.Add} style={styles.addIcon} />
         </TouchableOpacity>
       </View>
+      <ActivityLoader loading={Loader} />
+      <AlertModal
+        modalVisible={modalVisible}
+        onClose={() => {
+          setModalVisible(false);
+        }}
+        content={alertMessage}
+      />
     </View>
   );
 };

@@ -7,7 +7,7 @@ import {
   View,
   TextInput,
 } from 'react-native';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {scale} from '../../utlis/Scale';
@@ -23,6 +23,8 @@ import StorageService from '../../utlis/StorageService';
 import apiConfigs from '../../api/apiconfig';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 import {ActivityLoader} from '../../Components/Loader/Loader';
+import {useFocusEffect} from '@react-navigation/native';
+import AlertModal from '../../Components/AlertModal';
 
 const VendorMyOfferScreen = ({navigation}) => {
   const [activeTab, setActiveTab] = useState(1);
@@ -43,8 +45,8 @@ const VendorMyOfferScreen = ({navigation}) => {
   const [venueList, setVenueList] = useState([]);
   const [offerList, setOfferList] = useState([]);
   const [Loader, setLoader] = useState(false);
-  const [selectedSport, setSelectedSport] = useState([]);
-  const [selectedCourt, setSelectedCourt] = useState([]);
+  const [selectedSport, setSelectedSport] = useState();
+  const [selectedCourt, setSelectedCourt] = useState();
   const [modalVisible, setModalVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
   const [warning, setWarning] = useState('');
@@ -53,6 +55,11 @@ const VendorMyOfferScreen = ({navigation}) => {
     getVenueList();
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      getVenueList();
+    }, []),
+  );
   const getVenueList = async () => {
     try {
       setLoader(true);
@@ -82,6 +89,8 @@ const VendorMyOfferScreen = ({navigation}) => {
           console.log('>>>>VENUE Result:::', result);
           setVenueList(result?.Data);
           setSelectedVenue(result?.Data[0]);
+          setSelectedSport(result?.Data[0]?.venue_sports_2[0]?.sports_id);
+
           offersListById(result?.Data[0]?.id);
         })
         .catch(error => {
@@ -90,6 +99,62 @@ const VendorMyOfferScreen = ({navigation}) => {
         });
     } catch (error) {
       console.log('Error::', error);
+      setLoader(false);
+    }
+  };
+
+  const addHotOffer = async () => {
+    try {
+      setLoader(true);
+      let vendorDetails = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.VENDOR_DETAILS,
+      );
+
+      const raw = JSON.stringify({
+        hot_offer: {
+          venue_id: selectedVenue?.id,
+          user_id: vendorDetails?.user_id,
+          offer_name: offerName,
+          offer_date: moment(startDate).format('YYYY-MM-DD'),
+          offer_percentage: offerPercentage,
+          court_info: [
+            {
+              court_id: selectedCourt,
+              sports_id: selectedSport,
+              slots: [],
+            },
+          ],
+        },
+      });
+
+      const requestOptions = {
+        method: 'POST',
+        body: raw,
+        redirect: 'follow',
+      };
+
+      console.log('>>>FD>>>', raw);
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Hotofferuser/add_hotoffer`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+
+          console.log(result);
+          if (result?.ErrorCode == 0) {
+            setAlertMessage('A Hot Offer Added Successfully.');
+            setModalVisible(true);
+          }
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.log(error);
       setLoader(false);
     }
   };
@@ -138,20 +203,12 @@ const VendorMyOfferScreen = ({navigation}) => {
   };
 
   const renderSports = ({item}) => {
-    const isSelected = selectedSport.includes(item.sports_id);
+    const isSelected = selectedSport == item.sports_id;
     return (
       <TouchableOpacity
         style={styles.items}
         onPress={() => {
-          setSelectedSport(prevSelectedItems => {
-            if (prevSelectedItems.includes(item?.sports_id)) {
-              return prevSelectedItems.filter(
-                itemId => itemId !== item?.sports_id,
-              );
-            } else {
-              return [...prevSelectedItems, item?.sports_id];
-            }
-          });
+          setSelectedSport(item?.sports_id);
         }}>
         <Image source={{uri: item?.image}} style={styles.sportIcon} />
         <Text style={styles.label} numberOfLines={1}>
@@ -166,21 +223,13 @@ const VendorMyOfferScreen = ({navigation}) => {
   };
 
   const renderCourt = ({item}) => {
-    const isSelected = selectedCourt.includes(item?.court_id);
+    const isSelected = selectedCourt == item?.court_id;
 
     return (
       <TouchableOpacity
         style={styles.items}
         onPress={() => {
-          setSelectedCourt(prevSelectedItems => {
-            if (prevSelectedItems.includes(item?.court_id)) {
-              return prevSelectedItems.filter(
-                itemId => itemId !== item?.court_id,
-              );
-            } else {
-              return [...prevSelectedItems, item?.court_id];
-            }
-          });
+          setSelectedCourt(item?.court_id);
         }}>
         <Text style={styles.label} numberOfLines={1}>
           {item.court}
@@ -389,7 +438,11 @@ const VendorMyOfferScreen = ({navigation}) => {
                   <Text style={styles.warning}>{warning}</Text>
                 )}
 
-                <TouchableOpacity onPress={() => {}} style={styles.loginBtn}>
+                <TouchableOpacity
+                  onPress={() => {
+                    addHotOffer();
+                  }}
+                  style={styles.loginBtn}>
                   <Text style={styles.btnText}>ADD HOT OFFER</Text>
                 </TouchableOpacity>
               </View>
@@ -435,6 +488,14 @@ const VendorMyOfferScreen = ({navigation}) => {
         )}
       </View>
       <ActivityLoader loading={Loader} />
+      <AlertModal
+        modalVisible={modalVisible}
+        onClose={() => {
+          setModalVisible(false);
+          setActiveTab(1);
+        }}
+        content={alertMessage}
+      />
     </View>
   );
 };

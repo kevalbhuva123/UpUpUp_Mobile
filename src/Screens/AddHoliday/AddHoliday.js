@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import CustomHeader from '../../Components/CustomHeader';
 import Color from '../../Constants/Color';
 import {scale} from '../../utlis/Scale';
@@ -18,11 +18,138 @@ import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {Calendar} from 'react-native-calendars';
 import moment from 'moment';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import StorageService from '../../utlis/StorageService';
+import apiConfigs from '../../api/apiconfig';
+import {ActivityLoader} from '../../Components/Loader/Loader';
+import AlertModal from '../../Components/AlertModal';
+import {useFocusEffect} from '@react-navigation/native';
 
 const AddHoliday = ({navigation}) => {
   const [selectedVenue, setSelectedVenue] = useState('');
   const [reason, setReason] = useState('');
   const [selectedDays, setSelectedDays] = useState('');
+  const [Loader, setLoader] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState('');
+  const [warning, setWarning] = useState('');
+  const [venueList, setVenueList] = useState([]);
+
+  useEffect(() => {
+    getVenueList();
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      getVenueList();
+    }, []),
+  );
+
+  const getVenueList = async () => {
+    try {
+      setLoader(true);
+      let vendorDetails = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.VENDOR_DETAILS,
+      );
+
+      console.log('>>>Vendor Details>>>', vendorDetails);
+
+      const formdata = new FormData();
+      formdata.append('user_id', vendorDetails?.user_id);
+      formdata.append('venue_id', '');
+      formdata.append('sports', 'true');
+      formdata.append('area', 'true');
+
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Venue/index`, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+
+          console.log('>>>>VENUE Result:::', result);
+          setVenueList(result?.Data);
+          setSelectedVenue(result?.Data[0]);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.log('Error::', error);
+      setLoader(false);
+    }
+  };
+
+  const WarningMessageTimer = () => {
+    const timeoutId = setTimeout(() => {
+      setWarning('');
+    }, 3000);
+    return () => clearTimeout(timeoutId);
+  };
+
+  const addHoliday = async () => {
+    if (!reason.trim()) {
+      setWarning('Please enter reason.');
+      WarningMessageTimer();
+      return;
+    }
+    if (!selectedDays.trim()) {
+      setWarning('Please select holiday date.');
+      WarningMessageTimer();
+      return;
+    }
+    try {
+      setLoader(true);
+      let vendorDetails = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.VENDOR_DETAILS,
+      );
+
+      console.log('>>>Vendor Details>>>', vendorDetails);
+
+      const holiday = [
+        {
+          user_id: vendorDetails?.user_id,
+          venue_id: selectedVenue?.id,
+          date: selectedDays,
+          description: reason,
+        },
+      ];
+      const formdata = new FormData();
+      formdata.append('holiday', JSON.stringify(holiday));
+      formdata.append('count', '1');
+      formdata.append('vendor_phone', vendorDetails?.phone);
+
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Holiday/holidays`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+          console.log(result);
+          if (result?.ErrorCode == 0) {
+            setAlertMessage('An Offer Added Successfully.');
+            setModalVisible(true);
+          }
+        })
+        .catch(error => {
+          setLoader(false);
+          console.log(error);
+        });
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   const renderVenues = item => {
     return (
@@ -51,19 +178,20 @@ const AddHoliday = ({navigation}) => {
             style={styles.dropdown}
             placeholderStyle={styles.placeholderStyle}
             selectedTextStyle={styles.selectedTextStyle}
+            selectedTextProps={{numberOfLines: 1}}
             inputSearchStyle={styles.inputSearchStyle}
             iconStyle={styles.iconStyle}
-            data={ownerVenues}
+            data={venueList}
             search
             maxHeight={scale(300)}
-            labelField="key"
-            valueField="value"
+            labelField="venue"
+            valueField="id"
             placeholder="Select item"
             searchPlaceholder="Search..."
-            value={selectedVenue}
+            value={selectedVenue?.id}
             onChange={item => {
               console.log('>>>>>>>', item);
-              setSelectedVenue(item.value);
+              setSelectedVenue(item);
             }}
             renderItem={renderVenues}
           />
@@ -109,11 +237,27 @@ const AddHoliday = ({navigation}) => {
             style={styles.input}
             placeholder="Type your reason here..."
           />
-          <TouchableOpacity onPress={() => {}} style={styles.loginBtn}>
+          {warning !== '' && <Text style={styles.warning}>{warning}</Text>}
+
+          <TouchableOpacity
+            onPress={() => {
+              addHoliday();
+            }}
+            style={styles.loginBtn}>
             <Text style={styles.btnText}>SUBMIT</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAwareScrollView>
+      <ActivityLoader loading={Loader} />
+
+      <AlertModal
+        modalVisible={modalVisible}
+        onClose={() => {
+          setModalVisible(false);
+          navigation.goBack();
+        }}
+        content={alertMessage}
+      />
     </View>
   );
 };
@@ -225,5 +369,12 @@ const styles = StyleSheet.create({
     fontSize: scale(14),
     color: Color.black,
     fontFamily: Fonts.regular,
+  },
+  warning: {
+    color: Color.red,
+    textAlign: 'center',
+    fontSize: scale(14),
+    fontFamily: Fonts.regular,
+    marginVertical: scale(10),
   },
 });
