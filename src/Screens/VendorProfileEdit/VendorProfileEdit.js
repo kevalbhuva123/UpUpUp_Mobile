@@ -39,14 +39,18 @@ const VendorProfileEdit = ({navigation, route}) => {
   const [Loader, setLoader] = useState(false);
   const [isDateOpen, setIsDateOpen] = useState(false);
 
-  useEffect(async () => {
+  useEffect(() => {
+    getDetail();
+  }, []);
+
+  const getDetail = async () => {
     let vendorDetails = await StorageService.getItem(
       StorageService.STORAGE_KEYS.VENDOR_DETAILS,
     );
 
     console.log('>>>Vendor Details>>>', vendorDetails);
-    setMobile;
-  }, []);
+    setMobile(vendorDetails?.phone);
+  };
 
   const requestCameraPermission = async () => {
     if (Platform.OS === 'android') {
@@ -201,7 +205,7 @@ const VendorProfileEdit = ({navigation, route}) => {
             StorageService.STORAGE_KEYS.USER_TYPE,
             'USER',
           );
-          navigation.replace('HomeScreen');
+          navigation.replace('VendorProfileEdit');
         })
         .catch(error => {
           setLoader(false);

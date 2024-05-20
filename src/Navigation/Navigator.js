@@ -32,6 +32,13 @@ import MyVenueVendorScreen from '../Screens/MyVenueVendorScreen';
 import MyBookingVendor from '../Screens/MyBookingVendor';
 import VendorMyOfferScreen from '../Screens/VendorMyOfferScreen';
 import AddOffer from '../Screens/AddOffer';
+import VendorProfileEdit from '../Screens/VendorProfileEdit';
+import BeTrainerScreen from '../Screens/BeTrainerScreen';
+import FindTrainer from '../Screens/FindTrainer';
+import HotOfferScreen from '../Screens/HotOfferScreen';
+import ReferEarnScreen from '../Screens/ReferEarnScreen';
+import SportsShopScreen from '../Screens/SportsShopScreen';
+import UPcoinScreen from '../Screens/UPcoinScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -77,6 +84,13 @@ const Navigator = () => {
           component={VendorMyOfferScreen}
         />
         <Stack.Screen name="AddOffer" component={AddOffer} />
+        <Stack.Screen name="VendorProfileEdit" component={VendorProfileEdit} />
+        <Stack.Screen name="BeTrainerScreen" component={BeTrainerScreen} />
+        <Stack.Screen name="FindTrainer" component={FindTrainer} />
+        <Stack.Screen name="HotOfferScreen" component={HotOfferScreen} />
+        <Stack.Screen name="ReferEarnScreen" component={ReferEarnScreen} />
+        <Stack.Screen name="SportsShopScreen" component={SportsShopScreen} />
+        <Stack.Screen name="UPcoinScreen" component={UPcoinScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

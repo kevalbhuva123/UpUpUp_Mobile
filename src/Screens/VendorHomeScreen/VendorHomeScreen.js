@@ -88,7 +88,7 @@ const VendorHomeScreen = ({navigation}) => {
           <TouchableOpacity
             style={styles.editBtn}
             onPress={() => {
-              navigation.navigate('MyProfileEdit');
+              navigation.navigate('VendorProfileEdit');
             }}>
             <Image source={IMAGES.Pencil} style={styles.editIcon} />
           </TouchableOpacity>

@@ -207,7 +207,7 @@ const MyProfileEdit = ({navigation, route}) => {
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
       <CustomHeader
-        heading={'Edit Profile'}
+        heading={'Add Profile'}
         onBackPress={() => navigation.goBack()}
       />
       <KeyboardAwareScrollView
@@ -273,7 +273,7 @@ const MyProfileEdit = ({navigation, route}) => {
               submitProfile();
             }}
             style={styles.loginBtn}>
-            <Text style={styles.btnText}>EDIT</Text>
+            <Text style={styles.btnText}>NEXT</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAwareScrollView>

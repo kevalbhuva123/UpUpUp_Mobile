@@ -3,6 +3,7 @@ import {
   Dimensions,
   FlatList,
   Image,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -69,11 +70,14 @@ const HomeScreen = ({navigation}) => {
           <Image source={IMAGES.Person} style={styles.editIcon} />
         </TouchableOpacity>
       </View>
-      <View style={styles.master}>
+      <ScrollView
+        style={styles.master}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{paddingBottom: scale(20)}}>
         <Carousel
           loop
           mode="parallax"
-          style={{backgroundColor: Color.main}}
+          style={{backgroundColor: Color.background}}
           width={width}
           height={scale(200)}
           autoPlay={true}
@@ -101,19 +105,97 @@ const HomeScreen = ({navigation}) => {
             </TouchableOpacity>
           )}
         />
+        <Text style={[styles.heading]} numberOfLines={1}>
+          Get-Set-Go! _______________________________________
+        </Text>
+
         <FlatList
-          data={HomeData}
+          data={HomeData.slice(0, 4)}
           renderItem={renderHomes}
           keyExtractor={item => item.id.toString()}
-          style={{flex: 1, marginTop: scale(-250)}}
+          style={{}}
           contentContainerStyle={{
-            paddingHorizontal: scale(10),
-            paddingVertical: scale(10),
+            width: '100%',
           }}
           showsVerticalScrollIndicator={false}
           numColumns={3}
         />
-      </View>
+        <Text style={[styles.heading]} numberOfLines={1}>
+          Offers & Discounts! __________________________________
+        </Text>
+
+        <FlatList
+          data={HomeData.slice(4, 6)}
+          renderItem={renderHomes}
+          keyExtractor={item => item.id.toString()}
+          style={{}}
+          contentContainerStyle={{
+            width: '100%',
+          }}
+          showsVerticalScrollIndicator={false}
+          numColumns={3}
+        />
+        <Text style={[styles.heading]} numberOfLines={1}>
+          UPcoins & Rewards! ________________________________________
+        </Text>
+
+        <FlatList
+          data={HomeData.slice(6, 8)}
+          renderItem={renderHomes}
+          keyExtractor={item => item.id.toString()}
+          style={{}}
+          contentContainerStyle={{
+            width: '100%',
+          }}
+          showsVerticalScrollIndicator={false}
+          numColumns={3}
+        />
+        <Text style={[styles.heading]} numberOfLines={1}>
+          It's all about me! ___________________________
+        </Text>
+
+        <FlatList
+          data={HomeData.slice(8, 12)}
+          renderItem={renderHomes}
+          keyExtractor={item => item.id.toString()}
+          style={{}}
+          contentContainerStyle={{
+            width: '100%',
+          }}
+          showsVerticalScrollIndicator={false}
+          numColumns={3}
+        />
+        <Text style={[styles.heading]} numberOfLines={1}>
+          Track Records! _____________________________
+        </Text>
+
+        <FlatList
+          data={HomeData.slice(12, 14)}
+          renderItem={renderHomes}
+          keyExtractor={item => item.id.toString()}
+          style={{}}
+          contentContainerStyle={{
+            width: '100%',
+          }}
+          showsVerticalScrollIndicator={false}
+          numColumns={3}
+        />
+        <Text style={[styles.heading]} numberOfLines={1}>
+          We hear you! _______________________________
+        </Text>
+
+        <FlatList
+          data={HomeData.slice(14, 15)}
+          renderItem={renderHomes}
+          keyExtractor={item => item.id.toString()}
+          style={{}}
+          contentContainerStyle={{
+            width: '100%',
+          }}
+          showsVerticalScrollIndicator={false}
+          numColumns={3}
+        />
+      </ScrollView>
       <CustomSidebar
         hamburgerVisible={hamburgerVisible}
         onClose={() => {
@@ -159,8 +241,8 @@ const styles = StyleSheet.create({
     backgroundColor: Color.white,
     elevation: 6,
     borderRadius: scale(10),
-    flex: 1,
-    marginHorizontal: scale(5),
+    width: '27%',
+    marginHorizontal: '3%',
     marginVertical: scale(10),
     paddingVertical: scale(15),
   },
@@ -227,5 +309,13 @@ const styles = StyleSheet.create({
   editBtn: {
     height: scale(35),
     width: scale(35),
+  },
+  heading: {
+    fontFamily: Fonts.bold,
+    color: Color.black,
+    fontSize: scale(14),
+    marginTop: scale(15),
+    paddingHorizontal: scale(15),
+    width: '100%',
   },
 });

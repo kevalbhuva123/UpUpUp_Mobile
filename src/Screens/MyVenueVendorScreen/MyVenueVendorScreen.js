@@ -39,10 +39,6 @@ const MyVenueVendorScreen = ({navigation}) => {
     getVenueList();
   }, []);
 
-  // useEffect(() => {
-  //   getSlotList(selectedVenue, selectedSport, selectedCourt, startDate);
-  // }, [startDate, selectedVenue, selectedSport, selectedCourt]);
-
   const getVenueList = async () => {
     try {
       setLoader(true);

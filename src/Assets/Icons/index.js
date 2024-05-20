@@ -59,4 +59,10 @@ export default IMAGES = {
   Gallery: require('./gallery.png'),
   Down: require('./down.png'),
   Email: require('./email.png'),
+  FindTrainer: require('./findCoach.png'),
+  BeTrainer: require('./coach.png'),
+  HotOffer: require('./fire.png'),
+  Shop: require('./shopping-bag.png'),
+  UpCoins: require('./profits.png'),
+  Refer: require('./salesman.png'),
 };
