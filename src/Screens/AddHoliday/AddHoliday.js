@@ -138,7 +138,7 @@ const AddHoliday = ({navigation}) => {
           setLoader(false);
           console.log(result);
           if (result?.ErrorCode == 0) {
-            setAlertMessage('An Offer Added Successfully.');
+            setAlertMessage('A Holiday Added Successfully.');
             setModalVisible(true);
           }
         })
