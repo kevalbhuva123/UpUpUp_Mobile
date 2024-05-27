@@ -65,4 +65,12 @@ export default IMAGES = {
   Shop: require('./shopping-bag.png'),
   UpCoins: require('./profits.png'),
   Refer: require('./salesman.png'),
+  Specialist: require('./expert.png'),
+  Availability: require('./24-hours.png'),
+  Achievement: require('./achieve.png'),
+  Certificate: require('./certificate.png'),
+  Follow: require('./heart.png'),
+  Wallet: require('./purse.png'),
+  Coin: require('./coin.png'),
+  Bonus: require('./present.png'),
 };

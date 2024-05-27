@@ -113,12 +113,12 @@ const HomeScreen = ({navigation}) => {
           data={HomeData.slice(0, 4)}
           renderItem={renderHomes}
           keyExtractor={item => item.id.toString()}
-          style={{}}
+          style={{paddingHorizontal: scale(10)}}
           contentContainerStyle={{
             width: '100%',
           }}
           showsVerticalScrollIndicator={false}
-          numColumns={3}
+          numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
           Offers & Discounts! __________________________________
@@ -128,12 +128,12 @@ const HomeScreen = ({navigation}) => {
           data={HomeData.slice(4, 6)}
           renderItem={renderHomes}
           keyExtractor={item => item.id.toString()}
-          style={{}}
+          style={{paddingHorizontal: scale(10)}}
           contentContainerStyle={{
             width: '100%',
           }}
           showsVerticalScrollIndicator={false}
-          numColumns={3}
+          numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
           UPcoins & Rewards! ________________________________________
@@ -143,12 +143,12 @@ const HomeScreen = ({navigation}) => {
           data={HomeData.slice(6, 8)}
           renderItem={renderHomes}
           keyExtractor={item => item.id.toString()}
-          style={{}}
+          style={{paddingHorizontal: scale(10)}}
           contentContainerStyle={{
             width: '100%',
           }}
           showsVerticalScrollIndicator={false}
-          numColumns={3}
+          numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
           It's all about me! ___________________________
@@ -158,12 +158,12 @@ const HomeScreen = ({navigation}) => {
           data={HomeData.slice(8, 12)}
           renderItem={renderHomes}
           keyExtractor={item => item.id.toString()}
-          style={{}}
+          style={{paddingHorizontal: scale(10)}}
           contentContainerStyle={{
             width: '100%',
           }}
           showsVerticalScrollIndicator={false}
-          numColumns={3}
+          numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
           Track Records! _____________________________
@@ -173,12 +173,12 @@ const HomeScreen = ({navigation}) => {
           data={HomeData.slice(12, 14)}
           renderItem={renderHomes}
           keyExtractor={item => item.id.toString()}
-          style={{}}
+          style={{paddingHorizontal: scale(10)}}
           contentContainerStyle={{
             width: '100%',
           }}
           showsVerticalScrollIndicator={false}
-          numColumns={3}
+          numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
           We hear you! _______________________________
@@ -188,12 +188,12 @@ const HomeScreen = ({navigation}) => {
           data={HomeData.slice(14, 15)}
           renderItem={renderHomes}
           keyExtractor={item => item.id.toString()}
-          style={{}}
+          style={{paddingHorizontal: scale(10)}}
           contentContainerStyle={{
             width: '100%',
           }}
           showsVerticalScrollIndicator={false}
-          numColumns={3}
+          numColumns={4}
         />
       </ScrollView>
       <CustomSidebar
@@ -241,21 +241,21 @@ const styles = StyleSheet.create({
     backgroundColor: Color.white,
     elevation: 6,
     borderRadius: scale(10),
-    width: '27%',
-    marginHorizontal: '3%',
+    width: '20%',
+    marginHorizontal: '1.5%',
     marginVertical: scale(10),
     paddingVertical: scale(15),
   },
   image: {
-    height: scale(40),
-    width: scale(40),
+    height: scale(20),
+    width: scale(20),
     resizeMode: 'contain',
     tintColor: Color.subBg,
   },
   title: {
     fontFamily: Fonts.bold,
     color: Color.black,
-    fontSize: scale(10),
+    fontSize: scale(7),
     textAlign: 'center',
     paddingTop: scale(7),
     paddingHorizontal: scale(5),

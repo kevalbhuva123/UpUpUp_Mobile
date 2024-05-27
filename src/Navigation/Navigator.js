@@ -39,6 +39,7 @@ import HotOfferScreen from '../Screens/HotOfferScreen';
 import ReferEarnScreen from '../Screens/ReferEarnScreen';
 import SportsShopScreen from '../Screens/SportsShopScreen';
 import UPcoinScreen from '../Screens/UPcoinScreen';
+import ViewProfileScreen from '../Screens/ViewProfileScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -91,6 +92,7 @@ const Navigator = () => {
         <Stack.Screen name="ReferEarnScreen" component={ReferEarnScreen} />
         <Stack.Screen name="SportsShopScreen" component={SportsShopScreen} />
         <Stack.Screen name="UPcoinScreen" component={UPcoinScreen} />
+        <Stack.Screen name="ViewProfileScreen" component={ViewProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -10,6 +10,7 @@ const Color = {
   modalBG: 'rgba(0, 0, 0, 0.5)',
   green: '#7CFC00',
   violet: '#EE82EE',
-  red:'#FF5050',
+  red: '#FF5050',
+  grey: '#808080',
 };
 export default Color;
