@@ -18,6 +18,7 @@ import IMAGES from '../../Assets/Icons/index';
 import CustomSidebar from '../../Components/CustomSidebar';
 import Carousel from 'react-native-reanimated-carousel';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import LinearGradient from 'react-native-linear-gradient';
 
 const HomeScreen = ({navigation}) => {
   const width = Dimensions.get('window').width;
@@ -39,8 +40,12 @@ const HomeScreen = ({navigation}) => {
           navigation.navigate(item.navigation);
         }}
         style={styles.card}>
-        <Image source={item.image} style={styles.image} />
-        <Text style={styles.title}>{item.name}</Text>
+        <View style={[styles.roundBorder, {borderColor: item?.borderColor}]}>
+          <Image source={item.image} style={styles.image} />
+        </View>
+        <Text style={styles.title} numberOfLines={2}>
+          {item.name}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -62,6 +67,10 @@ const HomeScreen = ({navigation}) => {
           }}>
           <Image source={IMAGES.Menu} style={styles.menu} />
         </TouchableOpacity>
+        <Image
+          source={IMAGES.LogoText}
+          style={{width: scale(100), height: scale(30), resizeMode: 'contain'}}
+        />
         <TouchableOpacity
           style={styles.menuBtn}
           onPress={() => {
@@ -76,7 +85,6 @@ const HomeScreen = ({navigation}) => {
         contentContainerStyle={{paddingBottom: scale(20)}}>
         <Carousel
           loop
-          mode="parallax"
           style={{backgroundColor: Color.background}}
           width={width}
           height={scale(200)}
@@ -88,10 +96,7 @@ const HomeScreen = ({navigation}) => {
             <TouchableOpacity
               style={{
                 flex: 1,
-                borderWidth: scale(0.5),
                 justifyContent: 'center',
-                borderRadius: scale(10),
-                borderColor: Color.main,
               }}>
               <Image
                 source={item.venueImage}
@@ -99,16 +104,20 @@ const HomeScreen = ({navigation}) => {
                   height: '100%',
                   width: '100%',
                   resizeMode: 'cover',
-                  borderRadius: scale(10),
                 }}
               />
             </TouchableOpacity>
           )}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
-          Get-Set-Go! _______________________________________
+          Get-Set-Go!
         </Text>
-
+        <LinearGradient
+          style={styles.gradient}
+          colors={[Color.grey, Color.grey, Color.background, Color.background]}
+          start={{x: 0, y: 1}}
+          end={{x: 1, y: 1}}
+        />
         <FlatList
           data={HomeData.slice(0, 4)}
           renderItem={renderHomes}
@@ -121,9 +130,14 @@ const HomeScreen = ({navigation}) => {
           numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
-          Offers & Discounts! __________________________________
+          Offers & Discounts!
         </Text>
-
+        <LinearGradient
+          style={styles.gradient}
+          colors={[Color.grey, Color.grey, Color.background, Color.background]}
+          start={{x: 0, y: 1}}
+          end={{x: 1, y: 1}}
+        />
         <FlatList
           data={HomeData.slice(4, 6)}
           renderItem={renderHomes}
@@ -136,9 +150,14 @@ const HomeScreen = ({navigation}) => {
           numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
-          UPcoins & Rewards! ________________________________________
+          UPcoins & Rewards!
         </Text>
-
+        <LinearGradient
+          style={styles.gradient}
+          colors={[Color.grey, Color.grey, Color.background, Color.background]}
+          start={{x: 0, y: 1}}
+          end={{x: 1, y: 1}}
+        />
         <FlatList
           data={HomeData.slice(6, 8)}
           renderItem={renderHomes}
@@ -151,9 +170,14 @@ const HomeScreen = ({navigation}) => {
           numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
-          It's all about me! ___________________________
+          It's all about me!
         </Text>
-
+        <LinearGradient
+          style={styles.gradient}
+          colors={[Color.grey, Color.grey, Color.background, Color.background]}
+          start={{x: 0, y: 1}}
+          end={{x: 1, y: 1}}
+        />
         <FlatList
           data={HomeData.slice(8, 12)}
           renderItem={renderHomes}
@@ -166,9 +190,14 @@ const HomeScreen = ({navigation}) => {
           numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
-          Track Records! _____________________________
+          Track Records!
         </Text>
-
+        <LinearGradient
+          style={styles.gradient}
+          colors={[Color.grey, Color.grey, Color.background, Color.background]}
+          start={{x: 0, y: 1}}
+          end={{x: 1, y: 1}}
+        />
         <FlatList
           data={HomeData.slice(12, 14)}
           renderItem={renderHomes}
@@ -181,9 +210,14 @@ const HomeScreen = ({navigation}) => {
           numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
-          We hear you! _______________________________
+          We hear you!
         </Text>
-
+        <LinearGradient
+          style={styles.gradient}
+          colors={[Color.grey, Color.grey, Color.background, Color.background]}
+          start={{x: 0, y: 1}}
+          end={{x: 1, y: 1}}
+        />
         <FlatList
           data={HomeData.slice(14, 15)}
           renderItem={renderHomes}
@@ -225,6 +259,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Color.background,
   },
+  gradient: {
+    height: scale(2),
+    width: '100%',
+    marginHorizontal: scale(15),
+    marginTop: scale(5),
+  },
   profileView: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -238,24 +278,25 @@ const styles = StyleSheet.create({
   card: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Color.white,
-    elevation: 6,
-    borderRadius: scale(10),
-    width: '20%',
+    // backgroundColor: Color.white,
+    // elevation: 6,
+    // borderRadius: scale(10),
+    width: '21%',
+    height: scale(80),
     marginHorizontal: '1.5%',
     marginVertical: scale(10),
-    paddingVertical: scale(15),
+    paddingVertical: scale(10),
   },
   image: {
     height: scale(20),
     width: scale(20),
     resizeMode: 'contain',
-    tintColor: Color.subBg,
+    tintColor: Color.black,
   },
   title: {
-    fontFamily: Fonts.bold,
+    fontFamily: Fonts.semibold,
     color: Color.black,
-    fontSize: scale(7),
+    fontSize: scale(8),
     textAlign: 'center',
     paddingTop: scale(7),
     paddingHorizontal: scale(5),
@@ -269,6 +310,7 @@ const styles = StyleSheet.create({
   menuBtn: {
     height: scale(35),
     width: scale(35),
+
     // paddingTop: scale(20),
   },
   iconTextView: {
@@ -302,6 +344,8 @@ const styles = StyleSheet.create({
     width: scale(30),
     resizeMode: 'cover',
     borderRadius: scale(100),
+    borderColor: Color.white,
+    borderWidth: scale(1),
   },
   detailContainer: {
     paddingVertical: scale(10),
@@ -317,5 +361,14 @@ const styles = StyleSheet.create({
     marginTop: scale(15),
     paddingHorizontal: scale(15),
     width: '100%',
+  },
+  roundBorder: {
+    borderRadius: scale(10000),
+    borderWidth: scale(2),
+    height: scale(40),
+    width: scale(40),
+    padding: scale(5),
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

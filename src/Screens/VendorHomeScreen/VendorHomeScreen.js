@@ -55,13 +55,24 @@ const VendorHomeScreen = ({navigation}) => {
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.menuBtn}
-          onPress={() => {
-            onHamburgerPress();
-          }}>
-          <Image source={IMAGES.Menu} style={styles.menu} />
-        </TouchableOpacity>
+        <View style={styles.subHeader}>
+          <TouchableOpacity
+            style={styles.menuBtn}
+            onPress={() => {
+              onHamburgerPress();
+            }}>
+            <Image source={IMAGES.Menu} style={styles.menu} />
+          </TouchableOpacity>
+          <Image
+            source={IMAGES.LogoText}
+            style={{
+              width: scale(100),
+              height: scale(30),
+              resizeMode: 'contain',
+            }}
+          />
+          <TouchableOpacity style={styles.menuBtn} disabled></TouchableOpacity>
+        </View>
         <View style={styles.profileView}>
           <Image
             source={
@@ -107,8 +118,12 @@ const VendorHomeScreen = ({navigation}) => {
           showsVerticalScrollIndicator={false}
           numColumns={3}
         />
-        <TouchableOpacity style={styles.loginBtn}>
-          <Text style={styles.btnText}>Assign Managers</Text>
+        <TouchableOpacity
+          style={styles.loginBtn}
+          onPress={() => {
+            navigation.navigate('BusinessAnalytics');
+          }}>
+          <Text style={styles.btnText}>Business Analytics</Text>
         </TouchableOpacity>
       </View>
       <CustomSidebar
@@ -196,7 +211,7 @@ const styles = StyleSheet.create({
   menuBtn: {
     height: scale(35),
     width: scale(35),
-    paddingTop: scale(20),
+    justifyContent: 'center',
   },
   iconTextView: {
     flexDirection: 'row',
@@ -236,5 +251,12 @@ const styles = StyleSheet.create({
   editBtn: {
     paddingVertical: scale(10),
     paddingLeft: scale(10),
+  },
+  subHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    alignContent: 'center',
+    paddingTop: scale(20),
   },
 });

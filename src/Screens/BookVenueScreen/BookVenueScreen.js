@@ -16,54 +16,57 @@ import Fonts from '../../Constants/Fonts';
 import StorageService from '../../utlis/StorageService';
 import apiConfigs from '../../api/apiconfig';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import {ActivityLoader} from '../../Components/Loader/Loader';
 
 const BookVenueScreen = ({navigation}) => {
   const [venues, setVenues] = useState([]);
   const [UserId, setUserId] = useState(779);
   const [venueId, setvenueId] = useState('');
-  const [sports, setsports] = useState(true);
-  const [area, setarea] = useState(true);
+  const [sports, setsports] = useState(false);
+  const [area, setarea] = useState(false);
+  const [Loader, setLoader] = useState(false);
 
   useEffect(() => {
-    // Fetch venues data when the component mounts
     fetchVenues();
   }, []);
 
   const fetchVenues = async () => {
     try {
-      // Retrieve user_id from storage
-      // const userData = await StorageService.getItem(
-      // //   StorageService.STORAGE_KEYS.USER_DETAILS
-      // // );
-      const UserID = '779';
-      // setUserId(userId.user_id);
-      // Create formData object
-      const formData = new FormData();
-      formData.append('user_id', UserID);
-      formData.append('venue_id', venueId);
-      formData.append('sports', sports);
-      formData.append('area', area);
+      setLoader(true);
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
 
-      // Make API request with formData and content type 'multipart/form-data'
-      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Venue/index`, {
+      console.log('>>>>USER DATA>>>', userData);
+      const formdata = new FormData();
+      formdata.append('user_id', userData?.id);
+      formdata.append('venue_id', '');
+      formdata.append('sports', 'true');
+      formdata.append('area', 'true');
+
+      const requestOptions = {
         method: 'POST',
-        body: formData,
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch('http://upupup.in/upsmart/api/Venue/index', requestOptions)
         .then(response => response.json())
         .then(data => {
+          setLoader(false);
           if (data.ErrorCode === 0) {
             setVenues(data.Data);
-            console.error('succuss');
+            console.log('succuss', data.Data[0].venue_image[0]);
           } else {
             console.error('Failed to fetch venues:', data.message);
           }
         })
-        .catch(error => console.error('Error fetching venues:', error));
+        .catch(error => {
+          setLoader(false), console.error('Error fetching venues:', error);
+        });
     } catch (error) {
       console.error('Error fetching venues:', error);
+      setLoader(false);
     }
   };
 
@@ -127,6 +130,7 @@ const BookVenueScreen = ({navigation}) => {
           showsVerticalScrollIndicator={false}
         />
       </View>
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };

@@ -1,4 +1,5 @@
 import IMAGES from '../Assets/Icons/index';
+import Color from './Color';
 
 export const Sports = [
   {
@@ -509,90 +510,105 @@ export const HomeData = [
     image: IMAGES.BookVenue,
     name: 'BOOK A\nVENUE',
     navigation: 'BookVenueScreen',
+    borderColor: Color.icon,
   },
   {
     id: 2,
     image: IMAGES.MatchHosting,
     name: 'MATCH\nHOSTING',
     navigation: 'HostMatchScreen',
+    borderColor: Color.icon,
   },
   {
     id: 3,
     image: IMAGES.FindTrainer,
     name: 'Find\nTrainer',
     navigation: 'FindTrainer',
+    borderColor: Color.icon,
   },
   {
     id: 4,
     image: IMAGES.BeTrainer,
     name: 'Be A\nTrainer',
     navigation: 'BeTrainerScreen',
+    borderColor: Color.icon,
   },
   {
     id: 5,
     image: IMAGES.HotOffer,
     name: 'Hot\nOffer',
     navigation: 'HotOfferScreen',
+    borderColor: Color.yellow,
   },
   {
     id: 6,
     image: IMAGES.Shop,
     name: 'Sports\nShops',
     navigation: 'SportsShopScreen',
+    borderColor: Color.yellow,
   },
   {
     id: 7,
     image: IMAGES.UpCoins,
     name: 'UP\nCoins',
     navigation: 'UPcoinScreen',
+    borderColor: Color.lightGrey,
   },
   {
     id: 8,
     image: IMAGES.Refer,
     name: 'Refer\n& Earn',
     navigation: 'ReferEarnScreen',
+    borderColor: Color.lightGrey,
   },
   {
     id: 9,
     image: IMAGES.MySport,
     name: 'MY\nSPORTS',
     navigation: 'MySportScreen',
+    borderColor: Color.main,
   },
   {
     id: 10,
     image: IMAGES.MyLocation,
     name: 'MY\nLOCATIONS',
     navigation: 'MyAreaScreen',
+    borderColor: Color.main,
   },
   {
     id: 11,
     image: IMAGES.MySkills,
     name: 'MY\nSKILLS',
     navigation: 'MySkillScreen',
+    borderColor: Color.main,
   },
   {
     id: 12,
     image: IMAGES.MyConnections,
     name: 'MY\nCONNECTIONS',
     navigation: 'MyConnectionScreen',
+    borderColor: Color.main,
   },
   {
     id: 13,
     image: IMAGES.MyMatches,
     name: 'MY\nMATCHES',
     navigation: 'MyMatchesScreen',
+    borderColor: Color.icon,
   },
   {
     id: 14,
     image: IMAGES.MyBookings,
     name: 'MY\nBOOKINGS',
     navigation: 'MyBookingScreen',
+    borderColor: Color.icon,
   },
   {
     id: 15,
     image: IMAGES.Notifications,
     name: 'NOTIFICATIONS',
     navigation: 'HelpScreen',
+    borderColor: Color.yellow,
   },
 ];
 
