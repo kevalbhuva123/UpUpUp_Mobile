@@ -20,15 +20,18 @@ import {ActivityLoader} from '../../Components/Loader/Loader';
 
 const BookVenueScreen = ({navigation}) => {
   const [venues, setVenues] = useState([]);
-  const [UserId, setUserId] = useState(779);
   const [venueId, setvenueId] = useState('');
-  const [sports, setsports] = useState(false);
-  const [area, setarea] = useState(false);
+  const [sports, setsports] = useState('false');
+  const [area, setarea] = useState('false');
   const [Loader, setLoader] = useState(false);
 
   useEffect(() => {
     fetchVenues();
   }, []);
+
+  useEffect(() => {
+    fetchVenues();
+  }, [sports, area]);
 
   const fetchVenues = async () => {
     try {
@@ -41,8 +44,8 @@ const BookVenueScreen = ({navigation}) => {
       const formdata = new FormData();
       formdata.append('user_id', userData?.id);
       formdata.append('venue_id', '');
-      formdata.append('sports', 'true');
-      formdata.append('area', 'true');
+      formdata.append('sports', sports);
+      formdata.append('area', area);
 
       const requestOptions = {
         method: 'POST',
@@ -50,7 +53,7 @@ const BookVenueScreen = ({navigation}) => {
         redirect: 'follow',
       };
 
-      fetch('http://upupup.in/upsmart/api/Venue/index', requestOptions)
+      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Venue/index`, requestOptions)
         .then(response => response.json())
         .then(data => {
           setLoader(false);
@@ -71,7 +74,9 @@ const BookVenueScreen = ({navigation}) => {
   };
 
   const renderImageItem = ({item}) => (
-    <Image style={styles.image} source={{uri: item}} />
+    <View style={styles.roundBorder}>
+      <Image style={styles.image} source={{uri: item?.image}} />
+    </View>
   );
 
   const renderRemainingCount = item => {
@@ -87,10 +92,17 @@ const BookVenueScreen = ({navigation}) => {
       <TouchableOpacity
         style={styles.card}
         onPress={() => {
-          navigation.navigate('VenueDetailScreen');
+          navigation.navigate('VenueDetailScreen', {data: item});
         }}>
         <Image source={{uri: item.venue_image[0]}} style={styles.venueImage} />
-        <Text style={styles.heading}>{item.venue}</Text>
+
+        <View style={styles.titleView}>
+          <Text style={styles.heading}>{item.venue}</Text>
+          <View style={styles.titleLeft}>
+            <Image source={IMAGES.Star} style={styles.star} />
+            <Text style={styles.heading}>{item?.rating}</Text>
+          </View>
+        </View>
         <View style={styles.iconTextView}>
           <Image source={IMAGES.Location} style={styles.icons} />
           <Text style={styles.subText}>{item.area}</Text>
@@ -98,11 +110,12 @@ const BookVenueScreen = ({navigation}) => {
         <View style={styles.container}>
           <View style={styles.subContainer}>
             <FlatList
-              data={item.venue_sports}
+              data={(item?.venue_sports_2).slice(0, 4)}
               renderItem={renderImageItem}
               keyExtractor={(item, index) => index.toString()}
               horizontal
             />
+            {renderRemainingCount(item)}
           </View>
           <View style={styles.bookNow}>
             <Text style={styles.buttonText}>BOOK NOW</Text>
@@ -119,6 +132,47 @@ const BookVenueScreen = ({navigation}) => {
         onBackPress={() => navigation.goBack()}
       />
       <View style={styles.master}>
+        <View style={styles.filterView}>
+          <View style={styles.bookNow}>
+            <Text style={styles.buttonText}>Filter By</Text>
+          </View>
+          <TouchableOpacity
+            onPress={() => {
+              sports == 'true' ? setsports('false') : setsports('true');
+            }}
+            style={styles.filterBtn}>
+            <Image
+              source={sports == 'true' ? IMAGES.Checked : IMAGES.Unchecked}
+              style={
+                sports == 'true' ? styles.checkedIcon : styles.unCheckedIcon
+              }
+            />
+            <Text
+              style={[
+                styles.heading,
+                {color: Color.icon, marginLeft: scale(5)},
+              ]}>
+              Sports
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              area == 'true' ? setarea('false') : setarea('true');
+            }}
+            style={styles.filterBtn}>
+            <Image
+              source={area == 'true' ? IMAGES.Checked : IMAGES.Unchecked}
+              style={area == 'true' ? styles.checkedIcon : styles.unCheckedIcon}
+            />
+            <Text
+              style={[
+                styles.heading,
+                {color: Color.icon, marginLeft: scale(5)},
+              ]}>
+              Area
+            </Text>
+          </TouchableOpacity>
+        </View>
         <FlatList
           data={venues}
           renderItem={renderVenues}
@@ -145,6 +199,31 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Color.background,
   },
+  filterView: {
+    width: '100%',
+    paddingVertical: scale(10),
+    paddingHorizontal: scale(20),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Color.white,
+  },
+  filterBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  checkedIcon: {
+    height: scale(16),
+    width: scale(16),
+    resizeMode: 'contain',
+    tintColor: Color.icon,
+  },
+  unCheckedIcon: {
+    height: scale(16),
+    width: scale(16),
+    resizeMode: 'contain',
+    tintColor: Color.icon,
+  },
   venueImage: {
     width: '100%',
     height: scale(120),
@@ -165,18 +244,48 @@ const styles = StyleSheet.create({
     paddingLeft: scale(10),
     paddingTop: scale(5),
   },
+  star: {
+    height: scale(16),
+    width: scale(16),
+    resizeMode: 'contain',
+    marginRight: scale(3),
+  },
+  roundBorder: {
+    height: scale(25),
+    width: scale(25),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: scale(100),
+    borderWidth: scale(0.5),
+    borderColor: Color.icon,
+    marginRight: scale(3),
+  },
   icons: {
     width: scale(12),
     height: scale(12),
     resizeMode: 'contain',
     marginRight: scale(5),
   },
+  titleView: {
+    paddingHorizontal: scale(10),
+    paddingTop: scale(10),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  titleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Color.green,
+    padding: scale(2),
+    width: '15%',
+    justifyContent: 'center',
+    borderRadius: scale(5),
+  },
   heading: {
     fontSize: scale(14),
     fontFamily: Fonts.semibold,
     color: Color.black,
-    paddingLeft: scale(10),
-    paddingTop: scale(10),
   },
   subText: {
     fontSize: scale(12),
@@ -207,6 +316,7 @@ const styles = StyleSheet.create({
     width: scale(16),
     margin: scale(5),
     tintColor: Color.icon,
+    resizeMode: 'contain',
   },
   buttonText: {
     fontFamily: Fonts.bold,

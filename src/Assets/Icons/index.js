@@ -73,5 +73,8 @@ export default IMAGES = {
   Wallet: require('./purse.png'),
   Coin: require('./coin.png'),
   Bonus: require('./present.png'),
-  Refer: require('./send-mail.png'),
+  Refers: require('./send-mail.png'),
+  Feedbacks: require('./feedback.png'),
+  HowWorks: require('./inform.png'),
+  Star: require('./star.png'),
 };

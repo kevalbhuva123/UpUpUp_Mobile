@@ -110,7 +110,7 @@ const HomeScreen = ({navigation}) => {
           )}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
-          Get-Set-Go!
+          get-set-go!
         </Text>
         <LinearGradient
           style={styles.gradient}
@@ -130,7 +130,7 @@ const HomeScreen = ({navigation}) => {
           numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
-          Offers & Discounts!
+          offers & discounts!
         </Text>
         <LinearGradient
           style={styles.gradient}
@@ -150,7 +150,7 @@ const HomeScreen = ({navigation}) => {
           numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
-          UPcoins & Rewards!
+          UPcoins & rewards!
         </Text>
         <LinearGradient
           style={styles.gradient}
@@ -170,7 +170,7 @@ const HomeScreen = ({navigation}) => {
           numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
-          It's all about me!
+          it's all about me!
         </Text>
         <LinearGradient
           style={styles.gradient}
@@ -190,7 +190,7 @@ const HomeScreen = ({navigation}) => {
           numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
-          Track Records!
+          track records!
         </Text>
         <LinearGradient
           style={styles.gradient}
@@ -210,7 +210,7 @@ const HomeScreen = ({navigation}) => {
           numColumns={4}
         />
         <Text style={[styles.heading]} numberOfLines={1}>
-          We hear you!
+          we hear you!
         </Text>
         <LinearGradient
           style={styles.gradient}
@@ -219,7 +219,7 @@ const HomeScreen = ({navigation}) => {
           end={{x: 1, y: 1}}
         />
         <FlatList
-          data={HomeData.slice(14, 15)}
+          data={HomeData.slice(14, 17)}
           renderItem={renderHomes}
           keyExtractor={item => item.id.toString()}
           style={{paddingHorizontal: scale(10)}}
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     backgroundColor: Color.background,
   },
   gradient: {
-    height: scale(2),
+    height: scale(1),
     width: '100%',
     marginHorizontal: scale(15),
     marginTop: scale(5),
@@ -294,9 +294,9 @@ const styles = StyleSheet.create({
     tintColor: Color.black,
   },
   title: {
-    fontFamily: Fonts.semibold,
+    fontFamily: Fonts.regular,
     color: Color.black,
-    fontSize: scale(8),
+    fontSize: scale(10),
     textAlign: 'center',
     paddingTop: scale(7),
     paddingHorizontal: scale(5),
@@ -355,16 +355,16 @@ const styles = StyleSheet.create({
     width: scale(35),
   },
   heading: {
-    fontFamily: Fonts.bold,
+    fontFamily: Fonts.regular,
     color: Color.black,
     fontSize: scale(14),
-    marginTop: scale(15),
+    marginTop: scale(10),
     paddingHorizontal: scale(15),
     width: '100%',
   },
   roundBorder: {
     borderRadius: scale(10000),
-    borderWidth: scale(2),
+    borderWidth: scale(1),
     height: scale(40),
     width: scale(40),
     padding: scale(5),

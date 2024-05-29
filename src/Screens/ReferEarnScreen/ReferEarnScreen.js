@@ -16,7 +16,7 @@ const ReferEarnScreen = ({navigation}) => {
         onBackPress={() => navigation.goBack()}
       />
       <View style={styles.master}>
-        <Image source={IMAGES.Refer} style={styles.icon} />
+        <Image source={IMAGES.Refers} style={styles.icon} />
         <Text style={styles.title}>Not yet started referring?</Text>
         <TouchableOpacity style={styles.referBtn}>
           <Text style={styles.btnTxt}>Refer</Text>
