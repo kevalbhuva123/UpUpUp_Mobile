@@ -6,51 +6,134 @@ import {
   TouchableOpacity,
   View,
   FlatList,
+  Dimensions,
+  Linking,
 } from 'react-native';
-import React from 'react';
+import React, {useState} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
 import IMAGES from '../../Assets/Icons/index';
-import {Facilities, Sports} from '../../Constants/StaticData';
+import {Facilities, Sports, Venues} from '../../Constants/StaticData';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
-const VenueDetailScreen = ({navigation}) => {
+import Carousel from 'react-native-reanimated-carousel';
+
+const VenueDetailScreen = ({navigation, route}) => {
+  const width = Dimensions.get('window').width;
+
+  const [venueDetails, setVenueDetails] = useState(route?.params?.data);
+
   const renderItem = ({item}) => (
     <View style={styles.iconContainer}>
-      <Image source={item.image} style={styles.sportsIcons} />
+      <Image source={{uri: item}} style={styles.sportsIcons} />
     </View>
   );
   const renderFacilities = ({item}) => (
     <View style={styles.iconContainer}>
-      <Text style={styles.subText}>{item.name}</Text>
+      <Text style={styles.subText}>{item}</Text>
     </View>
   );
+
+  const openGoogleMaps = (latitude, longitude) => {
+    const url = `https://www.google.com/maps?q=${latitude},${longitude}`;
+    Linking.openURL(url).catch(err => console.error('An error occurred', err));
+  };
 
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
       <CustomHeader
-        heading={'Book a Venue'}
+        heading={'Venue Detail'}
         onBackPress={() => navigation.goBack()}
       />
       <View style={styles.master}>
         <ScrollView
-          style={{flexGrow: 1, padding: scale(15)}}
+          style={{flexGrow: 1}}
           contentContainerStyle={{
-            backgroundColor: Color.white,
+            backgroundColor: Color.background,
             paddingBottom: scale(30),
           }}
           showsVerticalScrollIndicator={false}>
           <View>
-            <View style={styles.subView}>
-              <Text style={styles.heading}>Sports Available</Text>
-              <View>
+            <Carousel
+              loop
+              style={{backgroundColor: Color.background}}
+              width={width}
+              height={scale(200)}
+              autoPlay={true}
+              // data={Venues}
+              data={(venueDetails?.venue_image).concat(
+                venueDetails?.gallery_image,
+              )}
+              scrollAnimationDuration={1000}
+              onSnapToItem={index => {}}
+              renderItem={({item, index}) => (
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    justifyContent: 'center',
+                  }}>
+                  <Image
+                    source={{uri: item}}
+                    style={{
+                      height: '100%',
+                      width: '100%',
+                      resizeMode: 'cover',
+                    }}
+                  />
+                </TouchableOpacity>
+              )}
+            />
+            <View style={styles.headingView}>
+              <View style={{width: '80%'}}>
+                <Text style={styles.heading}>{venueDetails?.venue}</Text>
+                <Text style={styles.subText}>{venueDetails?.area}</Text>
+              </View>
+              <TouchableOpacity
+                style={{
+                  width: '20%',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                onPress={() => {
+                  openGoogleMaps(venueDetails?.lat, venueDetails?.lon);
+                }}>
+                <Image source={IMAGES.MapSearch} style={styles.mapSearch} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.subMain}>
+              <View style={styles.subView}>
+                <Text style={styles.heading}>Timing</Text>
+                <Text style={styles.subText}>
+                  Opening :{' '}
+                  <Text style={styles.valueText}>{venueDetails?.morning}</Text>
+                </Text>
+                <Text style={styles.subText}>
+                  Closing :{' '}
+                  <Text style={styles.valueText}>{venueDetails?.evening}</Text>
+                </Text>
+              </View>
+              <View style={styles.subView}>
+                <Text style={styles.heading}>Sports Available</Text>
                 <FlatList
-                  data={Sports}
+                  data={venueDetails?.venue_sports_image}
                   renderItem={renderItem}
-                  keyExtractor={item => item.id}
+                  keyExtractor={item => item}
                   numColumns={6}
+                />
+              </View>
+              <View style={styles.subView}>
+                <Text style={styles.heading}>More About Venue</Text>
+                <Text style={styles.subText}>{venueDetails?.description}</Text>
+              </View>
+              <View style={styles.subView}>
+                <Text style={styles.heading}>Facilities</Text>
+                <FlatList
+                  data={venueDetails?.facility}
+                  renderItem={renderFacilities}
+                  keyExtractor={item => item}
+                  // numColumns={6}
                 />
               </View>
             </View>
@@ -59,9 +142,9 @@ const VenueDetailScreen = ({navigation}) => {
         <TouchableOpacity
           style={styles.bottomButton}
           onPress={() => {
-            navigation.navigate('BookNowScreen');
+            navigation.navigate('BookNowScreen', {data: venueDetails});
           }}>
-          <Text style={styles.buttonText}>MAKE PAYMENT</Text>
+          <Text style={styles.buttonText}>BOOK NOW</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -79,8 +162,20 @@ const styles = StyleSheet.create({
     backgroundColor: Color.background,
   },
   subView: {
-    paddingTop: scale(15),
     width: '100%',
+    backgroundColor: Color.white,
+    shadowColor: Color.black,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: scale(2),
+
+    elevation: 6,
+    borderRadius: scale(10),
+    padding: scale(10),
+    marginBottom: scale(15),
   },
   moreAboutView: {
     borderRadius: scale(10),
@@ -101,6 +196,11 @@ const styles = StyleSheet.create({
     color: Color.white,
     fontSize: scale(14),
   },
+  valueText: {
+    fontFamily: Fonts.semibold,
+    color: Color.black,
+    fontSize: scale(12),
+  },
   venueImage: {
     width: '100%',
     height: scale(180),
@@ -111,9 +211,10 @@ const styles = StyleSheet.create({
     width: scale(40),
     resizeMode: 'contain',
   },
-  submain: {
-    flex: 1,
+  subMain: {
     padding: scale(20),
+    backgroundColor: Color.background,
+    flex: 1,
   },
   headingView: {
     flexDirection: 'row',
@@ -121,7 +222,10 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     borderBottomColor: Color.lightGrey,
     borderBottomWidth: scale(1),
-    paddingBottom: scale(20),
+    width: '100%',
+    paddingHorizontal: scale(20),
+    paddingVertical: scale(15),
+    backgroundColor: Color.white,
   },
   heading: {
     fontFamily: Fonts.bold,
@@ -146,7 +250,7 @@ const styles = StyleSheet.create({
     margin: scale(5),
     borderWidth: scale(1),
     borderRadius: scale(100),
-    borderColor: Color.main,
+    borderColor: Color.icon,
     padding: scale(6),
   },
 });

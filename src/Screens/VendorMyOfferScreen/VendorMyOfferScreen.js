@@ -680,6 +680,7 @@ const styles = StyleSheet.create({
   iconStyle: {
     width: scale(20),
     height: scale(20),
+    resizeMode: 'contain',
   },
   inputSearchStyle: {
     height: scale(40),
