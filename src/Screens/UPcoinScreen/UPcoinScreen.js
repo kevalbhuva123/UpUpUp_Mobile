@@ -14,8 +14,55 @@ import Fonts from '../../Constants/Fonts';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import IMAGES from '../../Assets/Icons/index';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import {ActivityLoader} from '../../Components/Loader/Loader';
+import apiConfigs from '../../api/apiconfig';
+import StorageService from '../../utlis/StorageService';
 
 const UPcoinScreen = ({navigation}) => {
+  const [Loader, setLoader] = useState(false);
+  const [upCoinData, setUpCoinData] = useState();
+  useEffect(() => {
+    getCoinDetail();
+  }, []);
+
+  const getCoinDetail = async () => {
+    try {
+      setLoader(true);
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      console.log('>>>>USER DATA>>>', userData);
+      const formdata = new FormData();
+      formdata.append('user_id', userData?.id);
+
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Upcoin/up_coin_settings`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+
+          setUpCoinData(result?.data);
+          console.log(result);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.error('Error fetching venues:', error);
+      setLoader(false);
+    }
+  };
+
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
@@ -34,9 +81,12 @@ const UPcoinScreen = ({navigation}) => {
           <View>
             <Text style={styles.title}>Balance</Text>
             <Text style={styles.coinCount}>
-              100 <Text style={styles.subTitle}>Coins</Text>
+              {upCoinData?.total} <Text style={styles.subTitle}>Coins</Text>
             </Text>
-            <Text style={styles.infoTxt}>Rs. 1 = 1 Coin</Text>
+            <Text style={styles.infoTxt}>
+              Rs. {upCoinData?.conversion_rupee} = {upCoinData?.conversion_coin}{' '}
+              Coin
+            </Text>
           </View>
           <Image source={IMAGES.Wallet} style={styles.walletIcon} />
         </View>
@@ -45,15 +95,18 @@ const UPcoinScreen = ({navigation}) => {
           <View style={styles.container}>
             <Image source={IMAGES.Coin} style={styles.subIcon} />
             <Text style={styles.accSecText}>Purchased UPcoins</Text>
-            <Text style={{paddingLeft: scale(60)}}>30</Text>
+            <Text style={{paddingLeft: scale(60)}}>{upCoinData?.up_coin}</Text>
           </View>
           <View style={styles.container}>
             <Image source={IMAGES.Bonus} style={styles.subIcon} />
             <Text style={styles.accSecText}>Bonus UPcoins</Text>
-            <Text style={{paddingLeft: scale(90)}}>70</Text>
+            <Text style={{paddingLeft: scale(90)}}>
+              {upCoinData?.bonus_coin}
+            </Text>
           </View>
         </View>
       </KeyboardAwareScrollView>
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };

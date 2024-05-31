@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
@@ -18,8 +18,14 @@ import IMAGES from '../../Assets/Icons/index';
 import moment from 'moment';
 import DatePicker from 'react-native-date-picker';
 import {ActivityLoader} from '../../Components/Loader/Loader';
+import RBSheet from 'react-native-raw-bottom-sheet';
+import apiConfigs from '../../api/apiconfig';
+import StorageService from '../../utlis/StorageService';
+import LinearGradient from 'react-native-linear-gradient';
 
 const BookNowScreen = ({navigation, route}) => {
+  const refRBSheet = useRef();
+
   const [venueDetails, setVenueDetails] = useState(route?.params?.data);
   const [isFromSDate, setIsFromSDate] = useState(false);
   const [isDateOpen, setIsDateOpen] = useState(false);
@@ -31,7 +37,45 @@ const BookNowScreen = ({navigation, route}) => {
   const [redeemCode, setRedeemCode] = useState('');
   const [coPlayer, setCoPlayer] = useState([]);
   const [coPlayerFromContact, setCoPlayerFromContact] = useState([]);
+  const [slotTime, setSlotTime] = useState([]);
+  const [couponList, setCouponList] = useState([]);
 
+  useEffect(() => {
+    getOfferCoupon();
+  }, []);
+
+  const getOfferCoupon = async () => {
+    try {
+      setLoader(true);
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      console.log('>>>>USER DATA>>>', userData);
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Coupons/index/${userData?.id}`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+          console.log(result);
+          setCouponList(result?.Data);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      setLoader(false);
+      console.log(error);
+    }
+  };
   const getSlotList = (vID, sID, cID, date) => {
     try {
       setLoader(true);
@@ -119,8 +163,59 @@ const BookNowScreen = ({navigation, route}) => {
 
   const renderSlots = ({item}) => {
     return (
-      <TouchableOpacity style={styles.slotBtn}>
-        <Text style={styles.slotText}>{item?.time}</Text>
+      <TouchableOpacity
+        style={[
+          styles.slotBtn,
+          {
+            backgroundColor:
+              slotTime == moment(item?.time, 'HH:mm:ss').format('hh:mm A')
+                ? Color.subBg
+                : Color.background,
+          },
+        ]}
+        onPress={() => {
+          setSlotTime(moment(item?.time, 'HH:mm:ss').format('hh:mm A'));
+        }}>
+        <Text style={styles.slotText}>
+          {moment(item?.time, 'HH:mm:ss').format('hh:mm A')}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderCoupons = ({item}) => {
+    return (
+      <TouchableOpacity style={styles.coupon}>
+        <View style={styles.leftCoupon}>
+          <Text style={styles.verticalTxt}>Coupon</Text>
+        </View>
+        <LinearGradient
+          angle={135}
+          colors={[Color.main, Color.main, Color.icon]}
+          style={styles.gradient}
+          useAngle={true}>
+          <Text style={styles.couponCode}>
+            {item?.coupon_code} - Flat {item?.coupon_amount}
+            {item?.percentage == 'Yes' ? '%' : 'Rs.'}
+          </Text>
+          <View style={styles.divider}></View>
+          <Text
+            style={[styles.subText, {color: Color.white}]}
+            numberOfLines={2}>
+            {item?.description}
+          </Text>
+          <Text
+            style={[
+              styles.heading,
+              {
+                paddingBottom: scale(0),
+                color: Color.white,
+                paddingTop: scale(3),
+              },
+            ]}>
+            Valid upto: {moment(item?.valid_to).format('DD-MM-YYYY')}
+          </Text>
+        </LinearGradient>
       </TouchableOpacity>
     );
   };
@@ -188,7 +283,7 @@ const BookNowScreen = ({navigation, route}) => {
             />
           </View>
 
-          {venueDetails?.court?.length > 0 && (
+          {venueDetails?.court?.length > 0 && selectedSport.length > 0 && (
             <View style={styles.subView}>
               <Text style={styles.heading}>Choose a Court</Text>
               <FlatList
@@ -205,25 +300,29 @@ const BookNowScreen = ({navigation, route}) => {
             </View>
           )}
 
-          {slots.length > 0 && (
-            <View style={styles.subView}>
-              <Text style={styles.heading}>Choose a Slot</Text>
-              <FlatList
-                data={slots}
-                renderItem={renderSlots}
-                keyExtractor={item => item.slot_id.toString()}
-                numColumns={3}
-                contentContainerStyle={{
-                  backgroundColor: Color.white,
-                  width: '100%',
-                  borderRadius: scale(10),
-                }}
-              />
-            </View>
-          )}
+          {slots.length > 0 &&
+            selectedSport.length > 0 &&
+            selectedCourt.length > 0 && (
+              <View style={styles.subView}>
+                <Text style={styles.heading}>Choose a Slot</Text>
+                <FlatList
+                  data={slots}
+                  renderItem={renderSlots}
+                  keyExtractor={item => item.slot_id.toString()}
+                  numColumns={3}
+                  contentContainerStyle={{
+                    backgroundColor: Color.white,
+                    width: '100%',
+                    borderRadius: scale(10),
+                  }}
+                />
+              </View>
+            )}
           <View style={styles.subView}>
             <Text style={styles.heading}>Redeem Coupon</Text>
-            <TouchableOpacity style={styles.pickerBtn}>
+            <TouchableOpacity
+              style={styles.pickerBtn}
+              onPress={() => refRBSheet.current.open()}>
               <TextInput
                 onChangeText={text => {
                   setRedeemCode(text);
@@ -262,6 +361,43 @@ const BookNowScreen = ({navigation, route}) => {
         dividerColor={Color.icon}
       />
       <ActivityLoader loading={Loader} />
+      <RBSheet
+        ref={refRBSheet}
+        useNativeDriver={false}
+        customStyles={{
+          container: {
+            borderTopLeftRadius: scale(10),
+            borderTopRightRadius: scale(10),
+          },
+          wrapper: {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+          },
+          draggableIcon: {
+            backgroundColor: Color.main,
+          },
+        }}
+        customModalProps={{
+          animationType: 'slide',
+          statusBarTranslucent: true,
+        }}
+        customAvoidingViewProps={{
+          enabled: false,
+        }}
+        height={scale(400)}
+        draggable>
+        <View style={styles.drawerMain}>
+          <Text style={styles.rbTitle}>Select Coupon</Text>
+          <FlatList
+            data={couponList}
+            renderItem={renderCoupons}
+            keyExtractor={item => item.coupon_id.toString()}
+            contentContainerStyle={{
+              backgroundColor: Color.white,
+              width: '100%',
+            }}
+          />
+        </View>
+      </RBSheet>
     </View>
   );
 };
@@ -276,6 +412,58 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Color.background,
     padding: scale(20),
+  },
+  divider: {
+    marginVertical: scale(10),
+    marginHorizontal: scale(20),
+    height: scale(1),
+    width: '70%',
+    backgroundColor: Color.white,
+  },
+  couponCode: {
+    fontSize: scale(20),
+    fontFamily: Fonts.bold,
+    color: Color.white,
+  },
+  coupon: {
+    width: '100%',
+    backgroundColor: Color.white,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginBottom: scale(15),
+    height: scale(120),
+  },
+  leftCoupon: {
+    width: '30%',
+    backgroundColor: Color.main,
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderTopLeftRadius: scale(20),
+    borderBottomLeftRadius: scale(20),
+    borderTopRightRadius: scale(10),
+    borderBottomRightRadius: scale(10),
+  },
+  verticalTxt: {
+    fontFamily: Fonts.bold,
+    color: Color.white,
+    fontSize: scale(20),
+    transform: [{rotate: '-90deg'}],
+  },
+  gradient: {
+    height: '100%',
+    width: '70%',
+    borderBottomLeftRadius: scale(10),
+    borderTopLeftRadius: scale(10),
+    alignItems: 'center',
+    padding: scale(10),
+    justifyContent: 'center',
+  },
+  rbTitle: {
+    fontFamily: Fonts.bold,
+    fontSize: scale(18),
+    color: Color.black,
+    paddingBottom: scale(20),
   },
   subView: {
     width: '100%',
@@ -386,5 +574,24 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     color: Color.white,
     fontSize: scale(14),
+  },
+  slotText: {
+    fontFamily: Fonts.regular,
+    fontSize: scale(12),
+    color: Color.black,
+  },
+  slotBtn: {
+    flex: 1,
+    margin: scale(5),
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: scale(5),
+    borderWidth: scale(0.5),
+    borderColor: Color.lightGrey,
+    borderRadius: scale(100),
+  },
+  drawerMain: {
+    paddingTop: scale(10),
+    paddingHorizontal: scale(20),
   },
 });

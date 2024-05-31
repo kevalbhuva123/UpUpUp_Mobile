@@ -10,6 +10,7 @@ import {
   ImageBackground,
   Platform,
   PermissionsAndroid,
+  FlatList,
 } from 'react-native';
 import CustomHeader from '../../Components/CustomHeader';
 import {scale} from '../../utlis/Scale';
@@ -28,7 +29,7 @@ import StorageService from '../../utlis/StorageService';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 import {Sports} from '../../Constants/StaticData';
 
-const BeTrainerScreen = () => {
+const BeTrainerScreen = ({navigation}) => {
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
   const [address, setAddress] = useState('');
@@ -52,92 +53,6 @@ const BeTrainerScreen = () => {
 
     console.log('>>>Vendor Details>>>', vendorDetails);
     setMobile(vendorDetails?.phone);
-  };
-
-  const requestCameraPermission = async () => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.CAMERA,
-          {
-            title: 'Camera Permission',
-            message: 'App needs camera permission',
-          },
-        );
-        // If CAMERA Permission is granted
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } catch (err) {
-        return false;
-      }
-    } else return true;
-  };
-
-  const requestExternalWritePermission = async () => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          {
-            title: 'External Storage Write Permission',
-            message: 'App needs write permission',
-          },
-        );
-        // If WRITE_EXTERNAL_STORAGE Permission is granted
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } catch (err) {
-        console.warn(err);
-      }
-      return false;
-    } else return true;
-  };
-
-  const captureImage = async () => {
-    setModalVisible(false);
-    let options = {
-      mediaType: 'photo',
-      saveToPhotos: true,
-    };
-    let isCameraPermitted = await requestCameraPermission();
-    let isStoragePermitted = await requestExternalWritePermission();
-    if (isCameraPermitted && isStoragePermitted) {
-      setTimeout(() => {
-        launchCamera(options, response => {
-          if (response.didCancel) {
-            return;
-          } else if (response.errorCode == 'camera_unavailable') {
-            return;
-          } else if (response.errorCode == 'permission') {
-            return;
-          } else if (response.errorCode == 'others') {
-            return;
-          }
-
-          console.log(response.assets[0]);
-          setAvatarSource(response.assets[0]);
-        });
-      }, 1000);
-    }
-  };
-
-  const chooseFile = () => {
-    setModalVisible(false);
-    let options = {
-      mediaType: 'photo',
-    };
-    launchImageLibrary(options, response => {
-      if (response.didCancel) {
-        return;
-      } else if (response.errorCode == 'camera_unavailable') {
-        return;
-      } else if (response.errorCode == 'permission') {
-        return;
-      } else if (response.errorCode == 'others') {
-        return;
-      }
-
-      console.log(response.assets[0]);
-      setAvatarSource(response.assets[0]);
-    });
   };
 
   const WarningMessageTimer = () => {
@@ -176,15 +91,6 @@ const BeTrainerScreen = () => {
         extraScrollHeight={20}
         style={{flex: 1}}>
         <View style={styles.master}>
-          <TouchableOpacity onPress={() => setModalVisible(true)}>
-            <ImageBackground
-              source={avatarSource === null ? IMAGES.Person : avatarSource}
-              style={styles.profilePhoto}
-              imageStyle={{borderRadius: scale(150)}} // adjust border radius as needed
-            >
-              <Image source={IMAGES.Camera} style={styles.cameraIcon} />
-            </ImageBackground>
-          </TouchableOpacity>
           <TextInput
             style={styles.input}
             placeholder="Name"
@@ -233,15 +139,15 @@ const BeTrainerScreen = () => {
             onChangeText={text => setExperience(text)}
             keyboardType="number-pad"
           />
-          <Text style={styles.headingTitle}>Select a Sport</Text>
-          <View style={styles.mainBox}>
+          <View style={styles.subView}>
+            <Text style={styles.headingTitle}>Select a Sport</Text>
             <FlatList
               data={Sports}
               renderItem={renderSports}
               keyExtractor={item => item.id.toString()}
               numColumns={4}
               contentContainerStyle={{
-                backgroundColor: Color.background,
+                backgroundColor: Color.white,
                 width: '100%',
                 borderRadius: scale(10),
               }}
@@ -273,19 +179,6 @@ const BeTrainerScreen = () => {
         dividerColor={Color.icon}
       />
       <ActivityLoader loading={Loader} />
-
-      <MediaModal
-        modalVisible={modalVisible}
-        onCancel={() => {
-          setModalVisible(false);
-        }}
-        onCamera={() => {
-          captureImage();
-        }}
-        onGallery={() => {
-          chooseFile();
-        }}
-      />
     </View>
   );
 };
@@ -370,7 +263,6 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     fontSize: scale(14),
     color: Color.black,
-    marginTop: scale(20),
     marginBottom: scale(10),
   },
   more: {
@@ -392,7 +284,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: scale(10),
-    backgroundColor: Color.background,
+    backgroundColor: Color.white,
     width: '25%',
     height: scale(65),
     borderRadius: scale(10),
@@ -408,5 +300,21 @@ const styles = StyleSheet.create({
     height: scale(20),
     width: scale(20),
     resizeMode: 'contain',
+  },
+  subView: {
+    width: '100%',
+    backgroundColor: Color.white,
+    shadowColor: Color.black,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: scale(2),
+
+    elevation: 6,
+    borderRadius: scale(10),
+    padding: scale(10),
+    marginTop: scale(15),
   },
 });
