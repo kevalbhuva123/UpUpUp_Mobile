@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {Connections} from '../../Constants/StaticData';
@@ -15,23 +15,79 @@ import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
 import RatingModal from '../../Components/RatingModal';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import {ActivityLoader} from '../../Components/Loader/Loader';
+import StorageService from '../../utlis/StorageService';
+import apiConfigs from '../../api/apiconfig';
+import IMAGES from '../../Assets/Icons/index';
 
 const FindTrainer = ({navigation}) => {
   const [visible, setVisible] = useState(false);
   const [rating, setRating] = useState(0);
+  const [Loader, setLoader] = useState(false);
+  const [trainerList, setTrainerList] = useState();
+  useEffect(() => {
+    getTrainerList();
+  }, []);
+
+  const getTrainerList = async () => {
+    try {
+      setLoader(true);
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      console.log('>>>>USER DATA>>>', userData);
+      const formdata = new FormData();
+      formdata.append('user_id', userData?.id);
+      formdata.append('location_id', userData?.location);
+
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Trainer/trainer_list`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+          setTrainerList(result?.data);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoader(false);
+    }
+  };
 
   const renderConnections = ({item}) => {
     return (
       <TouchableOpacity
         style={styles.card}
         onPress={() => {
-          navigation.navigate('ViewProfileScreen');
+          navigation.navigate('ViewProfileScreen', {data: item});
         }}>
-        <Image source={item.image} style={styles.image} />
-        <Text style={styles.heading}>{item.name}</Text>
-        <Text style={styles.subText}>Matches with you</Text>
-        <Text style={styles.numberText}> {('0' + item.matched).slice(-2)}</Text>
-        <Text style={styles.statusView}>RATE NOW</Text>
+        <Image source={IMAGES.Person} style={styles.image} />
+        <Text style={[styles.heading, {textAlign: 'center'}]}>
+          {item.name ? item.name : '-'}
+        </Text>
+        <Text style={styles.subText}>
+          {item?.speciality ? item?.speciality : '-'}
+        </Text>
+        <Text style={styles.numberText}>
+          Exp. {item?.experience ? item?.experience : '-'}{' '}
+          {item?.experience.length > 2 ? '' : 'yrs'}
+        </Text>
+        <Text style={styles.statusView}>{item?.total_followers} Followers</Text>
+        <Text style={styles.subText}>
+          {item?.location ? item?.location : '-'}
+        </Text>
       </TouchableOpacity>
     );
   };
@@ -45,7 +101,7 @@ const FindTrainer = ({navigation}) => {
       <ScrollView style={styles.master} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>Trainers in Your Area & Your Sports</Text>
         <FlatList
-          data={Connections.slice(0, 6)}
+          data={trainerList?.trainers}
           renderItem={renderConnections}
           keyExtractor={item => item.id.toString()}
           numColumns={2}
@@ -57,7 +113,7 @@ const FindTrainer = ({navigation}) => {
         />
         <Text style={styles.title}>Other Trainers & Coaches</Text>
         <FlatList
-          data={Connections.slice(6, 10)}
+          data={trainerList?.other_trainers}
           renderItem={renderConnections}
           keyExtractor={item => item.id.toString()}
           numColumns={2}
@@ -68,22 +124,8 @@ const FindTrainer = ({navigation}) => {
           showsVerticalScrollIndicator={false}
         />
       </ScrollView>
-      <RatingModal
-        isVisible={visible}
-        onClose={() => {
-          setVisible(false);
-          setRating(0);
-        }}
-        rating={rating}
-        setRating={rating => {
-          setRating(rating);
-        }}
-        handleRatingSubmit={() => {
-          console.log(rating);
-          setVisible(false);
-        }}
-        buttonText={'RATE PROFILE'}
-      />
+
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };
@@ -118,7 +160,7 @@ const styles = StyleSheet.create({
     fontSize: scale(10),
     paddingVertical: scale(3),
     fontFamily: Fonts.bold,
-    marginTop: scale(5),
+    marginVertical: scale(5),
     backgroundColor: Color.main,
     color: Color.white,
   },
@@ -126,11 +168,11 @@ const styles = StyleSheet.create({
     backgroundColor: Color.white,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: scale(20),
-    flex: 1,
-    margin: scale(10),
+    paddingVertical: scale(10),
     elevation: 6,
     borderRadius: scale(10),
+    width: '44%',
+    margin: '3%',
   },
   heading: {
     fontSize: scale(14),
@@ -142,6 +184,7 @@ const styles = StyleSheet.create({
     fontSize: scale(12),
     fontFamily: Fonts.regular,
     color: Color.black,
+    textAlign: 'center',
   },
   numberText: {
     fontFamily: Fonts.bold,

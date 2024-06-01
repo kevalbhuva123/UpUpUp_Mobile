@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {scale} from '../../utlis/Scale';
@@ -15,36 +15,84 @@ import {Sports, UpComingMyMatches} from '../../Constants/StaticData';
 import IMAGES from '../../Assets/Icons/index';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import {ActivityLoader} from '../../Components/Loader/Loader';
+import StorageService from '../../utlis/StorageService';
+import apiConfigs from '../../api/apiconfig';
+import moment from 'moment';
 
 const HostMatchScreen = ({navigation}) => {
   const [activeTab, setActiveTab] = useState(1);
+  const [Loader, setLoader] = useState(false);
+  const [hostedMatchList, setHostedMatchList] = useState();
+  useEffect(() => {
+    getMyHostedMatches();
+  }, []);
+
+  const getMyHostedMatches = async () => {
+    try {
+      setLoader(true);
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      console.log('>>>>USER DATA>>>', userData);
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Matches/past_matches/${userData?.id}`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+
+          setHostedMatchList(result?.Data);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.error('Error fetching venues:', error);
+      setLoader(false);
+    }
+  };
 
   const renderItem = ({item}) => {
     return (
       <TouchableOpacity style={styles.card}>
         <View style={styles.iconView}>
-          <Image source={item.image} style={styles.sportIcon} />
+          <Image source={{uri: item?.sports_image}} style={styles.sportIcon1} />
         </View>
         <View style={{width: '70%'}}>
           <View style={styles.subView}>
             <View style={styles.contentView}>
-              <Text style={styles.heading}>{item.title}</Text>
-              <Text style={styles.subText}>Posted by: {item.owner}</Text>
+              <Text style={[styles.heading, {width: '80%'}]} numberOfLines={1}>
+                {item.match_name}
+              </Text>
+              <Text style={[styles.subText, {width: '80%'}]} numberOfLines={1}>
+                Posted by: {item.hostedBy}
+              </Text>
 
               <View style={styles.iconTextView}>
                 <Image source={IMAGES.Location} style={styles.icons} />
-                <Text style={styles.subText}>{item.location}</Text>
+                <Text style={styles.subText}>{item.area}</Text>
               </View>
             </View>
             <View style={styles.separator}></View>
             <View style={styles.dateView}>
               <Text style={[styles.subText, {color: Color.icon}]}>
-                {item.month}
+                {moment(item.date).format('MMM').toUpperCase()}
               </Text>
               <Text style={[styles.heading, {color: Color.main}]}>
-                {item.date}
+                {moment(item.date).format('DD')}
               </Text>
-              <Text style={styles.subText}>{item.year}</Text>
+              <Text style={styles.subText}>
+                {moment(item.date).format('YYYY')}
+              </Text>
             </View>
           </View>
           <View style={styles.subView2}>
@@ -70,28 +118,37 @@ const HostMatchScreen = ({navigation}) => {
                 source={IMAGES.Morning}
                 style={[
                   styles.icons,
-                  {tintColor: item.time == 1 ? Color.icon : Color.black},
+                  {
+                    tintColor:
+                      item.time == 'Morning' ? Color.icon : Color.black,
+                  },
                 ]}
               />
               <Image
                 source={IMAGES.Afternoon}
                 style={[
                   styles.icons,
-                  {tintColor: item.time == 2 ? Color.icon : Color.black},
+                  {
+                    tintColor:
+                      item.time == 'Afternoon' ? Color.icon : Color.black,
+                  },
                 ]}
               />
               <Image
                 source={IMAGES.Evening}
                 style={[
                   styles.icons,
-                  {tintColor: item.time == 3 ? Color.icon : Color.black},
+                  {
+                    tintColor:
+                      item.time == 'Evening' ? Color.icon : Color.black,
+                  },
                 ]}
               />
               <Image
                 source={IMAGES.Night}
                 style={[
                   styles.icons,
-                  {tintColor: item.time == 4 ? Color.icon : Color.black},
+                  {tintColor: item.time == 'Night' ? Color.icon : Color.black},
                 ]}
               />
             </View>
@@ -114,6 +171,13 @@ const HostMatchScreen = ({navigation}) => {
         </Text>
       </TouchableOpacity>
     );
+
+  const EmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Image source={IMAGES.Empty} style={styles.emptyImage} />
+      <Text style={styles.emptyText}>No data available</Text>
+    </View>
+  );
 
   return (
     <View style={styles.main}>
@@ -141,9 +205,10 @@ const HostMatchScreen = ({navigation}) => {
         </View>
         {activeTab == 1 ? (
           <FlatList
-            data={UpComingMyMatches}
+            data={hostedMatchList}
             renderItem={renderItem}
             keyExtractor={item => item.id.toString()}
+            ListEmptyComponent={EmptyComponent}
             style={{flex: 1}}
             contentContainerStyle={{
               paddingTop: scale(20),
@@ -180,6 +245,7 @@ const HostMatchScreen = ({navigation}) => {
           </KeyboardAwareScrollView>
         )}
       </View>
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };
@@ -251,6 +317,12 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.light,
     fontSize: scale(10),
     color: Color.black,
+  },
+  sportIcon1: {
+    height: scale(60),
+    width: scale(60),
+    resizeMode: 'contain',
+    tintColor: Color.icon,
   },
   sportIcon: {
     height: scale(20),
@@ -369,5 +441,22 @@ const styles = StyleSheet.create({
     width: '40%',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyImage: {
+    width: scale(150),
+    height: scale(150),
+    resizeMode: 'contain',
+    marginTop: scale(100),
+    marginBottom: scale(20),
+  },
+  emptyText: {
+    fontSize: scale(14),
+    color: Color.lightGrey,
+    fontFamily: Fonts.semibold,
   },
 });
