@@ -1,6 +1,8 @@
 import {
   FlatList,
   Image,
+  PermissionsAndroid,
+  Platform,
   StyleSheet,
   Text,
   TextInput,
@@ -22,6 +24,7 @@ import RBSheet from 'react-native-raw-bottom-sheet';
 import apiConfigs from '../../api/apiconfig';
 import StorageService from '../../utlis/StorageService';
 import LinearGradient from 'react-native-linear-gradient';
+import {selectContactPhone} from 'react-native-select-contact';
 
 const BookNowScreen = ({navigation, route}) => {
   const refRBSheet = useRef();
@@ -43,6 +46,39 @@ const BookNowScreen = ({navigation, route}) => {
   useEffect(() => {
     getOfferCoupon();
   }, []);
+
+  const pickContact = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+        {
+          title: 'Contacts',
+          message: 'This app would like to view your contacts.',
+        },
+      );
+
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        console.warn('Contacts permission denied');
+        return;
+      }
+    }
+
+    try {
+      return selectContactPhone().then(selection => {
+        if (!selection) {
+          return null;
+        }
+
+        let {contact, selectedPhone} = selection;
+        console.log(
+          `Selected ${selectedPhone.type} phone number ${selectedPhone.number} from ${contact.name}`,
+        );
+        return selectedPhone.number;
+      });
+    } catch (err) {
+      console.warn('Error picking contact:', err);
+    }
+  };
 
   const getOfferCoupon = async () => {
     try {
@@ -266,10 +302,26 @@ const BookNowScreen = ({navigation, route}) => {
           </View>
 
           <View style={styles.subView}>
-            <Text style={styles.heading}>
-              Total Players {coPlayer.length + coPlayerFromContact.length}{' '}
-              <Text style={styles.subText}>(Double-tap to delete)</Text>
-            </Text>
+            <View
+              style={{
+                width: '100%',
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+              <Text style={[styles.heading, {width: '60%'}]}>
+                Total Players {coPlayer.length + coPlayerFromContact.length}{' '}
+                <Text style={styles.subText}>(Double-tap to delete)</Text>
+              </Text>
+              <TouchableOpacity
+                style={styles.selectBtn}
+                onPress={() => {
+                  pickContact();
+                }}>
+                <Text style={styles.selectTxt}>Select</Text>
+              </TouchableOpacity>
+            </View>
+
             <FlatList
               data={venueDetails?.venue_sports_2}
               renderItem={renderSports}
@@ -339,7 +391,14 @@ const BookNowScreen = ({navigation, route}) => {
           </View>
         </View>
       </KeyboardAwareScrollView>
-      <TouchableOpacity style={styles.bottomButton} onPress={() => {}}>
+      <TouchableOpacity
+        style={styles.bottomButton}
+        onPress={() => {
+          navigation.navigate('PaymentScreen', {
+            venueData: venueDetails,
+            selectedDate: startDate,
+          });
+        }}>
         <Text style={styles.buttonText}>MAKE PAYMENT</Text>
       </TouchableOpacity>
       <DatePicker

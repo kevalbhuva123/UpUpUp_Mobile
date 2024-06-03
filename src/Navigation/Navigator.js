@@ -42,6 +42,7 @@ import UPcoinScreen from '../Screens/UPcoinScreen';
 import ViewProfileScreen from '../Screens/ViewProfileScreen';
 import BusinessAnalytics from '../Screens/BusinessAnalytics';
 import AboutApp from '../Screens/AboutApp';
+import PaymentScreen from '../Screens/PaymentScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -97,6 +98,7 @@ const Navigator = () => {
         <Stack.Screen name="ViewProfileScreen" component={ViewProfileScreen} />
         <Stack.Screen name="BusinessAnalytics" component={BusinessAnalytics} />
         <Stack.Screen name="AboutApp" component={AboutApp} />
+        <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
