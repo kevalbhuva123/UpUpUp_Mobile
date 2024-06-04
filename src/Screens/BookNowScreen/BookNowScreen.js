@@ -24,7 +24,7 @@ import RBSheet from 'react-native-raw-bottom-sheet';
 import apiConfigs from '../../api/apiconfig';
 import StorageService from '../../utlis/StorageService';
 import LinearGradient from 'react-native-linear-gradient';
-import {selectContactPhone} from 'react-native-select-contact';
+import Contacts from 'react-native-contacts';
 
 const BookNowScreen = ({navigation, route}) => {
   const refRBSheet = useRef();
@@ -42,42 +42,36 @@ const BookNowScreen = ({navigation, route}) => {
   const [coPlayerFromContact, setCoPlayerFromContact] = useState([]);
   const [slotTime, setSlotTime] = useState([]);
   const [couponList, setCouponList] = useState([]);
+  const [selectedCourtPrice, setSelectedCourtPrice] = useState();
 
   useEffect(() => {
     getOfferCoupon();
   }, []);
 
   const pickContact = async () => {
-    if (Platform.OS === 'android') {
-      const granted = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-        {
-          title: 'Contacts',
-          message: 'This app would like to view your contacts.',
-        },
-      );
+    // if (Platform.OS === 'android') {
+    //   const granted = await PermissionsAndroid.request(
+    //     PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
+    //     {
+    //       title: 'Contacts',
+    //       message: 'This app needs access to your contacts.',
+    //     },
+    //   );
 
-      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-        console.warn('Contacts permission denied');
-        return;
-      }
-    }
-
-    try {
-      return selectContactPhone().then(selection => {
-        if (!selection) {
-          return null;
-        }
-
-        let {contact, selectedPhone} = selection;
-        console.log(
-          `Selected ${selectedPhone.type} phone number ${selectedPhone.number} from ${contact.name}`,
-        );
-        return selectedPhone.number;
+    //   if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+    //     console.warn('Contacts permission denied');
+    //     return;
+    //   }
+    // }
+    console.log('MMMMMMMMMM');
+    Contacts.openContactForm({})
+      .then(contact => {
+        console.log('>>>>>>', contact);
+        setCoPlayerFromContact(contact);
+      })
+      .catch(err => {
+        console.warn('Error picking contact:', err);
       });
-    } catch (err) {
-      console.warn('Error picking contact:', err);
-    }
   };
 
   const getOfferCoupon = async () => {
@@ -88,6 +82,12 @@ const BookNowScreen = ({navigation, route}) => {
       );
 
       console.log('>>>>USER DATA>>>', userData);
+      let ownerDetails = {
+        id: userData?.id,
+        name: userData?.name,
+        phone_no: userData?.phone_no,
+      };
+      setCoPlayer([ownerDetails]);
       const requestOptions = {
         method: 'GET',
         redirect: 'follow',
@@ -165,6 +165,16 @@ const BookNowScreen = ({navigation, route}) => {
       </TouchableOpacity>
     );
   };
+  const renderPlayers = ({item}) => {
+    return (
+      <TouchableOpacity style={styles.items} onPress={() => {}}>
+        <Image source={IMAGES.Person} style={styles.profileIcon} />
+        <Text style={styles.label} numberOfLines={2}>
+          {item.name}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
 
   const renderCourt = ({item}) => {
     const isSelected = selectedCourt == item?.court_id;
@@ -174,6 +184,7 @@ const BookNowScreen = ({navigation, route}) => {
         style={styles.items}
         onPress={() => {
           setSelectedCourt(item?.court_id);
+          setSelectedCourtPrice(item?.cost);
           getSlotList(
             venueDetails?.id,
             selectedSport,
@@ -198,19 +209,37 @@ const BookNowScreen = ({navigation, route}) => {
   };
 
   const renderSlots = ({item}) => {
+    console.log('>>>STIME>>>>', slotTime);
+    let isSelected = slotTime.includes(
+      moment(item?.time, 'HH:mm:ss').format('hh:mm A'),
+    );
     return (
       <TouchableOpacity
         style={[
           styles.slotBtn,
           {
-            backgroundColor:
-              slotTime == moment(item?.time, 'HH:mm:ss').format('hh:mm A')
-                ? Color.subBg
-                : Color.background,
+            backgroundColor: isSelected ? Color.subBg : Color.background,
           },
         ]}
         onPress={() => {
-          setSlotTime(moment(item?.time, 'HH:mm:ss').format('hh:mm A'));
+          setSlotTime(prevSelectedItems => {
+            if (
+              prevSelectedItems.includes(
+                moment(item?.time, 'HH:mm:ss').format('hh:mm A'),
+              )
+            ) {
+              return prevSelectedItems.filter(
+                itemId =>
+                  itemId !== moment(item?.time, 'HH:mm:ss').format('hh:mm A'),
+              );
+            } else {
+              return [
+                ...prevSelectedItems,
+                moment(item?.time, 'HH:mm:ss').format('hh:mm A'),
+              ];
+            }
+          });
+          // setSlotTime(moment(item?.time, 'HH:mm:ss').format('hh:mm A'));
         }}>
         <Text style={styles.slotText}>
           {moment(item?.time, 'HH:mm:ss').format('hh:mm A')}
@@ -221,7 +250,12 @@ const BookNowScreen = ({navigation, route}) => {
 
   const renderCoupons = ({item}) => {
     return (
-      <TouchableOpacity style={styles.coupon}>
+      <TouchableOpacity
+        style={styles.coupon}
+        onPress={() => {
+          setRedeemCode(item?.coupon_code);
+          refRBSheet.current.close();
+        }}>
         <View style={styles.leftCoupon}>
           <Text style={styles.verticalTxt}>Coupon</Text>
         </View>
@@ -323,9 +357,9 @@ const BookNowScreen = ({navigation, route}) => {
             </View>
 
             <FlatList
-              data={venueDetails?.venue_sports_2}
-              renderItem={renderSports}
-              keyExtractor={item => item.sports_id.toString()}
+              data={coPlayer}
+              renderItem={renderPlayers}
+              keyExtractor={item => item.id.toString()}
               numColumns={4}
               contentContainerStyle={{
                 backgroundColor: Color.white,
@@ -389,6 +423,29 @@ const BookNowScreen = ({navigation, route}) => {
               </View>
             </TouchableOpacity>
           </View>
+          {slotTime.length > 0 && (
+            <View style={styles.subView}>
+              <Text style={styles.heading}>Payment Summary</Text>
+              <Text style={styles.subText}>
+                Actual Amount :{' '}
+                <Text style={[styles.subText, {fontFamily: Fonts.semibold}]}>
+                  Rs. {selectedCourtPrice * slotTime.length}
+                </Text>
+              </Text>
+              <Text style={styles.subText}>
+                Playing Time :{' '}
+                <Text style={[styles.subText, {fontFamily: Fonts.semibold}]}>
+                  {slotTime.length} Hours
+                </Text>
+              </Text>
+              <Text style={styles.subText}>
+                Start Time :{' '}
+                <Text style={[styles.subText, {fontFamily: Fonts.semibold}]}>
+                  {slotTime.sort()[0]}
+                </Text>
+              </Text>
+            </View>
+          )}
         </View>
       </KeyboardAwareScrollView>
       <TouchableOpacity
@@ -652,5 +709,11 @@ const styles = StyleSheet.create({
   drawerMain: {
     paddingTop: scale(10),
     paddingHorizontal: scale(20),
+  },
+  profileIcon: {
+    width: scale(40),
+    height: scale(40),
+    resizeMode: 'cover',
+    borderRadius: scale(100),
   },
 });

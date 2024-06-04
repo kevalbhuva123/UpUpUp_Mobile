@@ -1,4 +1,4 @@
-import {StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 import CustomHeader from '../../Components/CustomHeader';
@@ -10,12 +10,15 @@ import IMAGES from '../../Assets/Icons/index';
 import apiConfigs from '../../api/apiconfig';
 import StorageService from '../../utlis/StorageService';
 import {ActivityLoader} from '../../Components/Loader/Loader';
+import moment from 'moment';
 
 const PaymentScreen = ({navigation, route}) => {
-  const [details, setDetails] = useState();
+  const [details, setDetails] = useState(route?.params);
   const [upCoin, setUpCoin] = useState();
   const [serviceCharges, setServiceCharges] = useState();
   const [Loader, setLoader] = useState(false);
+  const [ownerDetail, setOwnerDetail] = useState();
+  const [isUPcoinSelected, setIsUPcoinSelected] = useState(false);
 
   useEffect(() => {
     getUserCoinInfo();
@@ -30,6 +33,7 @@ const PaymentScreen = ({navigation, route}) => {
       );
 
       console.log('>>>>USER DATA>>>', userData);
+      setOwnerDetail(userData);
       const formdata = new FormData();
       formdata.append('user_id', userData?.id);
       formdata.append('location_id', userData?.location);
@@ -59,7 +63,7 @@ const PaymentScreen = ({navigation, route}) => {
             `${apiConfigs.LOCAL_SERVER_API_URL}/Callbook/service_charge`,
             requestOptions,
           )
-            .then(response => response.text())
+            .then(response => response.json())
             .then(result => {
               setLoader(false);
               setServiceCharges(result?.data?.amount);
@@ -99,15 +103,17 @@ const PaymentScreen = ({navigation, route}) => {
           <View style={styles.upperView}>
             <View style={styles.lineView}>
               <Text style={styles.title}>Venue Name :</Text>
-              <Text style={styles.value}>cajnj ncanskjc kjnckjnsa lknk </Text>
+              <Text style={styles.value}>{details?.venueData?.venue}</Text>
             </View>
             <View style={styles.lineView}>
               <Text style={styles.title}>Booked By :</Text>
-              <Text style={styles.value}>Rexon Antony</Text>
+              <Text style={styles.value}>{ownerDetail?.name}</Text>
             </View>
             <View style={styles.lineView}>
               <Text style={styles.title}>Playing Date :</Text>
-              <Text style={styles.value}>Rexon Antony</Text>
+              <Text style={styles.value}>
+                {moment(details?.selectedDate).format('DD-MM-YYYY')}
+              </Text>
             </View>
             <View style={styles.lineView}>
               <Text style={styles.title}>Sub Total :</Text>
@@ -122,7 +128,33 @@ const PaymentScreen = ({navigation, route}) => {
               <Text style={styles.value}></Text>
             </View>
           </View>
-          <View style={styles.lowerView}></View>
+          <View style={styles.lowerView}>
+            <View style={styles.subView}>
+              <Text style={styles.heading}>Pay thorough :</Text>
+              <View>
+                <Image source={IMAGES.BookVenue} style={styles.icon} />
+                <Text style={styles.subText}>UPcoins</Text>
+              </View>
+              <View>
+                <Text style={styles.subText}>Balance UPcoins</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setIsUPcoinSelected(!isUPcoinSelected);
+                  }}>
+                  <Image
+                    source={
+                      isUPcoinSelected ? IMAGES.Checked : IMAGES.Unchecked
+                    }
+                    style={
+                      isUPcoinSelected
+                        ? styles.checkedIcon
+                        : styles.unCheckedIcon
+                    }
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
         </View>
       </KeyboardAwareScrollView>
       <TouchableOpacity style={styles.bottomButton} onPress={() => {}}>
@@ -178,5 +210,47 @@ const styles = StyleSheet.create({
   },
   lowerView: {
     padding: scale(20),
+  },
+  heading: {
+    fontFamily: Fonts.bold,
+    color: Color.black,
+    fontSize: scale(14),
+    paddingBottom: scale(5),
+  },
+  subText: {fontFamily: Fonts.regular, fontSize: scale(12), color: Color.black},
+  subView: {
+    width: '100%',
+    backgroundColor: Color.white,
+    shadowColor: Color.black,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: scale(2),
+
+    elevation: 6,
+    borderRadius: scale(10),
+    padding: scale(10),
+    marginBottom: scale(15),
+  },
+  checkedIcon: {
+    height: scale(16),
+    width: scale(16),
+    resizeMode: 'contain',
+    tintColor: Color.subBg,
+    marginTop: scale(3),
+  },
+  unCheckedIcon: {
+    height: scale(16),
+    width: scale(16),
+    resizeMode: 'contain',
+    tintColor: Color.lightGrey,
+    marginTop: scale(3),
+  },
+  icon: {
+    width: scale(16),
+    height: scale(16),
+    resizeMode: 'contain',
   },
 });
