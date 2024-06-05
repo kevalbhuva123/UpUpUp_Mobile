@@ -117,26 +117,51 @@ const PaymentScreen = ({navigation, route}) => {
             </View>
             <View style={styles.lineView}>
               <Text style={styles.title}>Sub Total :</Text>
-              <Text style={styles.value}>Rexon Antony</Text>
+              <Text style={styles.value}>Rs. {details?.subTotal}</Text>
             </View>
             <View style={styles.lineView}>
               <Text style={styles.title}>Service Charge :</Text>
-              <Text style={styles.value}>{serviceCharges}</Text>
+              <Text style={styles.value}>Rs. {serviceCharges}</Text>
             </View>
             <View style={styles.lineView}>
               <Text style={styles.title}>Total Amount :</Text>
-              <Text style={styles.value}></Text>
+              <Text style={styles.value}>
+                Rs. {details?.subTotal + serviceCharges}
+              </Text>
             </View>
           </View>
           <View style={styles.lowerView}>
             <View style={styles.subView}>
               <Text style={styles.heading}>Pay thorough :</Text>
-              <View>
+              <View style={styles.rawView}>
                 <Image source={IMAGES.BookVenue} style={styles.icon} />
-                <Text style={styles.subText}>UPcoins</Text>
+                <Text style={[styles.subText, {width: '60%'}]}>UPcoins</Text>
+                <Text style={styles.coinText}> </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    setIsUPcoinSelected(!isUPcoinSelected);
+                  }}>
+                  <Image
+                    style={
+                      isUPcoinSelected
+                        ? styles.checkedIcon
+                        : styles.unCheckedIcon
+                    }
+                  />
+                </TouchableOpacity>
               </View>
-              <View>
-                <Text style={styles.subText}>Balance UPcoins</Text>
+              <View View style={styles.rawView}>
+                <Image style={styles.icon} />
+
+                <Text style={[styles.subText, {width: '60%'}]}>
+                  Balance UPcoins
+                </Text>
+                <Text style={styles.coinText}>
+                  {parseInt(upCoin?.bonus_coins) +
+                    parseInt(upCoin?.purchased_coins) +
+                    parseInt(upCoin?.refund_bonus_amount)}
+                </Text>
+
                 <TouchableOpacity
                   onPress={() => {
                     setIsUPcoinSelected(!isUPcoinSelected);
@@ -152,6 +177,52 @@ const PaymentScreen = ({navigation, route}) => {
                     }
                   />
                 </TouchableOpacity>
+              </View>
+              {isUPcoinSelected && (
+                <View View style={styles.rawView}>
+                  <Image style={styles.icon} />
+
+                  <Text style={[styles.subText, {width: '60%'}]}></Text>
+                  <Text style={[styles.coinText, {color: Color.green}]}>
+                    -{' '}
+                    {parseInt(upCoin?.bonus_coins) +
+                      parseInt(upCoin?.purchased_coins) +
+                      parseInt(upCoin?.refund_bonus_amount)}{' '}
+                    Rs.
+                  </Text>
+
+                  <TouchableOpacity
+                    onPress={() => {
+                      setIsUPcoinSelected(!isUPcoinSelected);
+                    }}>
+                    <Image
+                      style={
+                        isUPcoinSelected
+                          ? styles.checkedIcon
+                          : styles.unCheckedIcon
+                      }
+                    />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+            <View style={styles.subView}>
+              <Text style={styles.heading}>Online :</Text>
+              <View style={styles.rawView}>
+                <Image source={IMAGES.Card} style={styles.icon} />
+                <Text style={[styles.subText, {width: '60%'}]}>
+                  Remaining Payment
+                </Text>
+                <Text style={styles.coinText}>
+                  Rs.{' '}
+                  {isUPcoinSelected
+                    ? details?.subTotal +
+                      serviceCharges -
+                      (parseInt(upCoin?.bonus_coins) +
+                        parseInt(upCoin?.purchased_coins) +
+                        parseInt(upCoin?.refund_bonus_amount))
+                    : details?.subTotal + serviceCharges}
+                </Text>
               </View>
             </View>
           </View>
@@ -217,7 +288,7 @@ const styles = StyleSheet.create({
     fontSize: scale(14),
     paddingBottom: scale(5),
   },
-  subText: {fontFamily: Fonts.regular, fontSize: scale(12), color: Color.black},
+  subText: {fontFamily: Fonts.regular, fontSize: scale(14), color: Color.black},
   subView: {
     width: '100%',
     backgroundColor: Color.white,
@@ -252,5 +323,17 @@ const styles = StyleSheet.create({
     width: scale(16),
     height: scale(16),
     resizeMode: 'contain',
+    marginRight: scale(10),
+  },
+  rawView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: scale(10),
+  },
+  coinText: {
+    marginRight: scale(15),
+    fontFamily: Fonts.semibold,
+    color: Color.black,
+    fontSize: scale(14),
   },
 });

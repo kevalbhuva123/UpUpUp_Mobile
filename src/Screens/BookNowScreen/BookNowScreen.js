@@ -43,6 +43,7 @@ const BookNowScreen = ({navigation, route}) => {
   const [slotTime, setSlotTime] = useState([]);
   const [couponList, setCouponList] = useState([]);
   const [selectedCourtPrice, setSelectedCourtPrice] = useState();
+  const [subTotal, setSubTotal] = useState(0);
 
   useEffect(() => {
     getOfferCoupon();
@@ -209,7 +210,6 @@ const BookNowScreen = ({navigation, route}) => {
   };
 
   const renderSlots = ({item}) => {
-    console.log('>>>STIME>>>>', slotTime);
     let isSelected = slotTime.includes(
       moment(item?.time, 'HH:mm:ss').format('hh:mm A'),
     );
@@ -255,6 +255,17 @@ const BookNowScreen = ({navigation, route}) => {
         onPress={() => {
           setRedeemCode(item?.coupon_code);
           refRBSheet.current.close();
+          if (item?.percentage == 'Yes') {
+            setSubTotal(
+              selectedCourtPrice * slotTime.length -
+                (selectedCourtPrice * slotTime.length * item?.coupon_amount) /
+                  100,
+            );
+          } else {
+            setSubTotal(
+              selectedCourtPrice * slotTime.length - item?.coupon_amount,
+            );
+          }
         }}>
         <View style={styles.leftCoupon}>
           <Text style={styles.verticalTxt}>Coupon</Text>
@@ -444,6 +455,15 @@ const BookNowScreen = ({navigation, route}) => {
                   {slotTime.sort()[0]}
                 </Text>
               </Text>
+
+              <Text style={styles.subTotal}>
+                Sub Total :{' '}
+                <Text style={[styles.subTotal, {fontFamily: Fonts.semibold}]}>
+                  {redeemCode != ''
+                    ? subTotal
+                    : selectedCourtPrice * slotTime.length}
+                </Text>
+              </Text>
             </View>
           )}
         </View>
@@ -454,6 +474,10 @@ const BookNowScreen = ({navigation, route}) => {
           navigation.navigate('PaymentScreen', {
             venueData: venueDetails,
             selectedDate: startDate,
+            subTotal:
+              redeemCode != ''
+                ? subTotal
+                : selectedCourtPrice * slotTime.length,
           });
         }}>
         <Text style={styles.buttonText}>MAKE PAYMENT</Text>
@@ -604,6 +628,12 @@ const styles = StyleSheet.create({
     paddingBottom: scale(5),
   },
   subText: {fontFamily: Fonts.regular, fontSize: scale(12), color: Color.black},
+  subTotal: {
+    fontFamily: Fonts.bold,
+    fontSize: scale(14),
+    color: Color.black,
+    marginTop: scale(10),
+  },
   pickerBtn: {
     borderWidth: scale(0.5),
     borderColor: Color.lightGrey,

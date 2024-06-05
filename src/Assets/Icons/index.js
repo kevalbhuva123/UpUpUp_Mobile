@@ -77,4 +77,5 @@ export default IMAGES = {
   Feedbacks: require('./feedback.png'),
   HowWorks: require('./inform.png'),
   Star: require('./star.png'),
+  Card: require('./credit-card.png'),
 };
