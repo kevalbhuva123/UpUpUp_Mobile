@@ -25,9 +25,11 @@ import apiConfigs from '../../api/apiconfig';
 import StorageService from '../../utlis/StorageService';
 import LinearGradient from 'react-native-linear-gradient';
 import Contacts from 'react-native-contacts';
+import ConfirmationModal from '../../Components/ConfirmationModal';
 
 const BookNowScreen = ({navigation, route}) => {
   const refRBSheet = useRef();
+  const refRBSheetPlayers = useRef();
 
   const [venueDetails, setVenueDetails] = useState(route?.params?.data);
   const [isFromSDate, setIsFromSDate] = useState(false);
@@ -44,6 +46,8 @@ const BookNowScreen = ({navigation, route}) => {
   const [couponList, setCouponList] = useState([]);
   const [selectedCourtPrice, setSelectedCourtPrice] = useState();
   const [subTotal, setSubTotal] = useState(0);
+  const [coPlayerList, setCoPlayerList] = useState([]);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     getOfferCoupon();
@@ -100,9 +104,24 @@ const BookNowScreen = ({navigation, route}) => {
       )
         .then(response => response.json())
         .then(result => {
-          setLoader(false);
           console.log(result);
           setCouponList(result?.Data);
+
+          const requestOptions = {
+            method: 'GET',
+            redirect: 'follow',
+          };
+
+          fetch(
+            `${apiConfigs.LOCAL_SERVER_API_URL}/Users/co_players/${userData?.id}`,
+            requestOptions,
+          )
+            .then(response => response.json())
+            .then(result => {
+              setLoader(false);
+              console.log(result);
+              setCoPlayerList(result?.Data);
+            });
         })
         .catch(error => {
           setLoader(false);
@@ -301,6 +320,31 @@ const BookNowScreen = ({navigation, route}) => {
     );
   };
 
+  const renderImageItem = ({item}) => (
+    <View style={styles.roundBorder}>
+      <Image style={styles.image} source={{uri: item?.sports_image}} />
+    </View>
+  );
+
+  const renderCoPlayers = ({item}) => {
+    return (
+      <TouchableOpacity>
+        <Image
+          source={{uri: item?.co_player_image}}
+          style={styles.profileIcon}
+        />
+        <Text>{item?.co_player}</Text>
+        <Text>{item?.coplayer_phone}</Text>
+        <FlatList
+          data={item?.co_player_sports}
+          renderItem={renderImageItem}
+          keyExtractor={(item, index) => item?.sports.toString()}
+          numColumns={8}
+        />
+      </TouchableOpacity>
+    );
+  };
+
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
@@ -361,7 +405,8 @@ const BookNowScreen = ({navigation, route}) => {
               <TouchableOpacity
                 style={styles.selectBtn}
                 onPress={() => {
-                  pickContact();
+                  // pickContact();
+                  setVisible(!visible);
                 }}>
                 <Text style={styles.selectTxt}>Select</Text>
               </TouchableOpacity>
@@ -538,6 +583,55 @@ const BookNowScreen = ({navigation, route}) => {
           />
         </View>
       </RBSheet>
+      <RBSheet
+        ref={refRBSheetPlayers}
+        useNativeDriver={false}
+        customStyles={{
+          container: {
+            borderTopLeftRadius: scale(10),
+            borderTopRightRadius: scale(10),
+          },
+          wrapper: {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+          },
+          draggableIcon: {
+            backgroundColor: Color.main,
+          },
+        }}
+        customModalProps={{
+          animationType: 'slide',
+          statusBarTranslucent: true,
+        }}
+        customAvoidingViewProps={{
+          enabled: false,
+        }}
+        height={scale(600)}
+        draggable>
+        <View style={styles.drawerMain}>
+          <Text style={styles.rbTitle}>Select Co-Player</Text>
+          <FlatList
+            data={coPlayerList}
+            renderItem={renderCoPlayers}
+            keyExtractor={item => item.co_player_id.toString()}
+            contentContainerStyle={{
+              backgroundColor: Color.white,
+              width: '100%',
+            }}
+          />
+        </View>
+      </RBSheet>
+      <ConfirmationModal
+        isVisible={visible}
+        onClose={() => setVisible(false)}
+        heading={'Choose co-player from'}
+        btn1={'MY CONNECTIONS'}
+        btn2={'MY CONTACTS'}
+        asUser={() => {
+          setVisible(false);
+          refRBSheetPlayers.current.open();
+        }}
+        asVendor={() => {}}
+      />
     </View>
   );
 };
@@ -620,6 +714,23 @@ const styles = StyleSheet.create({
     borderRadius: scale(10),
     padding: scale(10),
     marginBottom: scale(15),
+  },
+  roundBorder: {
+    height: scale(25),
+    width: scale(25),
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: scale(100),
+    borderWidth: scale(0.5),
+    borderColor: Color.icon,
+    margin: scale(5),
+  },
+  image: {
+    height: scale(16),
+    width: scale(16),
+    margin: scale(5),
+    tintColor: Color.icon,
+    resizeMode: 'contain',
   },
   heading: {
     fontFamily: Fonts.bold,

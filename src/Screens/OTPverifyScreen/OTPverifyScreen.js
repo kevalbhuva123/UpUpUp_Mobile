@@ -261,7 +261,10 @@ const OTPverifyScreen = ({navigation}) => {
       />
       <ConfirmationModal
         isVisible={visible}
-        onClose={() => setVisible(false)}
+        // onClose={() => setVisible(false)}
+        heading={'Want to Login as ?'}
+        btn1={'User'}
+        btn2={'Vendor'}
         asUser={async () => {
           setVisible(false);
           let userDetails = await StorageService.getItem(

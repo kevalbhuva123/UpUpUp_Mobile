@@ -4,26 +4,37 @@ import {scale} from '../../utlis/Scale';
 import Color from '../../Constants/Color';
 import Fonts from '../../Constants/Fonts';
 
-const ConfirmationModal = ({isVisible, asVendor, asUser, onClose}) => {
+const ConfirmationModal = ({
+  isVisible,
+  asVendor,
+  asUser,
+  onClose,
+  heading,
+  btn1,
+  btn2,
+}) => {
   return (
     <Modal
       animationType="slide"
       transparent={true}
       visible={isVisible}
       onRequestClose={onClose}>
-      <View style={styles.centeredView}>
+      <TouchableOpacity
+        style={styles.centeredView}
+        onPress={onClose}
+        disabled={onClose ? false : true}>
         <View style={styles.modalView}>
-          <Text style={styles.title}>Want to Login as ?</Text>
+          <Text style={styles.title}>{heading}</Text>
           <View style={styles.btnView}>
             <TouchableOpacity style={styles.loginBtn} onPress={asUser}>
-              <Text style={styles.btnText}>User</Text>
+              <Text style={styles.btnText}>{btn1}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.loginBtn} onPress={asVendor}>
-              <Text style={styles.btnText}>Vendor</Text>
+              <Text style={styles.btnText}>{btn2}</Text>
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     </Modal>
   );
 };
@@ -32,20 +43,20 @@ export default ConfirmationModal;
 
 const styles = StyleSheet.create({
   btnView: {
-    flexDirection: 'row',
+    // flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
     justifyContent: 'space-between',
   },
   loginBtn: {
     backgroundColor: Color.icon,
-    width: '45%',
+    width: '90%',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: scale(12),
     borderRadius: scale(10),
     alignSelf: 'center',
-    marginTop: scale(40),
+    marginTop: scale(20),
   },
   btnText: {
     color: Color.background,
