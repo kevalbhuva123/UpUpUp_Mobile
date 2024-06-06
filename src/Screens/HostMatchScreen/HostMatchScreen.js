@@ -3,6 +3,7 @@ import {
   Image,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -19,11 +20,22 @@ import {ActivityLoader} from '../../Components/Loader/Loader';
 import StorageService from '../../utlis/StorageService';
 import apiConfigs from '../../api/apiconfig';
 import moment from 'moment';
+import {Dropdown} from 'react-native-element-dropdown';
+import DatePicker from 'react-native-date-picker';
 
 const HostMatchScreen = ({navigation}) => {
   const [activeTab, setActiveTab] = useState(1);
   const [Loader, setLoader] = useState(false);
   const [hostedMatchList, setHostedMatchList] = useState();
+  const [moreDetails, setMoreDetails] = useState();
+  const [areaList, setAreaList] = useState();
+  const [selectedArea, setSelectedArea] = useState();
+  const [isDateOpen, setIsDateOpen] = useState(false);
+  const [startDate, setStartDate] = useState(new Date());
+  const [isTimeOpen, setIsTimeOpen] = useState(false);
+  const [startTime, setStartTime] = useState(new Date());
+  const [noOfPlayer, setNoOfPlayer] = useState();
+
   useEffect(() => {
     getMyHostedMatches();
   }, []);
@@ -47,9 +59,31 @@ const HostMatchScreen = ({navigation}) => {
       )
         .then(response => response.json())
         .then(result => {
-          setLoader(false);
-
           setHostedMatchList(result?.Data);
+
+          const formdata = new FormData();
+          formdata.append('location_id', userData?.location);
+
+          const requestOptions = {
+            method: 'GET',
+            redirect: 'follow',
+          };
+
+          fetch(
+            `${apiConfigs.LOCAL_SERVER_API_URL}/Place/area/${userData?.location}`,
+            requestOptions,
+          )
+            .then(response => response.json())
+            .then(result => {
+              setLoader(false);
+
+              console.log(result);
+              setAreaList(result?.Data);
+            })
+            .catch(error => {
+              setLoader(false);
+              console.error(error);
+            });
         })
         .catch(error => {
           setLoader(false);
@@ -68,7 +102,7 @@ const HostMatchScreen = ({navigation}) => {
           <Image source={{uri: item?.sports_image}} style={styles.sportIcon1} />
         </View>
         <View style={{width: '70%'}}>
-          <View style={styles.subView}>
+          <View style={styles.subView1}>
             <View style={styles.contentView}>
               <Text style={[styles.heading, {width: '80%'}]} numberOfLines={1}>
                 {item.match_name}
@@ -107,7 +141,7 @@ const HostMatchScreen = ({navigation}) => {
                       ? Color.green
                       : item.status == 'PENDING'
                       ? Color.yellow
-                      : Color.violet,
+                      : Color.main,
                   color: Color.white,
                 },
               ]}>
@@ -179,6 +213,14 @@ const HostMatchScreen = ({navigation}) => {
     </View>
   );
 
+  const renderAreas = item => {
+    return (
+      <View style={styles.item}>
+        <Text style={styles.textItem}>{item.area}</Text>
+      </View>
+    );
+  };
+
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
@@ -225,20 +267,101 @@ const HostMatchScreen = ({navigation}) => {
             extraScrollHeight={20}
             style={{flex: 1, marginTop: scale(10)}}>
             <Text style={styles.title}>NOW LET'S{'\n'}HOST YOUR MATCHES</Text>
-            <Text style={styles.headingTitle}>Select a Sport</Text>
-            <View style={styles.mainBox}>
+            <View style={styles.subView}>
+              <Text style={styles.heading1}>Choose a Sport</Text>
               <FlatList
                 data={Sports}
                 renderItem={renderSports}
                 keyExtractor={item => item.id.toString()}
                 numColumns={4}
                 contentContainerStyle={{
-                  backgroundColor: Color.background,
+                  backgroundColor: Color.white,
                   width: '100%',
                   borderRadius: scale(10),
                 }}
               />
             </View>
+
+            <View style={styles.subView}>
+              <Text style={styles.heading1}>Select Area</Text>
+              <Dropdown
+                style={styles.dropdown}
+                placeholderStyle={styles.placeholderStyle}
+                selectedTextStyle={styles.selectedTextStyle}
+                selectedTextProps={{numberOfLines: 1}}
+                inputSearchStyle={styles.inputSearchStyle}
+                iconStyle={styles.iconStyle}
+                data={areaList}
+                search
+                maxHeight={scale(300)}
+                labelField="area"
+                valueField="id"
+                placeholder="Select Area"
+                searchPlaceholder="Search..."
+                value={selectedArea?.id}
+                onChange={item => {
+                  console.log('>>>>>>>', item);
+                  setSelectedArea(item);
+                }}
+                renderItem={renderAreas}
+              />
+            </View>
+
+            <View style={styles.subView}>
+              <Text style={styles.heading1}>Set Date</Text>
+              <TouchableOpacity
+                style={styles.pickerBtn}
+                onPress={() => {
+                  setIsDateOpen(true);
+                }}>
+                <Text style={styles.value}>
+                  {startDate != ''
+                    ? moment(startDate).format('DD-MM-YYYY')
+                    : moment().format('DD-MM-YYYY')}
+                </Text>
+                <Image source={IMAGES.Down} style={styles.iconStyle} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.subView}>
+              <Text style={styles.heading1}>Set Time</Text>
+              <TouchableOpacity
+                style={styles.pickerBtn}
+                onPress={() => {
+                  setIsTimeOpen(true);
+                }}>
+                <Text style={styles.value}>
+                  {JSON.stringify(startTime).substring(12, 20)}
+                </Text>
+                <Image source={IMAGES.Down} style={styles.iconStyle} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.subView}>
+              <Text style={styles.heading1}>No. of Players (Optional)</Text>
+
+              <TextInput
+                onChangeText={text => {
+                  setNoOfPlayer(text);
+                }}
+                value={noOfPlayer}
+                style={styles.input1}
+                placeholder="Enter no of players.."
+                keyboardType="number-pad"
+              />
+            </View>
+            <View style={styles.subView}>
+              <Text style={styles.heading1}>More Details</Text>
+
+              <TextInput
+                onChangeText={text => {
+                  setMoreDetails(text);
+                }}
+                value={moreDetails}
+                style={styles.input}
+                placeholder="Enter Details"
+                multiline
+              />
+            </View>
+
             <TouchableOpacity onPress={() => {}} style={styles.loginBtn}>
               <Text style={styles.btnText}>HOST MATCH</Text>
             </TouchableOpacity>
@@ -246,6 +369,39 @@ const HostMatchScreen = ({navigation}) => {
         )}
       </View>
       <ActivityLoader loading={Loader} />
+      <DatePicker
+        modal
+        open={isDateOpen}
+        date={startDate ? startDate : new Date()}
+        minimumDate={new Date()}
+        onConfirm={date => {
+          console.log(date);
+          setIsDateOpen(false);
+          setStartDate(date);
+        }}
+        onCancel={() => {
+          setIsDateOpen(false);
+        }}
+        mode="date"
+        buttonColor={Color.icon}
+        dividerColor={Color.icon}
+      />
+      <DatePicker
+        modal
+        open={isTimeOpen}
+        date={startDate}
+        onConfirm={time => {
+          console.log(time);
+          setIsTimeOpen(false);
+          setStartTime(time);
+        }}
+        onCancel={() => {
+          setIsTimeOpen(false);
+        }}
+        mode="time"
+        buttonColor={Color.icon}
+        dividerColor={Color.icon}
+      />
     </View>
   );
 };
@@ -258,7 +414,86 @@ const styles = StyleSheet.create({
   },
   container: {
     padding: scale(20),
+    backgroundColor: Color.background,
+  },
+  pickerBtn: {
+    borderWidth: scale(0.5),
+    borderColor: Color.lightGrey,
+    padding: scale(10),
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexDirection: 'row',
+    borderRadius: scale(10),
+  },
+  value: {
+    fontFamily: Fonts.semibold,
+    fontSize: scale(12),
+    color: Color.black,
+  },
+
+  dropdown: {
+    height: scale(40),
     backgroundColor: Color.white,
+    borderWidth: scale(1),
+    borderColor: Color.lightGrey,
+    borderRadius: scale(10),
+    padding: scale(10),
+  },
+  placeholderStyle: {
+    fontSize: scale(14),
+    color: Color.black,
+    fontFamily: Fonts.regular,
+  },
+  selectedTextStyle: {
+    fontSize: scale(14),
+    color: Color.black,
+    fontFamily: Fonts.regular,
+  },
+  iconStyle: {
+    width: scale(20),
+    height: scale(20),
+    resizeMode: 'contain',
+  },
+  inputSearchStyle: {
+    height: scale(40),
+    fontSize: scale(14),
+    color: Color.black,
+    fontFamily: Fonts.regular,
+  },
+  item: {
+    padding: scale(10),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  textItem: {
+    flex: 1,
+    fontSize: scale(14),
+    color: Color.black,
+    fontFamily: Fonts.regular,
+  },
+  input: {
+    borderWidth: scale(1),
+    borderColor: Color.lightGrey,
+    borderRadius: scale(10),
+    padding: scale(10),
+    height: scale(150),
+    backgroundColor: Color.white,
+    textAlignVertical: 'top',
+    fontSize: scale(14),
+    color: Color.black,
+    fontFamily: Fonts.regular,
+  },
+  input1: {
+    borderWidth: scale(1),
+    borderColor: Color.lightGrey,
+    borderRadius: scale(10),
+    padding: scale(10),
+    backgroundColor: Color.white,
+    fontSize: scale(14),
+    color: Color.black,
+    fontFamily: Fonts.regular,
+    alignItems: 'center',
   },
   loginBtn: {
     backgroundColor: Color.icon,
@@ -275,10 +510,17 @@ const styles = StyleSheet.create({
     fontSize: scale(14),
     fontFamily: Fonts.bold,
   },
+  heading1: {
+    fontFamily: Fonts.bold,
+    color: Color.black,
+    fontSize: scale(14),
+    paddingBottom: scale(5),
+  },
   title: {
     fontSize: scale(14),
     color: Color.main,
-    fontFamily: Fonts.semibold,
+    fontFamily: Fonts.bold,
+    paddingBottom: scale(15),
   },
   headingTitle: {
     fontFamily: Fonts.bold,
@@ -306,7 +548,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: scale(10),
-    backgroundColor: Color.background,
+    backgroundColor: Color.white,
     width: '25%',
     height: scale(65),
     borderRadius: scale(10),
@@ -376,7 +618,22 @@ const styles = StyleSheet.create({
     borderRadius: scale(10),
     marginBottom: scale(15),
   },
+  subView: {
+    width: '100%',
+    backgroundColor: Color.white,
+    shadowColor: Color.black,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: scale(2),
 
+    elevation: 6,
+    borderRadius: scale(10),
+    padding: scale(10),
+    marginBottom: scale(15),
+  },
   icons: {
     width: scale(12),
     height: scale(12),
@@ -428,7 +685,7 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
     marginTop: scale(3),
   },
-  subView: {width: '100%', flexDirection: 'row', alignItems: 'center'},
+  subView1: {width: '100%', flexDirection: 'row', alignItems: 'center'},
   subView2: {
     width: '100%',
     flexDirection: 'row',

@@ -48,6 +48,7 @@ const BookNowScreen = ({navigation, route}) => {
   const [subTotal, setSubTotal] = useState(0);
   const [coPlayerList, setCoPlayerList] = useState([]);
   const [visible, setVisible] = useState(false);
+  const [warning, setWarning] = useState('');
 
   useEffect(() => {
     getOfferCoupon();
@@ -172,7 +173,7 @@ const BookNowScreen = ({navigation, route}) => {
       <TouchableOpacity
         style={styles.items}
         onPress={() => {
-          setSelectedSport(item?.sports_id);
+          setSelectedSport([item?.sports_id]);
         }}>
         <Image source={{uri: item?.image}} style={styles.sportIcon} />
         <Text style={styles.label} numberOfLines={1}>
@@ -185,10 +186,22 @@ const BookNowScreen = ({navigation, route}) => {
       </TouchableOpacity>
     );
   };
-  const renderPlayers = ({item}) => {
+  const renderPlayers = ({item, index}) => {
     return (
-      <TouchableOpacity style={styles.items} onPress={() => {}}>
-        <Image source={IMAGES.Person} style={styles.profileIcon} />
+      <TouchableOpacity
+        style={styles.items}
+        onPress={() => {
+          if (index != 0) {
+            const filteredItems = coPlayer.filter(
+              items => items?.id !== item?.id,
+            );
+            setCoPlayer(filteredItems);
+          }
+        }}>
+        <Image
+          source={item?.profile ? {uri: item?.profile} : IMAGES.Person}
+          style={styles.profileIcon}
+        />
         <Text style={styles.label} numberOfLines={2}>
           {item.name}
         </Text>
@@ -203,7 +216,7 @@ const BookNowScreen = ({navigation, route}) => {
       <TouchableOpacity
         style={styles.items}
         onPress={() => {
-          setSelectedCourt(item?.court_id);
+          setSelectedCourt([item?.court_id]);
           setSelectedCourtPrice(item?.cost);
           getSlotList(
             venueDetails?.id,
@@ -328,21 +341,84 @@ const BookNowScreen = ({navigation, route}) => {
 
   const renderCoPlayers = ({item}) => {
     return (
-      <TouchableOpacity>
-        <Image
-          source={{uri: item?.co_player_image}}
-          style={styles.profileIcon}
-        />
-        <Text>{item?.co_player}</Text>
-        <Text>{item?.coplayer_phone}</Text>
-        <FlatList
-          data={item?.co_player_sports}
-          renderItem={renderImageItem}
-          keyExtractor={(item, index) => item?.sports.toString()}
-          numColumns={8}
-        />
+      <TouchableOpacity
+        style={styles.coPlayerCard}
+        onPress={() => {
+          let playerDetail = {
+            id: item?.co_player_id,
+            name: item?.co_player,
+            phone_no: item?.coplayer_phone,
+            profile: item?.co_player_image,
+          };
+          setCoPlayer([...coPlayer, playerDetail]);
+          refRBSheetPlayers.current.close();
+        }}>
+        <LinearGradient
+          angle={135}
+          colors={[Color.main, Color.main, Color.icon]}
+          style={styles.gradientCoPlayer}
+          useAngle={true}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              marginBottom: scale(10),
+            }}>
+            <Image
+              source={{uri: item?.co_player_image}}
+              style={styles.profileIcon}
+            />
+            <View style={{paddingLeft: scale(20)}}>
+              <Text style={[styles.heading, {color: Color.white}]}>
+                {item?.co_player}
+              </Text>
+              <Text style={[styles.subText, {color: Color.white}]}>
+                Phone No.: {item?.coplayer_phone}
+              </Text>
+            </View>
+          </View>
+          <FlatList
+            data={item?.co_player_sports}
+            renderItem={renderImageItem}
+            keyExtractor={(item, index) => item?.sports.toString()}
+            numColumns={8}
+          />
+        </LinearGradient>
       </TouchableOpacity>
     );
+  };
+
+  const WarningMessageTimer = () => {
+    const timeoutId = setTimeout(() => {
+      setWarning('');
+    }, 3000);
+    return () => clearTimeout(timeoutId);
+  };
+  const validationFxn = () => {
+    console.log('>>>>>', selectedCourt, selectedSport, slotTime);
+    if (selectedSport.length == 0) {
+      setWarning('Please choose a sport.');
+      WarningMessageTimer();
+      return;
+    } else if (selectedCourt.length == 0) {
+      setWarning('Please choose a court.');
+      WarningMessageTimer();
+      return;
+    } else if (slotTime.length == 0) {
+      setWarning('Please choose a slot.');
+      WarningMessageTimer();
+      return;
+    } else {
+      navigation.navigate('PaymentScreen', {
+        venueData: venueDetails,
+        selectedDate: startDate,
+        subTotal:
+          redeemCode != '' ? subTotal : selectedCourtPrice * slotTime.length,
+        selectedCourt: selectedCourt,
+        selectedSport: selectedSport,
+        slotTime: slotTime,
+      });
+    }
   };
 
   return (
@@ -398,9 +474,9 @@ const BookNowScreen = ({navigation, route}) => {
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}>
-              <Text style={[styles.heading, {width: '60%'}]}>
+              <Text style={[styles.heading, {width: '70%'}]}>
                 Total Players {coPlayer.length + coPlayerFromContact.length}{' '}
-                <Text style={styles.subText}>(Double-tap to delete)</Text>
+                <Text style={styles.subText}>(Tap to delete)</Text>
               </Text>
               <TouchableOpacity
                 style={styles.selectBtn}
@@ -513,17 +589,12 @@ const BookNowScreen = ({navigation, route}) => {
           )}
         </View>
       </KeyboardAwareScrollView>
+      {warning !== '' && <Text style={styles.warning}>{warning}</Text>}
+
       <TouchableOpacity
         style={styles.bottomButton}
         onPress={() => {
-          navigation.navigate('PaymentScreen', {
-            venueData: venueDetails,
-            selectedDate: startDate,
-            subTotal:
-              redeemCode != ''
-                ? subTotal
-                : selectedCourtPrice * slotTime.length,
-          });
+          validationFxn();
         }}>
         <Text style={styles.buttonText}>MAKE PAYMENT</Text>
       </TouchableOpacity>
@@ -590,6 +661,7 @@ const BookNowScreen = ({navigation, route}) => {
           container: {
             borderTopLeftRadius: scale(10),
             borderTopRightRadius: scale(10),
+            backgroundColor: Color.white,
           },
           wrapper: {
             backgroundColor: 'rgba(0,0,0,0.1)',
@@ -607,8 +679,10 @@ const BookNowScreen = ({navigation, route}) => {
         }}
         height={scale(600)}
         draggable>
-        <View style={styles.drawerMain}>
-          <Text style={styles.rbTitle}>Select Co-Player</Text>
+        <View style={{paddingTop: scale(10)}}>
+          <Text style={[styles.rbTitle, {paddingHorizontal: scale(20)}]}>
+            Select Co-Player
+          </Text>
           <FlatList
             data={coPlayerList}
             renderItem={renderCoPlayers}
@@ -616,6 +690,7 @@ const BookNowScreen = ({navigation, route}) => {
             contentContainerStyle={{
               backgroundColor: Color.white,
               width: '100%',
+              paddingHorizontal: scale(20),
             }}
           />
         </View>
@@ -646,6 +721,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Color.background,
     padding: scale(20),
+  },
+  warning: {
+    color: Color.red,
+    textAlign: 'center',
+    fontSize: scale(14),
+    paddingVertical: scale(10),
   },
   divider: {
     marginVertical: scale(10),
@@ -693,6 +774,12 @@ const styles = StyleSheet.create({
     padding: scale(10),
     justifyContent: 'center',
   },
+  gradientCoPlayer: {
+    width: '100%',
+    borderRadius: scale(10),
+    padding: scale(10),
+    justifyContent: 'center',
+  },
   rbTitle: {
     fontFamily: Fonts.bold,
     fontSize: scale(18),
@@ -715,6 +802,21 @@ const styles = StyleSheet.create({
     padding: scale(10),
     marginBottom: scale(15),
   },
+  coPlayerCard: {
+    width: '100%',
+    backgroundColor: Color.white,
+    shadowColor: Color.black,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: scale(2),
+
+    elevation: 6,
+    borderRadius: scale(10),
+    marginBottom: scale(15),
+  },
   roundBorder: {
     height: scale(25),
     width: scale(25),
@@ -722,14 +824,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: scale(100),
     borderWidth: scale(0.5),
-    borderColor: Color.icon,
+    borderColor: Color.white,
     margin: scale(5),
   },
   image: {
     height: scale(16),
     width: scale(16),
     margin: scale(5),
-    tintColor: Color.icon,
+    tintColor: Color.white,
     resizeMode: 'contain',
   },
   heading: {
