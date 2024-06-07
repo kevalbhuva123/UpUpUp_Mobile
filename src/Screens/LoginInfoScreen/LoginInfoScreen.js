@@ -132,6 +132,55 @@ const LoginInfoScreen = ({navigation}) => {
     } else {
       try {
         setLoader(true);
+
+        const formdata = new FormData();
+        formdata.append('user_id', '2234');
+        formdata.append('area', selectedOptions);
+
+        const requestOptions = {
+          method: 'POST',
+          body: formdata,
+          redirect: 'follow',
+        };
+
+        fetch(
+          `${apiConfigs.LOCAL_SERVER_API_URL}/Area/edit_user_area`,
+          requestOptions,
+        )
+          .then(response => response.json())
+          .then(data => {
+            console.log(data);
+
+            const formdata = new FormData();
+            formdata.append('user_id', '2234');
+            formdata.append('area', selectedSports);
+
+            const requestOptions = {
+              method: 'POST',
+              body: formdata,
+              redirect: 'follow',
+            };
+
+            fetch(
+              `${apiConfigs.LOCAL_SERVER_API_URL}/Sports/edit_user_sports`,
+              requestOptions,
+            )
+              .then(response => response.json())
+              .then(result => {
+                console.log(result);
+                setLoader(false);
+
+                navigation.replace('HomeScreen');
+              })
+              .catch(error => {
+                setLoader(false);
+                console.error(error);
+              });
+          })
+          .catch(error => {
+            setLoader(false);
+            console.error(error);
+          });
       } catch (error) {
         setLoader(false);
         console.log(error);

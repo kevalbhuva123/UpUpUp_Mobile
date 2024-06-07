@@ -192,7 +192,7 @@ const MyProfileEdit = ({navigation, route}) => {
             StorageService.STORAGE_KEYS.USER_TYPE,
             'USER',
           );
-          navigation.replace('HomeScreen');
+          navigation.replace('LoginInfoScreen');
         })
         .catch(error => {
           setLoader(false);
