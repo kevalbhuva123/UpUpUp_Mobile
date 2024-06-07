@@ -17,103 +17,196 @@ import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
 import apiConfigs from '../../api/apiconfig';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import {ActivityLoader} from '../../Components/Loader/Loader';
 
 const LoginInfoScreen = ({navigation}) => {
-  const [region, setRegion] = useState('');
-  const [regionsData, setRegionsData] = useState([]);
-  const [areasData, setAreasData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [locationList, setLocationList] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState();
   const [options, setOptions] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState([]);
+  const [Loader, setLoader] = useState(false);
+  const [sportsList, setSportsList] = useState([]);
+  const [selectedSports, setSelectedSports] = useState([]);
+  const [warning, setWarning] = useState('');
 
   useEffect(() => {
-    // Fetch region data
-    fetchRegionData();
-    // Fetch area/place data for region with ID 19
-    fetchAreaData(19);
+    getLocations();
   }, []);
 
-  const fetchRegionData = () => {
-    setLoading(true);
-    fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Place/region`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.ErrorCode === 0) {
-          setRegionsData(
-            data.Data.map(item => ({id: item.id, label: item.location})),
-          );
-          setLoading(false);
-        } else {
-          setError(data.ErrorMessage);
-          setLoading(false);
-        }
-      })
-      .catch(error => {
-        console.error('Error fetching region data:', error);
-        setError(error.message);
-        setLoading(false);
-      });
+  const getLocations = () => {
+    try {
+      setLoader(true);
+
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Place/region`, requestOptions)
+        .then(response => response.json())
+        .then(data => {
+          // setLoader(false);
+          console.log(data);
+          setLocationList(data?.Data);
+          setSelectedLocation(data?.Data[0]);
+
+          const requestOptions = {
+            method: 'GET',
+            redirect: 'follow',
+          };
+
+          fetch(
+            `${apiConfigs.LOCAL_SERVER_API_URL}/Sports/index`,
+            requestOptions,
+          )
+            .then(response => response.json())
+            .then(result => {
+              getAreaList(data?.Data[0]?.id);
+
+              setLoader(false);
+              console.log(result);
+              setSportsList(result?.Data);
+            })
+            .catch(error => {
+              setLoader(false);
+              console.error(error);
+            });
+        })
+        .catch(error => {
+          setLoader(false);
+
+          console.error('Error fetching data:', error);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoader(false);
+    }
   };
 
-  const fetchAreaData = () => {
-    setLoading(true);
-    fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Place/area/19`, {
-      method: 'GET', // Assuming this endpoint supports GET method
-      headers: {
-        'Content-Type': 'application/json', // Change content type to application/json
-      },
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.ErrorCode === 0) {
-          setAreasData(data.Data);
-        }
-      })
-      .catch(error => console.error('Error fetching data:', error));
+  const getAreaList = id => {
+    try {
+      setLoader(true);
+
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Place/area/${id}`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(data => {
+          setLoader(false);
+          console.log(data);
+          setOptions(data?.Data);
+        })
+        .catch(error => {
+          setLoader(false);
+
+          console.error('Error fetching data:', error);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoader(false);
+    }
   };
 
-  const renderItem2 = ({item}) => {
+  const WarningMessageTimer = () => {
+    const timeoutId = setTimeout(() => {
+      setWarning('');
+    }, 3000);
+    return () => clearTimeout(timeoutId);
+  };
+
+  const submit = () => {
+    if (selectedOptions.length == 0) {
+      setWarning('Please select your areas.');
+      WarningMessageTimer();
+      return;
+    } else if (selectedSports.length == 0) {
+      setWarning('Please select your sports.');
+      WarningMessageTimer();
+      return;
+    } else {
+      try {
+        setLoader(true);
+      } catch (error) {
+        setLoader(false);
+        console.log(error);
+      }
+    }
+  };
+
+  const renderItem = ({item}) => {
+    const isSelected = selectedOptions.includes(item.id);
+
     return (
-      <View
-        style={{padding: 10, borderBottomWidth: 1, borderBottomColor: '#ccc'}}>
-        <Text style={{fontSize: 16, fontWeight: 'bold', color: 'black'}}>
-          {item.location}
-        </Text>
-        <Text style={{fontSize: 14, color: 'black'}}>{item.area}</Text>
-      </View>
+      <TouchableOpacity
+        style={[styles.optionItem]}
+        onPress={() => {
+          setSelectedOptions(prevSelectedItems => {
+            if (prevSelectedItems.includes(item?.id)) {
+              return prevSelectedItems.filter(itemId => itemId !== item?.id);
+            } else {
+              if (prevSelectedItems.length < 4) {
+                return [...prevSelectedItems, item?.id];
+              } else {
+                return prevSelectedItems;
+              }
+            }
+          });
+        }}>
+        <Text style={styles.optionLabel}>{item.area}</Text>
+        <Image
+          source={isSelected ? IMAGES.Checked : IMAGES.Unchecked}
+          style={isSelected ? styles.checkedIcon : styles.unCheckedIcon}
+        />
+      </TouchableOpacity>
     );
   };
 
-  const renderRegion = item => {
+  const renderLocations = item => {
     return (
       <View style={styles.item}>
-        <Text style={styles.textItem}>{item.label}</Text>
-        {item.value === region && (
-          <Image source={IMAGES.Checked} style={styles.checkedIcon} />
-        )}
+        <Text style={styles.textItem}>{item.location}</Text>
       </View>
     );
   };
 
-  const renderItem = ({item}) =>
-    item.name == 'More\nSports' ? (
-      <TouchableOpacity style={styles.more}>
-        <Text style={styles.moreText}>{item.name}</Text>
-      </TouchableOpacity>
-    ) : (
-      <TouchableOpacity style={styles.items}>
-        <Image source={item.image} style={styles.sportIcon} />
+  const renderSports = ({item}) => {
+    const isSelected = selectedSports?.includes(item.id);
+
+    return (
+      <TouchableOpacity
+        style={styles.items}
+        onPress={() => {
+          setSelectedSports(prevSelectedItems => {
+            if (prevSelectedItems.includes(item?.id)) {
+              return prevSelectedItems.filter(itemId => itemId !== item?.id);
+            } else {
+              if (prevSelectedItems.length < 8) {
+                return [...prevSelectedItems, item?.id];
+              } else {
+                return prevSelectedItems;
+              }
+            }
+          });
+        }}>
+        <View style={styles.rawView}>
+          <Image
+            source={isSelected ? IMAGES.Checked : IMAGES.Unchecked}
+            style={isSelected ? styles.checkedIcon : styles.unCheckedIcon}
+          />
+        </View>
+        <Image source={{uri: item.image}} style={styles.sportIcon} />
         <Text style={styles.label} numberOfLines={1}>
-          {item.name}
+          {item.sports}
         </Text>
       </TouchableOpacity>
     );
+  };
 
   return (
     <View style={styles.main}>
@@ -132,26 +225,48 @@ const LoginInfoScreen = ({navigation}) => {
             style={styles.dropdown}
             placeholderStyle={styles.placeholderStyle}
             selectedTextStyle={styles.selectedTextStyle}
+            selectedTextProps={{numberOfLines: 1}}
             inputSearchStyle={styles.inputSearchStyle}
             iconStyle={styles.iconStyle}
-            data={regionsData}
+            data={locationList}
             search
             maxHeight={scale(300)}
-            labelField="label"
-            valueField="value"
+            labelField="location"
+            valueField="id"
             placeholder="Select item"
             searchPlaceholder="Search..."
-            value={region}
+            value={selectedLocation?.id}
             onChange={item => {
-              setRegion(item.value);
+              console.log('>>>>>>>', item);
+              setSelectedLocation(item);
+              setSelectedOptions([]);
+              getAreaList(item?.id);
             }}
-            renderItem={renderRegion}
+            renderItem={renderLocations}
           />
-          <Text style={styles.heading}>Select a Sport</Text>
+
+          <Text style={styles.heading}>
+            Choose Area/ Place{' '}
+            <Text style={styles.subText}>(Max. 4 areas)</Text>
+          </Text>
+          <View style={styles.subView}>
+            <FlatList
+              data={options}
+              renderItem={renderItem}
+              keyExtractor={item => item.id.toString()}
+              style={{flex: 1}}
+              contentContainerStyle={{borderRadius: scale(10)}}
+              showsVerticalScrollIndicator={false}
+              numColumns={2}
+            />
+          </View>
+          <Text style={styles.heading}>
+            Select a Sport <Text style={styles.subText}>(Max. 8 sports)</Text>
+          </Text>
           <View style={styles.mainBox}>
             <FlatList
-              data={Sports}
-              renderItem={renderItem}
+              data={sportsList}
+              renderItem={renderSports}
               keyExtractor={item => item.id.toString()}
               numColumns={4}
               contentContainerStyle={{
@@ -161,31 +276,18 @@ const LoginInfoScreen = ({navigation}) => {
               }}
             />
           </View>
-          <Text style={styles.heading}>Choose Area/ Place</Text>
-          <View style={styles.area1}>
-            <FlatList
-              data={areasData}
-              renderItem={renderItem2}
-              keyExtractor={item => item.id}
-              ListEmptyComponent={() => (
-                <View
-                  style={{
-                    flex: 1,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                  <Text>No data available</Text>
-                </View>
-              )}
-              refreshing={loading}
-              onRefresh={fetchAreaData}
-            />
-          </View>
         </ScrollView>
-        <TouchableOpacity onPress={() => {}} style={styles.loginBtn}>
+        {warning !== '' && <Text style={styles.warning}>{warning}</Text>}
+
+        <TouchableOpacity
+          onPress={() => {
+            submit();
+          }}
+          style={styles.loginBtn}>
           <Text style={styles.btnText}>FINISH</Text>
         </TouchableOpacity>
       </View>
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };
@@ -199,6 +301,35 @@ const styles = StyleSheet.create({
   master: {
     flex: 1,
     backgroundColor: Color.background,
+  },
+  warning: {
+    color: Color.red,
+    textAlign: 'center',
+    fontSize: scale(14),
+    fontFamily: Fonts.regular,
+    marginVertical: scale(10),
+  },
+  subText: {fontFamily: Fonts.regular, fontSize: scale(10), color: Color.black},
+  rawView: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    width: '100%',
+  },
+  subView: {
+    width: '100%',
+    backgroundColor: Color.white,
+    shadowColor: Color.black,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: scale(2),
+
+    elevation: 6,
+    borderRadius: scale(10),
+    marginBottom: scale(15),
   },
   area1: {
     flex: 1,
@@ -220,8 +351,8 @@ const styles = StyleSheet.create({
     tintColor: Color.subBg,
   },
   unCheckedIcon: {
-    height: scale(20),
-    width: scale(20),
+    height: scale(16),
+    width: scale(16),
     resizeMode: 'contain',
     tintColor: Color.lightGrey,
   },
@@ -297,21 +428,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: scale(10),
     backgroundColor: Color.white,
-    width: '25%',
-    height: scale(65),
     borderRadius: scale(10),
+    flex: 1,
   },
   label: {
     marginTop: scale(5),
     textAlign: 'center',
-    fontFamily: Fonts.light,
+    fontFamily: Fonts.regular,
     fontSize: scale(10),
     color: Color.black,
   },
   sportIcon: {
-    height: scale(20),
-    width: scale(20),
+    height: scale(25),
+    width: scale(25),
     resizeMode: 'contain',
+    tintColor: Color.icon,
   },
   more: {
     borderWidth: scale(1),
@@ -327,5 +458,23 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
     color: Color.black,
     textAlign: 'center',
+  },
+  optionItem: {
+    paddingHorizontal: scale(10),
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: scale(15),
+    borderBottomWidth: scale(0.5),
+    borderBottomColor: Color.lightGrey,
+    width: '50%',
+    borderRightWidth: scale(0.5),
+    borderRightColor: Color.lightGrey,
+  },
+
+  optionLabel: {
+    fontSize: scale(14),
+    color: Color.black,
+    fontWeight: '600',
   },
 });

@@ -14,28 +14,78 @@ import IMAGES from '../../Assets/Icons/index';
 import Fonts from '../../Constants/Fonts';
 import apiConfigs from '../../api/apiconfig';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import {ActivityLoader} from '../../Components/Loader/Loader';
+import {Dropdown} from 'react-native-element-dropdown';
 
 const MyAreaScreen = ({navigation}) => {
+  const [locationList, setLocationList] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState();
   const [options, setOptions] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState([]);
+  const [Loader, setLoader] = useState(false);
 
   useEffect(() => {
-    fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Place/region`, {
-      method: 'GET', // Assuming this endpoint supports GET method
-      headers: {
-        'Content-Type': 'application/json', // Change content type to application/json
-      },
-    })
-      .then(response => response.json())
-      .then(data => {
-        if (data.ErrorCode === 0) {
-          setOptions(
-            data.Data.map(item => ({id: item.id, label: item.location})),
-          );
-        }
-      })
-      .catch(error => console.error('Error fetching data:', error));
+    getLocations();
   }, []);
+
+  const getLocations = () => {
+    try {
+      setLoader(true);
+
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Place/region`, requestOptions)
+        .then(response => response.json())
+        .then(data => {
+          setLoader(false);
+          console.log(data);
+          setLocationList(data?.Data);
+          setSelectedLocation(data?.Data[0]);
+          getAreaList(data?.Data[0]?.id);
+        })
+        .catch(error => {
+          setLoader(false);
+
+          console.error('Error fetching data:', error);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoader(false);
+    }
+  };
+
+  const getAreaList = id => {
+    try {
+      setLoader(true);
+
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Place/area/${id}`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(data => {
+          setLoader(false);
+          console.log(data);
+          setOptions(data?.Data);
+        })
+        .catch(error => {
+          setLoader(false);
+
+          console.error('Error fetching data:', error);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoader(false);
+    }
+  };
 
   const toggleOption = optionId => {
     if (selectedOptions.includes(optionId)) {
@@ -52,7 +102,7 @@ const MyAreaScreen = ({navigation}) => {
       <TouchableOpacity
         style={[styles.optionItem]}
         onPress={() => toggleOption(item.id)}>
-        <Text style={styles.optionLabel}>{item.label}</Text>
+        <Text style={styles.optionLabel}>{item.area}</Text>
         <Image
           source={isSelected ? IMAGES.Checked : IMAGES.Unchecked}
           style={isSelected ? styles.checkedIcon : styles.unCheckedIcon}
@@ -60,6 +110,15 @@ const MyAreaScreen = ({navigation}) => {
       </TouchableOpacity>
     );
   };
+
+  const renderLocations = item => {
+    return (
+      <View style={styles.item}>
+        <Text style={styles.textItem}>{item.location}</Text>
+      </View>
+    );
+  };
+
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
@@ -69,6 +128,29 @@ const MyAreaScreen = ({navigation}) => {
       />
       <View style={styles.master}>
         <Text style={styles.headingText}>Choose Area/Place</Text>
+        <Dropdown
+          style={styles.dropdown}
+          placeholderStyle={styles.placeholderStyle}
+          selectedTextStyle={styles.selectedTextStyle}
+          selectedTextProps={{numberOfLines: 1}}
+          inputSearchStyle={styles.inputSearchStyle}
+          iconStyle={styles.iconStyle}
+          data={locationList}
+          search
+          maxHeight={scale(300)}
+          labelField="location"
+          valueField="id"
+          placeholder="Select item"
+          searchPlaceholder="Search..."
+          value={selectedLocation?.id}
+          onChange={item => {
+            console.log('>>>>>>>', item);
+            setSelectedLocation(item);
+            setSelectedOptions([]);
+            getAreaList(item?.id);
+          }}
+          renderItem={renderLocations}
+        />
         <FlatList
           data={options}
           renderItem={renderItem}
@@ -85,6 +167,7 @@ const MyAreaScreen = ({navigation}) => {
           <Text style={styles.btnText}>FINISH</Text>
         </TouchableOpacity>
       </View>
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };
@@ -101,12 +184,60 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(20),
     paddingVertical: scale(20),
   },
+  dropdown: {
+    marginVertical: scale(10),
+    height: scale(40),
+    backgroundColor: Color.white,
+    borderRadius: scale(10),
+    padding: scale(10),
+    shadowColor: Color.black,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: scale(2),
+
+    elevation: 6,
+  },
+  placeholderStyle: {
+    fontSize: scale(14),
+    color: Color.black,
+    fontFamily: Fonts.regular,
+  },
+  selectedTextStyle: {
+    fontSize: scale(14),
+    color: Color.black,
+    fontFamily: Fonts.regular,
+  },
+  iconStyle: {
+    width: scale(20),
+    height: scale(20),
+  },
+  inputSearchStyle: {
+    height: scale(40),
+    fontSize: scale(14),
+    color: Color.black,
+    fontFamily: Fonts.regular,
+  },
+  item: {
+    padding: scale(10),
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  textItem: {
+    flex: 1,
+    fontSize: scale(14),
+    color: Color.black,
+    fontFamily: Fonts.regular,
+  },
   optionItem: {
     paddingHorizontal: scale(10),
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: scale(15),
+    paddingBottom: scale(15),
   },
 
   optionLabel: {
