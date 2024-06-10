@@ -19,7 +19,8 @@ import apiConfigs from '../../api/apiconfig';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 import {ActivityLoader} from '../../Components/Loader/Loader';
 
-const LoginInfoScreen = ({navigation}) => {
+const LoginInfoScreen = ({navigation, route}) => {
+  const [userID, setUserID] = useState(route?.params?.userID);
   const [locationList, setLocationList] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState();
   const [options, setOptions] = useState([]);
@@ -134,7 +135,7 @@ const LoginInfoScreen = ({navigation}) => {
         setLoader(true);
 
         const formdata = new FormData();
-        formdata.append('user_id', '2234');
+        formdata.append('user_id', userID);
         formdata.append('area', selectedOptions);
 
         const requestOptions = {
@@ -152,7 +153,7 @@ const LoginInfoScreen = ({navigation}) => {
             console.log(data);
 
             const formdata = new FormData();
-            formdata.append('user_id', '2234');
+            formdata.append('user_id', userID);
             formdata.append('area', selectedSports);
 
             const requestOptions = {

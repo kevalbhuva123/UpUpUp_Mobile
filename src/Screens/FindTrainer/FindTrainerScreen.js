@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {Connections} from '../../Constants/StaticData';
@@ -19,15 +19,23 @@ import {ActivityLoader} from '../../Components/Loader/Loader';
 import StorageService from '../../utlis/StorageService';
 import apiConfigs from '../../api/apiconfig';
 import IMAGES from '../../Assets/Icons/index';
+import {useFocusEffect} from '@react-navigation/native';
 
 const FindTrainer = ({navigation}) => {
   const [visible, setVisible] = useState(false);
   const [rating, setRating] = useState(0);
   const [Loader, setLoader] = useState(false);
   const [trainerList, setTrainerList] = useState();
+
   useEffect(() => {
     getTrainerList();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      getTrainerList();
+    }, []),
+  );
 
   const getTrainerList = async () => {
     try {
@@ -55,6 +63,7 @@ const FindTrainer = ({navigation}) => {
         .then(result => {
           setLoader(false);
           setTrainerList(result?.data);
+          console.log('>>>>>', result);
         })
         .catch(error => {
           setLoader(false);
@@ -91,6 +100,14 @@ const FindTrainer = ({navigation}) => {
       </TouchableOpacity>
     );
   };
+
+  const EmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Image source={IMAGES.Empty} style={styles.emptyImage} />
+      <Text style={styles.emptyText}>No data available</Text>
+    </View>
+  );
+
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
@@ -106,6 +123,7 @@ const FindTrainer = ({navigation}) => {
           keyExtractor={item => item.id.toString()}
           numColumns={2}
           style={{flexGrow: 1}}
+          ListEmptyComponent={EmptyComponent}
           contentContainerStyle={{
             justifyContent: 'space-between',
           }}
@@ -118,6 +136,7 @@ const FindTrainer = ({navigation}) => {
           keyExtractor={item => item.id.toString()}
           numColumns={2}
           style={{flexGrow: 1}}
+          ListEmptyComponent={EmptyComponent}
           contentContainerStyle={{
             justifyContent: 'space-between',
           }}
@@ -139,6 +158,24 @@ const styles = StyleSheet.create({
   master: {
     flex: 1,
     backgroundColor: Color.background,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyImage: {
+    width: scale(150),
+    height: scale(150),
+    resizeMode: 'contain',
+    marginTop: scale(50),
+    marginBottom: scale(20),
+  },
+  emptyText: {
+    fontSize: scale(14),
+    color: Color.lightGrey,
+    fontFamily: Fonts.semibold,
+    marginBottom: scale(20),
   },
   title: {
     fontFamily: Fonts.bold,

@@ -273,13 +273,19 @@ const OTPverifyScreen = ({navigation}) => {
 
           console.log('>>>>>>', userDetails);
           if (userDetails?.id) {
-            StorageService.saveItem(
-              StorageService.STORAGE_KEYS.USER_TYPE,
-              'USER',
-            );
-            navigation.navigate('HomeScreen');
+            if (userDetails?.location == '') {
+              navigation.replace('MyProfileEdit', {
+                userID: userDetails?.id,
+              });
+            } else {
+              StorageService.saveItem(
+                StorageService.STORAGE_KEYS.USER_TYPE,
+                'USER',
+              );
+              navigation.navigate('HomeScreen');
+            }
           } else {
-            navigation.navigate('MyProfileEdit', {
+            navigation.replace('MyProfileEdit', {
               data: route?.params?.phoneNumber,
             });
           }

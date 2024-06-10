@@ -13,9 +13,54 @@ import {scale} from '../../utlis/Scale';
 import IMAGES from '../../Assets/Icons/index';
 import Color from '../../Constants/Color';
 import Fonts from '../../Constants/Fonts';
+import {ActivityLoader} from '../../Components/Loader/Loader';
+import StorageService from '../../utlis/StorageService';
+import apiConfigs from '../../api/apiconfig';
 
 const ViewProfileScreen = ({navigation, route}) => {
   const [trainerDetails, setTrainerDetails] = useState(route?.params?.data);
+  const [Loader, setLoader] = useState(false);
+
+  const followTrainer = async () => {
+    try {
+      setLoader(true);
+
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      console.log('>>>>USER DATA>>>', userData);
+
+      const formdata = new FormData();
+      formdata.append('user_id', userData?.id);
+      formdata.append('trainer_id', trainerDetails?.id);
+      formdata.append('status', trainerDetails?.follow_status == 0 ? 1 : 0);
+
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Trainer/following`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+          navigation.goBack();
+          console.log(result);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoader(false);
+    }
+  };
   return (
     <View style={styles.main}>
       <ImageBackground
@@ -145,14 +190,25 @@ const ViewProfileScreen = ({navigation, route}) => {
           />
           <Text style={styles.btnTxt}>Call Now</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.followBtn}>
+        <TouchableOpacity
+          style={styles.followBtn}
+          onPress={() => {
+            followTrainer();
+          }}>
           <Image
-            source={IMAGES.Follow}
+            source={
+              trainerDetails?.follow_status == 0
+                ? IMAGES.Follow
+                : IMAGES.FilledHeart
+            }
             style={[styles.subIcon, {tintColor: Color.white}]}
           />
-          <Text style={styles.btnTxt}>Follow</Text>
+          <Text style={styles.btnTxt}>
+            {trainerDetails?.follow_status == 0 ? 'Follow' : 'Followed'}
+          </Text>
         </TouchableOpacity>
       </View>
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };

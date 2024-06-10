@@ -78,4 +78,5 @@ export default IMAGES = {
   HowWorks: require('./inform.png'),
   Star: require('./star.png'),
   Card: require('./credit-card.png'),
+  FilledHeart: require('./love.png'),
 };

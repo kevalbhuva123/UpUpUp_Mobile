@@ -177,7 +177,7 @@ const MyProfileEdit = ({navigation, route}) => {
       };
 
       fetch(
-        `${apiConfigs.LOCAL_SERVER_API_URL}/Login/crate_users`,
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Login/create_users`,
         requestOptions,
       )
         .then(response => response.json())
@@ -192,7 +192,7 @@ const MyProfileEdit = ({navigation, route}) => {
             StorageService.STORAGE_KEYS.USER_TYPE,
             'USER',
           );
-          navigation.replace('LoginInfoScreen');
+          navigation.replace('LoginInfoScreen', {userID: result.Data?.id});
         })
         .catch(error => {
           setLoader(false);
