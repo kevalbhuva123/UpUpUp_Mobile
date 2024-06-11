@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {scale} from '../../utlis/Scale';
@@ -15,36 +15,117 @@ import {UpComingMyMatches} from '../../Constants/StaticData';
 import IMAGES from '../../Assets/Icons/index';
 import RatingModal from '../../Components/RatingModal';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import apiConfigs from '../../api/apiconfig';
+import {ActivityLoader} from '../../Components/Loader/Loader';
+import StorageService from '../../utlis/StorageService';
+import moment from 'moment';
 
 const MyMatchesScreen = ({navigation}) => {
   const [activeTab, setActiveTab] = useState(1);
+  const [Loader, setLoader] = useState(false);
+  const [pastMatchList, setPastMatchList] = useState([]);
+  const [upComingMatchList, setUpComingMatchList] = useState([]);
+
+  useEffect(() => {
+    getUpcomingMatches();
+  }, []);
+
+  const getUpcomingMatches = async () => {
+    try {
+      setLoader(true);
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      console.log('>>>>USER DATA>>>', userData);
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Matches/upcoming_matches/${userData?.id}`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+          setUpComingMatchList(result?.Data);
+          console.log(result);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      setLoader(false);
+      console.log(error);
+    }
+  };
+  const getPastMatches = async () => {
+    try {
+      setLoader(true);
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      console.log('>>>>USER DATA>>>', userData);
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Matches/past_matches/${userData?.id}`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+          setPastMatchList(result?.Data);
+          console.log(result);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      setLoader(false);
+      console.log(error);
+    }
+  };
 
   const renderItem = ({item}) => {
     return (
       <TouchableOpacity style={styles.card}>
         <View style={styles.iconView}>
-          <Image source={item.image} style={styles.sportIcon} />
+          <Image source={{uri: item.sports_image}} style={styles.sportIcon} />
         </View>
         <View style={{width: '70%'}}>
           <View style={styles.subView}>
             <View style={styles.contentView}>
-              <Text style={styles.heading}>{item.title}</Text>
-              <Text style={styles.subText}>Posted by: {item.owner}</Text>
-
+              <Text style={[styles.heading, {width: '80%'}]} numberOfLines={1}>
+                {item.match_name}
+              </Text>
+              <Text style={[styles.subText, {width: '80%'}]} numberOfLines={1}>
+                Posted by: {item.hostedBy}
+              </Text>
               <View style={styles.iconTextView}>
                 <Image source={IMAGES.Location} style={styles.icons} />
-                <Text style={styles.subText}>{item.location}</Text>
+                <Text style={styles.subText}>{item.area}</Text>
               </View>
             </View>
             <View style={styles.separator}></View>
             <View style={styles.dateView}>
               <Text style={[styles.subText, {color: Color.icon}]}>
-                {item.month}
+                {moment(item.date).format('MMM').toUpperCase()}
               </Text>
               <Text style={[styles.heading, {color: Color.main}]}>
-                {item.date}
+                {moment(item.date).format('DD')}
               </Text>
-              <Text style={styles.subText}>{item.year}</Text>
+              <Text style={styles.subText}>
+                {moment(item.date).format('YYYY')}
+              </Text>
             </View>
           </View>
           <View style={styles.subView2}>
@@ -53,13 +134,13 @@ const MyMatchesScreen = ({navigation}) => {
                 styles.statusView,
                 {
                   backgroundColor:
-                    item.status == 'REQUEST'
+                    item.status == 'Request'
                       ? Color.icon
-                      : item.status == 'ACCEPTED'
+                      : item.status == 'Accepted'
                       ? Color.green
-                      : item.status == 'PENDING'
+                      : item.status == 'Pending'
                       ? Color.yellow
-                      : Color.violet,
+                      : Color.main,
                   color: Color.white,
                 },
               ]}>
@@ -70,28 +151,37 @@ const MyMatchesScreen = ({navigation}) => {
                 source={IMAGES.Morning}
                 style={[
                   styles.icons,
-                  {tintColor: item.time == 1 ? Color.icon : Color.black},
+                  {
+                    tintColor:
+                      item.time == 'Morning' ? Color.icon : Color.black,
+                  },
                 ]}
               />
               <Image
                 source={IMAGES.Afternoon}
                 style={[
                   styles.icons,
-                  {tintColor: item.time == 2 ? Color.icon : Color.black},
+                  {
+                    tintColor:
+                      item.time == 'Afternoon' ? Color.icon : Color.black,
+                  },
                 ]}
               />
               <Image
                 source={IMAGES.Evening}
                 style={[
                   styles.icons,
-                  {tintColor: item.time == 3 ? Color.icon : Color.black},
+                  {
+                    tintColor:
+                      item.time == 'Evening' ? Color.icon : Color.black,
+                  },
                 ]}
               />
               <Image
                 source={IMAGES.Night}
                 style={[
                   styles.icons,
-                  {tintColor: item.time == 4 ? Color.icon : Color.black},
+                  {tintColor: item.time == 'Night' ? Color.icon : Color.black},
                 ]}
               />
             </View>
@@ -100,32 +190,38 @@ const MyMatchesScreen = ({navigation}) => {
       </TouchableOpacity>
     );
   };
-  const renderRate = ({item}) => {
+
+  const renderPastMatches = ({item}) => {
     return (
       <TouchableOpacity style={styles.card} onPress={() => {}}>
         <View style={styles.iconView}>
-          <Image source={item.image} style={styles.sportIcon} />
+          <Image source={{uri: item?.sports_image}} style={styles.sportIcon} />
         </View>
         <View style={{width: '70%'}}>
           <View style={styles.subView}>
             <View style={styles.contentView}>
-              <Text style={styles.heading}>{item.title}</Text>
-              <Text style={styles.subText}>Posted by: {item.owner}</Text>
-
+              <Text style={[styles.heading, {width: '80%'}]} numberOfLines={1}>
+                {item.match_name}
+              </Text>
+              <Text style={[styles.subText, {width: '80%'}]} numberOfLines={1}>
+                Posted by: {item.hostedBy}
+              </Text>
               <View style={styles.iconTextView}>
                 <Image source={IMAGES.Location} style={styles.icons} />
-                <Text style={styles.subText}>{item.location}</Text>
+                <Text style={styles.subText}>{item.area}</Text>
               </View>
             </View>
             <View style={styles.separator}></View>
             <View style={styles.dateView}>
               <Text style={[styles.subText, {color: Color.icon}]}>
-                {item.month}
+                {moment(item.date).format('MMM').toUpperCase()}
               </Text>
               <Text style={[styles.heading, {color: Color.main}]}>
-                {item.date}
+                {moment(item.date).format('DD')}
               </Text>
-              <Text style={styles.subText}>{item.year}</Text>
+              <Text style={styles.subText}>
+                {moment(item.date).format('YYYY')}
+              </Text>
             </View>
           </View>
           <View style={styles.subView2}>
@@ -140,7 +236,7 @@ const MyMatchesScreen = ({navigation}) => {
                       ? Color.green
                       : item.status == 'PENDING'
                       ? Color.yellow
-                      : Color.violet,
+                      : Color.main,
                   color: Color.white,
                 },
               ]}>
@@ -151,28 +247,37 @@ const MyMatchesScreen = ({navigation}) => {
                 source={IMAGES.Morning}
                 style={[
                   styles.icons,
-                  {tintColor: item.time == 1 ? Color.icon : Color.black},
+                  {
+                    tintColor:
+                      item.time == 'Morning' ? Color.icon : Color.black,
+                  },
                 ]}
               />
               <Image
                 source={IMAGES.Afternoon}
                 style={[
                   styles.icons,
-                  {tintColor: item.time == 2 ? Color.icon : Color.black},
+                  {
+                    tintColor:
+                      item.time == 'Afternoon' ? Color.icon : Color.black,
+                  },
                 ]}
               />
               <Image
                 source={IMAGES.Evening}
                 style={[
                   styles.icons,
-                  {tintColor: item.time == 3 ? Color.icon : Color.black},
+                  {
+                    tintColor:
+                      item.time == 'Evening' ? Color.icon : Color.black,
+                  },
                 ]}
               />
               <Image
                 source={IMAGES.Night}
                 style={[
                   styles.icons,
-                  {tintColor: item.time == 4 ? Color.icon : Color.black},
+                  {tintColor: item.time == 'Night' ? Color.icon : Color.black},
                 ]}
               />
             </View>
@@ -195,6 +300,7 @@ const MyMatchesScreen = ({navigation}) => {
             style={activeTab == 1 ? styles.tabActiveButton : styles.tabButton}
             onPress={() => {
               setActiveTab(1);
+              getUpcomingMatches();
             }}>
             <Text style={styles.tabText}>Upcoming</Text>
           </TouchableOpacity>
@@ -202,13 +308,14 @@ const MyMatchesScreen = ({navigation}) => {
             style={activeTab == 2 ? styles.tabActiveButton : styles.tabButton}
             onPress={() => {
               setActiveTab(2);
+              getPastMatches();
             }}>
             <Text style={styles.tabText}>Past Matches</Text>
           </TouchableOpacity>
         </View>
         {activeTab == 1 ? (
           <FlatList
-            data={UpComingMyMatches}
+            data={upComingMatchList}
             renderItem={renderItem}
             keyExtractor={item => item.id.toString()}
             style={{flex: 1}}
@@ -220,8 +327,8 @@ const MyMatchesScreen = ({navigation}) => {
           />
         ) : (
           <FlatList
-            data={UpComingMyMatches}
-            renderItem={renderRate}
+            data={pastMatchList}
+            renderItem={renderPastMatches}
             keyExtractor={item => item.id.toString()}
             style={{flex: 1}}
             contentContainerStyle={{
@@ -232,6 +339,7 @@ const MyMatchesScreen = ({navigation}) => {
           />
         )}
       </View>
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };
@@ -285,8 +393,8 @@ const styles = StyleSheet.create({
     marginBottom: scale(15),
   },
   sportIcon: {
-    width: scale(50),
-    height: scale(50),
+    width: scale(60),
+    height: scale(60),
     resizeMode: 'contain',
     tintColor: Color.icon,
   },
