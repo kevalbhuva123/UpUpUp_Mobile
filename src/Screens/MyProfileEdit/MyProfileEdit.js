@@ -183,15 +183,15 @@ const MyProfileEdit = ({navigation, route}) => {
         .then(response => response.json())
         .then(async result => {
           setLoader(false);
-          console.log(result);
+          console.log('>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>', result);
           await StorageService.saveItem(
             StorageService.STORAGE_KEYS.USER_DETAILS,
             result.Data,
           );
-          await StorageService.saveItem(
-            StorageService.STORAGE_KEYS.USER_TYPE,
-            'USER',
-          );
+          // await StorageService.saveItem(
+          //   StorageService.STORAGE_KEYS.USER_TYPE,
+          //   'USER',
+          // );
           navigation.replace('LoginInfoScreen', {userID: result.Data?.id});
         })
         .catch(error => {

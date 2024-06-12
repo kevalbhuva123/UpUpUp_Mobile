@@ -97,6 +97,7 @@ const OTPverifyScreen = ({navigation}) => {
         })
           .then(response => response.json())
           .then(async data => {
+            setValue('');
             console.log('>>>>VENDOR DATA>>>>>', data);
             if (data == 'not exist') {
               setIsVendor(false);

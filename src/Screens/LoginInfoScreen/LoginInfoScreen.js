@@ -18,6 +18,7 @@ import Fonts from '../../Constants/Fonts';
 import apiConfigs from '../../api/apiconfig';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 import {ActivityLoader} from '../../Components/Loader/Loader';
+import StorageService from '../../utlis/StorageService';
 
 const LoginInfoScreen = ({navigation, route}) => {
   const [userID, setUserID] = useState(route?.params?.userID);
@@ -137,24 +138,27 @@ const LoginInfoScreen = ({navigation, route}) => {
         const formdata = new FormData();
         formdata.append('user_id', userID);
         formdata.append('area', selectedOptions);
-
         const requestOptions = {
           method: 'POST',
           body: formdata,
           redirect: 'follow',
         };
+        console.log('>>>FFFFF>>>>', requestOptions);
 
         fetch(
           `${apiConfigs.LOCAL_SERVER_API_URL}/Area/edit_user_area`,
           requestOptions,
         )
           .then(response => response.json())
-          .then(data => {
+          .then(async data => {
             console.log(data);
-
+            await StorageService.saveItem(
+              StorageService.STORAGE_KEYS.USER_LOCATION,
+              data?.Data,
+            );
             const formdata = new FormData();
             formdata.append('user_id', userID);
-            formdata.append('area', selectedSports);
+            formdata.append('sports', selectedSports);
 
             const requestOptions = {
               method: 'POST',
@@ -162,15 +166,24 @@ const LoginInfoScreen = ({navigation, route}) => {
               redirect: 'follow',
             };
 
+            console.log('>>>VVVVVVV>>>>', requestOptions);
+
             fetch(
               `${apiConfigs.LOCAL_SERVER_API_URL}/Sports/edit_user_sports`,
               requestOptions,
             )
               .then(response => response.json())
-              .then(result => {
+              .then(async result => {
                 console.log(result);
                 setLoader(false);
-
+                await StorageService.saveItem(
+                  StorageService.STORAGE_KEYS.USER_SPORTS,
+                  data?.Data,
+                );
+                await StorageService.saveItem(
+                  StorageService.STORAGE_KEYS.USER_TYPE,
+                  'USER',
+                );
                 navigation.replace('HomeScreen');
               })
               .catch(error => {
