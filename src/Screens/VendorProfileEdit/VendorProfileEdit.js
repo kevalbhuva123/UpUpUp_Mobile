@@ -172,6 +172,13 @@ const VendorProfileEdit = ({navigation, route}) => {
       return;
     }
 
+    let file = {
+      uri: avatarSource?.uri,
+      name: avatarSource?.fileName,
+      type: avatarSource?.type,
+      size: avatarSource?.fileSize,
+    };
+
     try {
       setLoader(true);
       const formdata = new FormData();
@@ -181,7 +188,7 @@ const VendorProfileEdit = ({navigation, route}) => {
       formdata.append('email', email);
       formdata.append('device_id', '');
       formdata.append('dob', DOB);
-      formdata.append('file', avatarSource);
+      formdata.append('file', file);
 
       const requestOptions = {
         method: 'POST',

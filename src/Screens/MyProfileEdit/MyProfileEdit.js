@@ -39,69 +39,27 @@ const MyProfileEdit = ({navigation, route}) => {
   const [Loader, setLoader] = useState(false);
   const [isDateOpen, setIsDateOpen] = useState(false);
 
-  const requestCameraPermission = async () => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.CAMERA,
-          {
-            title: 'Camera Permission',
-            message: 'App needs camera permission',
-          },
-        );
-        // If CAMERA Permission is granted
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } catch (err) {
-        return false;
-      }
-    } else return true;
-  };
-
-  const requestExternalWritePermission = async () => {
-    if (Platform.OS === 'android') {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          {
-            title: 'External Storage Write Permission',
-            message: 'App needs write permission',
-          },
-        );
-        // If WRITE_EXTERNAL_STORAGE Permission is granted
-        return granted === PermissionsAndroid.RESULTS.GRANTED;
-      } catch (err) {
-        console.warn(err);
-      }
-      return false;
-    } else return true;
-  };
-
   const captureImage = async () => {
     setModalVisible(false);
     let options = {
       mediaType: 'photo',
-      saveToPhotos: true,
+      quality: 1,
     };
-    let isCameraPermitted = await requestCameraPermission();
-    let isStoragePermitted = await requestExternalWritePermission();
-    if (isCameraPermitted && isStoragePermitted) {
-      setTimeout(() => {
-        launchCamera(options, response => {
-          if (response.didCancel) {
-            return;
-          } else if (response.errorCode == 'camera_unavailable') {
-            return;
-          } else if (response.errorCode == 'permission') {
-            return;
-          } else if (response.errorCode == 'others') {
-            return;
-          }
 
-          console.log(response.assets[0]);
-          setAvatarSource(response.assets[0]);
-        });
-      }, 1000);
-    }
+    launchCamera(options, response => {
+      if (response.didCancel) {
+        return;
+      } else if (response.errorCode == 'camera_unavailable') {
+        return;
+      } else if (response.errorCode == 'permission') {
+        return;
+      } else if (response.errorCode == 'others') {
+        return;
+      }
+
+      console.log(response.assets[0]);
+      setAvatarSource(response.assets[0]);
+    });
   };
 
   const chooseFile = () => {
@@ -159,6 +117,13 @@ const MyProfileEdit = ({navigation, route}) => {
       return;
     }
 
+    let file = {
+      uri: avatarSource?.uri,
+      name: avatarSource?.fileName,
+      type: avatarSource?.type,
+      size: avatarSource?.fileSize,
+    };
+
     try {
       setLoader(true);
       const formdata = new FormData();
@@ -168,7 +133,7 @@ const MyProfileEdit = ({navigation, route}) => {
       formdata.append('email', email);
       formdata.append('device_id', '');
       formdata.append('dob', DOB);
-      formdata.append('file', avatarSource);
+      formdata.append('file', file);
 
       const requestOptions = {
         method: 'POST',

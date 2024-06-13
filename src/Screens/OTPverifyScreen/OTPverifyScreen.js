@@ -237,11 +237,17 @@ const OTPverifyScreen = ({navigation}) => {
 
             console.log('>>>>>>', userDetails);
             if (userDetails?.id) {
-              StorageService.saveItem(
-                StorageService.STORAGE_KEYS.USER_TYPE,
-                'USER',
-              );
-              navigation.navigate('HomeScreen');
+              if (userDetails?.location == '') {
+                navigation.replace('LoginInfoScreen', {
+                  userID: userDetails?.id,
+                });
+              } else {
+                StorageService.saveItem(
+                  StorageService.STORAGE_KEYS.USER_TYPE,
+                  'USER',
+                );
+                navigation.navigate('HomeScreen');
+              }
             } else {
               navigation.navigate('MyProfileEdit', {
                 data: route?.params?.phoneNumber,
@@ -275,7 +281,7 @@ const OTPverifyScreen = ({navigation}) => {
           console.log('>>>>>>', userDetails);
           if (userDetails?.id) {
             if (userDetails?.location == '') {
-              navigation.replace('MyProfileEdit', {
+              navigation.replace('LoginInfoScreen', {
                 userID: userDetails?.id,
               });
             } else {

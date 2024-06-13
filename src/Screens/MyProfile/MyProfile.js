@@ -7,7 +7,7 @@ import {
   View,
   FlatList,
 } from 'react-native';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import CustomHeader from '../../Components/CustomHeader';
 import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
@@ -15,8 +15,76 @@ import Color from '../../Constants/Color';
 import IMAGES from '../../Assets/Icons/index';
 import {Sports} from '../../Constants/StaticData';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import {ActivityLoader} from '../../Components/Loader/Loader';
+import StorageService from '../../utlis/StorageService';
+import apiConfigs from '../../api/apiconfig';
 
 const MyProfile = ({navigation}) => {
+  const [sportList, setSportList] = useState([]);
+  const [userInfo, setUserInfo] = useState();
+  const [areaList, setAreaList] = useState([]);
+  const [Loader, setLoader] = useState(false);
+
+  useEffect(() => {
+    getInfo();
+  }, []);
+
+  const getInfo = async () => {
+    try {
+      let userDetails = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      console.log('>>>USER Details>>>', userDetails);
+      setUserInfo(userDetails);
+
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Sports/get_user_sports/${userDetails?.id}`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setSportList(result?.Data);
+
+          const formData = new FormData();
+          formData.append('user_id', userDetails?.id);
+
+          const requestOptions = {
+            method: 'POST',
+            body: formData,
+            redirect: 'follow',
+          };
+
+          fetch(
+            `${apiConfigs.LOCAL_SERVER_API_URL}/Area/get_user_area`,
+            requestOptions,
+          )
+            .then(response => response.json())
+            .then(result => {
+              setLoader(false);
+              setAreaList(result?.Data);
+              console.log(result);
+            })
+            .catch(error => {
+              setLoader(false);
+              console.error(error);
+            });
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoader(false);
+    }
+  };
+
   const options = [
     {id: 1, label: 'Kaloor'},
     {id: 2, label: 'Nettoor'},
@@ -26,19 +94,20 @@ const MyProfile = ({navigation}) => {
     {id: 6, label: 'Fort Kochi'},
     {id: 7, label: 'Thrissur'},
   ];
-  const renderItem = ({item}) =>
-    item.image && (
+  const renderItem = ({item}) => {
+    return (
       <TouchableOpacity style={styles.item} disabled>
-        <Image source={item.image} style={styles.sportIcon} />
-        <Text style={styles.label}>{item.name}</Text>
+        <Image source={{uri: item?.image}} style={styles.sportIcon} />
+        <Text style={styles.label}>{item.sports}</Text>
       </TouchableOpacity>
     );
+  };
 
   const renderLocation = ({item}) => {
     return (
       <TouchableOpacity style={[styles.optionItem]} disabled>
         <Text style={styles.optionLabel}>
-          {'\u2022'} {item.label}
+          {'\u2022'} {item.area}
         </Text>
       </TouchableOpacity>
     );
@@ -53,9 +122,9 @@ const MyProfile = ({navigation}) => {
       <View style={styles.master}>
         <View style={styles.topView}>
           <Image source={IMAGES.Person} style={styles.profile} />
-          <Text style={styles.title}>Keval Bhuva</Text>
-          <Text style={styles.subTitle}>+91 9999922222</Text>
-          <Text style={styles.subTitle}>keval@gmail.com</Text>
+          <Text style={styles.title}>{userInfo?.name}</Text>
+          <Text style={styles.subTitle}>{userInfo?.phone_no}</Text>
+          <Text style={styles.subTitle}>{userInfo?.email}</Text>
           <TouchableOpacity
             style={styles.editBtn}
             onPress={() => {
@@ -70,7 +139,7 @@ const MyProfile = ({navigation}) => {
           <View style={styles.box}>
             <Text style={styles.heading}>My Sports</Text>
             <FlatList
-              data={Sports}
+              data={sportList}
               renderItem={renderItem}
               keyExtractor={item => item.id.toString()}
               numColumns={4}
@@ -91,7 +160,7 @@ const MyProfile = ({navigation}) => {
           <View style={styles.box}>
             <Text style={styles.heading}>My Locations</Text>
             <FlatList
-              data={options}
+              data={areaList}
               renderItem={renderLocation}
               keyExtractor={item => item.id.toString()}
               contentContainerStyle={{marginVertical: scale(10)}}
@@ -108,6 +177,7 @@ const MyProfile = ({navigation}) => {
           </View>
         </ScrollView>
       </View>
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };

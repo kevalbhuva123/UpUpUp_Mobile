@@ -28,6 +28,7 @@ import {ActivityLoader} from '../../Components/Loader/Loader';
 import StorageService from '../../utlis/StorageService';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 import {Sports} from '../../Constants/StaticData';
+import AlertModal from '../../Components/AlertModal';
 
 const BeTrainerScreen = ({navigation}) => {
   const [name, setName] = useState('');
@@ -41,18 +42,101 @@ const BeTrainerScreen = ({navigation}) => {
   const [warning, setWarning] = useState('');
   const [Loader, setLoader] = useState(false);
   const [isDateOpen, setIsDateOpen] = useState(false);
+  const [userSports, setUserSports] = useState([]);
+  const [selectedSports, setSelectedSports] = useState([]);
+  const [age, setAge] = useState('');
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMsg, setAlertMsg] = useState('');
 
   useEffect(() => {
     getDetail();
   }, []);
 
   const getDetail = async () => {
-    let vendorDetails = await StorageService.getItem(
-      StorageService.STORAGE_KEYS.VENDOR_DETAILS,
-    );
+    try {
+      setLoader(true);
+      let userDetails = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
 
-    console.log('>>>Vendor Details>>>', vendorDetails);
-    setMobile(vendorDetails?.phone);
+      console.log('>>>USER Details>>>', userDetails);
+      setMobile(userDetails?.phone_no);
+
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Sports/get_user_sports/${userDetails?.id}`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setUserSports(result?.Data);
+          setLoader(false);
+
+          console.log(result);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoader(false);
+    }
+  };
+
+  const captureImage = async () => {
+    setModalVisible(false);
+    let options = {
+      mediaType: 'photo',
+      quality: 1,
+    };
+
+    launchCamera(options, response => {
+      if (response.didCancel) {
+        return;
+      } else if (response.errorCode == 'camera_unavailable') {
+        return;
+      } else if (response.errorCode == 'permission') {
+        return;
+      } else if (response.errorCode == 'others') {
+        return;
+      }
+
+      console.log(response.assets[0]);
+      setAvatarSource(response.assets[0]);
+    });
+  };
+
+  const chooseFile = () => {
+    setModalVisible(false);
+    let options = {
+      mediaType: 'photo',
+    };
+    launchImageLibrary(options, response => {
+      if (response.didCancel) {
+        return;
+      } else if (response.errorCode == 'camera_unavailable') {
+        return;
+      } else if (response.errorCode == 'permission') {
+        return;
+      } else if (response.errorCode == 'others') {
+        return;
+      }
+
+      console.log(response.assets[0]);
+      setAvatarSource(response.assets[0]);
+    });
+  };
+
+  const calculateAge = birthDate => {
+    const birthDateMoment = moment(birthDate, 'YYYY-MM-DD');
+    const today = moment();
+    const ages = today.diff(birthDateMoment, 'years');
+    setAge(ages);
   };
 
   const WarningMessageTimer = () => {
@@ -62,19 +146,133 @@ const BeTrainerScreen = ({navigation}) => {
     return () => clearTimeout(timeoutId);
   };
 
-  const renderSports = ({item}) =>
-    item.name == 'More\nSports' ? (
-      <TouchableOpacity style={styles.more}>
-        <Text style={styles.moreText}>{item.name}</Text>
-      </TouchableOpacity>
-    ) : (
-      <TouchableOpacity style={styles.items}>
-        <Image source={item.image} style={styles.sportIcon} />
+  const submitProfile = async () => {
+    console.log('PRESSED');
+    if (avatarSource == null) {
+      setWarning('Please select profile.');
+      WarningMessageTimer();
+      console.log('1');
+      return;
+    }
+    if (!name.trim()) {
+      setWarning('Please enter your name.');
+      WarningMessageTimer();
+      console.log('2');
+
+      return;
+    }
+    if (!address.trim()) {
+      setWarning('Please enter your address.');
+      WarningMessageTimer();
+      console.log('3');
+
+      return;
+    }
+
+    if (!experience.trim()) {
+      setWarning('Please enter your experience.');
+      WarningMessageTimer();
+      console.log('5');
+
+      return;
+    }
+
+    if (selectedSports.length == 0) {
+      setWarning('Please select your sports.');
+      WarningMessageTimer();
+      console.log('6');
+      return;
+    }
+
+    try {
+      setLoader(true);
+      let userDetails = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      console.log('>>>USER Details>>>', userDetails);
+
+      let file = {
+        uri: avatarSource?.uri,
+        name: avatarSource?.fileName,
+        type: avatarSource?.type,
+        size: avatarSource?.fileSize,
+      };
+      console.log(file);
+      const formdata = new FormData();
+      formdata.append('user_id', userDetails?.id);
+      formdata.append('user_name', name);
+      formdata.append('user_age', age);
+      formdata.append('user_phone', mobile);
+      formdata.append('user_address', address);
+      formdata.append('user_experiance', experience);
+      formdata.append('location_id', userDetails?.location);
+      formdata.append('sports', JSON.stringify(selectedSports));
+      formdata.append('file', file);
+      console.log('>>>>FD>>>', formdata);
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Trainer/trainer`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+          if (result?.errorCode == 0) {
+            navigation.goBack();
+          } else {
+            setAlertMsg(result?.message);
+            setAlertVisible(true);
+          }
+          console.log(result);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error('>>>>>>>>>', error);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoader(false);
+    }
+  };
+
+  const renderSports = ({item}) => {
+    const isSelected = selectedSports?.includes(item.id);
+
+    return (
+      <TouchableOpacity
+        style={styles.items}
+        onPress={() => {
+          setSelectedSports(prevSelectedItems => {
+            if (prevSelectedItems.includes(item?.id)) {
+              return prevSelectedItems.filter(itemId => itemId !== item?.id);
+            } else {
+              if (prevSelectedItems.length < 8) {
+                return [...prevSelectedItems, item?.id];
+              } else {
+                return prevSelectedItems;
+              }
+            }
+          });
+        }}>
+        <View style={styles.rawView}>
+          <Image
+            source={isSelected ? IMAGES.Checked : IMAGES.Unchecked}
+            style={isSelected ? styles.checkedIcon : styles.unCheckedIcon}
+          />
+        </View>
+        <Image source={{uri: item.image}} style={styles.sportIcon} />
         <Text style={styles.label} numberOfLines={1}>
-          {item.name}
+          {item.sports}
         </Text>
       </TouchableOpacity>
     );
+  };
 
   return (
     <View style={styles.main}>
@@ -91,6 +289,15 @@ const BeTrainerScreen = ({navigation}) => {
         extraScrollHeight={20}
         style={{flex: 1}}>
         <View style={styles.master}>
+          <TouchableOpacity onPress={() => setModalVisible(true)}>
+            <ImageBackground
+              source={avatarSource === null ? IMAGES.Person : avatarSource}
+              style={styles.profilePhoto}
+              imageStyle={{borderRadius: scale(150)}} // adjust border radius as needed
+            >
+              <Image source={IMAGES.Camera} style={styles.cameraIcon} />
+            </ImageBackground>
+          </TouchableOpacity>
           <TextInput
             style={styles.input}
             placeholder="Name"
@@ -114,18 +321,11 @@ const BeTrainerScreen = ({navigation}) => {
             placeholderTextColor={Color.lightGrey}
             onChangeText={text => setAddress(text)}
           />
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            placeholderTextColor={Color.lightGrey}
-            value={email}
-            onChangeText={text => setEmail(text)}
-            keyboardType="email-address"
-          />
+
           <TouchableOpacity
             style={[styles.input, {justifyContent: 'center'}]}
             onPress={() => {
-              setIsDateOpen(true);
+              setIsDateOpen(!isDateOpen);
             }}>
             <Text style={styles.dateText}>
               {DOB != '' ? DOB : 'Select Date of Birth'}
@@ -142,7 +342,7 @@ const BeTrainerScreen = ({navigation}) => {
           <View style={styles.subView}>
             <Text style={styles.headingTitle}>Select a Sport</Text>
             <FlatList
-              data={Sports}
+              data={userSports}
               renderItem={renderSports}
               keyExtractor={item => item.id.toString()}
               numColumns={4}
@@ -170,6 +370,8 @@ const BeTrainerScreen = ({navigation}) => {
         onConfirm={date => {
           console.log(date);
           setDOB(moment(date).format('YYYY-MM-DD'));
+          calculateAge(moment(date).format('YYYY-MM-DD'));
+          setIsDateOpen(false);
         }}
         onCancel={() => {
           setIsDateOpen(false);
@@ -179,6 +381,26 @@ const BeTrainerScreen = ({navigation}) => {
         dividerColor={Color.icon}
       />
       <ActivityLoader loading={Loader} />
+      <MediaModal
+        modalVisible={modalVisible}
+        onCancel={() => {
+          setModalVisible(false);
+        }}
+        onCamera={() => {
+          captureImage();
+        }}
+        onGallery={() => {
+          chooseFile();
+        }}
+      />
+      <AlertModal
+        modalVisible={alertVisible}
+        onClose={async () => {
+          setAlertVisible(false);
+          navigation.goBack();
+        }}
+        content={alertMsg}
+      />
     </View>
   );
 };
@@ -195,6 +417,24 @@ const styles = StyleSheet.create({
     paddingHorizontal: scale(20),
     paddingVertical: scale(20),
     alignItems: 'center',
+  },
+  rawView: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    width: '100%',
+  },
+  checkedIcon: {
+    height: scale(16),
+    width: scale(16),
+    resizeMode: 'contain',
+    tintColor: Color.subBg,
+  },
+  unCheckedIcon: {
+    height: scale(16),
+    width: scale(16),
+    resizeMode: 'contain',
+    tintColor: Color.lightGrey,
   },
   loginBtn: {
     backgroundColor: Color.icon,
@@ -285,9 +525,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: scale(10),
     backgroundColor: Color.white,
-    width: '25%',
-    height: scale(65),
     borderRadius: scale(10),
+    flex: 1,
   },
   label: {
     marginTop: scale(5),
@@ -297,9 +536,10 @@ const styles = StyleSheet.create({
     color: Color.black,
   },
   sportIcon: {
-    height: scale(20),
-    width: scale(20),
+    height: scale(25),
+    width: scale(25),
     resizeMode: 'contain',
+    tintColor: Color.icon,
   },
   subView: {
     width: '100%',

@@ -48,7 +48,6 @@ const LoginInfoScreen = ({navigation, route}) => {
         .then(response => response.json())
         .then(data => {
           // setLoader(false);
-          console.log(data);
           setLocationList(data?.Data);
           setSelectedLocation(data?.Data[0]);
 
@@ -66,7 +65,6 @@ const LoginInfoScreen = ({navigation, route}) => {
               getAreaList(data?.Data[0]?.id);
 
               setLoader(false);
-              console.log(result);
               setSportsList(result?.Data);
             })
             .catch(error => {
@@ -101,7 +99,6 @@ const LoginInfoScreen = ({navigation, route}) => {
         .then(response => response.json())
         .then(data => {
           setLoader(false);
-          console.log(data);
           setOptions(data?.Data);
         })
         .catch(error => {
@@ -122,7 +119,7 @@ const LoginInfoScreen = ({navigation, route}) => {
     return () => clearTimeout(timeoutId);
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (selectedOptions.length == 0) {
       setWarning('Please select your areas.');
       WarningMessageTimer();
@@ -137,49 +134,41 @@ const LoginInfoScreen = ({navigation, route}) => {
 
         const formdata = new FormData();
         formdata.append('user_id', userID);
-        formdata.append('area', selectedOptions);
+        formdata.append('area', JSON.stringify(selectedOptions));
+
         const requestOptions = {
           method: 'POST',
           body: formdata,
           redirect: 'follow',
         };
-        console.log('>>>FFFFF>>>>', requestOptions);
 
         fetch(
           `${apiConfigs.LOCAL_SERVER_API_URL}/Area/edit_user_area`,
           requestOptions,
         )
           .then(response => response.json())
-          .then(async data => {
-            console.log(data);
-            await StorageService.saveItem(
-              StorageService.STORAGE_KEYS.USER_LOCATION,
-              data?.Data,
-            );
-            const formdata = new FormData();
-            formdata.append('user_id', userID);
-            formdata.append('sports', selectedSports);
+          .then(async result => {
+            console.log('AREA>>>>>>>>>>>>>>>>>>>>>>>', result);
+
+            const formData = new FormData();
+            formData.append('user_id', userID);
+            formData.append('sports', JSON.stringify(selectedSports));
 
             const requestOptions = {
               method: 'POST',
-              body: formdata,
+              body: formData,
               redirect: 'follow',
             };
-
-            console.log('>>>VVVVVVV>>>>', requestOptions);
 
             fetch(
               `${apiConfigs.LOCAL_SERVER_API_URL}/Sports/edit_user_sports`,
               requestOptions,
             )
               .then(response => response.json())
-              .then(async result => {
-                console.log(result);
-                setLoader(false);
-                await StorageService.saveItem(
-                  StorageService.STORAGE_KEYS.USER_SPORTS,
-                  data?.Data,
-                );
+              .then(async data => {
+                console.log('SPORTS>>>>>>>>>>>>>>>>>>>>>>>>>>>>', data),
+                  setLoader(false);
+
                 await StorageService.saveItem(
                   StorageService.STORAGE_KEYS.USER_TYPE,
                   'USER',
