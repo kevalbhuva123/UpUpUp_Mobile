@@ -242,23 +242,24 @@ const BeTrainerScreen = ({navigation}) => {
   };
 
   const renderSports = ({item}) => {
-    const isSelected = selectedSports?.includes(item.id);
+    const isSelected = selectedSports == item.id;
 
     return (
       <TouchableOpacity
         style={styles.items}
         onPress={() => {
-          setSelectedSports(prevSelectedItems => {
-            if (prevSelectedItems.includes(item?.id)) {
-              return prevSelectedItems.filter(itemId => itemId !== item?.id);
-            } else {
-              if (prevSelectedItems.length < 8) {
-                return [...prevSelectedItems, item?.id];
-              } else {
-                return prevSelectedItems;
-              }
-            }
-          });
+          // setSelectedSports(prevSelectedItems => {
+          //   if (prevSelectedItems.includes(item?.id)) {
+          //     return prevSelectedItems.filter(itemId => itemId !== item?.id);
+          //   } else {
+          //     if (prevSelectedItems.length < 8) {
+          //       return [...prevSelectedItems, item?.id];
+          //     } else {
+          //       return prevSelectedItems;
+          //     }
+          //   }
+          // });
+          setSelectedSports([item.id]);
         }}>
         <View style={styles.rawView}>
           <Image

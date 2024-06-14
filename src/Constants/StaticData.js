@@ -715,3 +715,22 @@ export const HolidaysList = [
       'Lorem epsum no reason construction re-build etc pitch pool renovation',
   },
 ];
+
+export const MatchTime = [
+  {
+    title: 'Morning',
+    id: 'Morning',
+  },
+  {
+    title: 'Afternoon',
+    id: 'Afternoon',
+  },
+  {
+    title: 'Evening',
+    id: 'Evening',
+  },
+  {
+    title: 'Night',
+    id: 'Night',
+  },
+];

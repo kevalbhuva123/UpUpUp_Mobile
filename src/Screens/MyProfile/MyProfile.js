@@ -128,7 +128,7 @@ const MyProfile = ({navigation}) => {
           <TouchableOpacity
             style={styles.editBtn}
             onPress={() => {
-              navigation.navigate('MyProfileEdit');
+              // navigation.navigate('MyProfileEdit');
             }}>
             <Image source={IMAGES.Pencil} style={styles.icon} />
           </TouchableOpacity>

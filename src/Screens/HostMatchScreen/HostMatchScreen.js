@@ -12,7 +12,7 @@ import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
-import {Sports, UpComingMyMatches} from '../../Constants/StaticData';
+import {MatchTime, Sports, UpComingMyMatches} from '../../Constants/StaticData';
 import IMAGES from '../../Assets/Icons/index';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
@@ -32,10 +32,12 @@ const HostMatchScreen = ({navigation}) => {
   const [selectedArea, setSelectedArea] = useState();
   const [isDateOpen, setIsDateOpen] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
-  const [isTimeOpen, setIsTimeOpen] = useState(false);
-  const [startTime, setStartTime] = useState(new Date());
+  const [startTime, setStartTime] = useState();
   const [noOfPlayer, setNoOfPlayer] = useState();
-
+  const [userSports, setUserSports] = useState([]);
+  const [selectedSports, setSelectedSports] = useState([]);
+  const [warning, setWarning] = useState('');
+  const [matchName, setMatchName] = useState('');
   useEffect(() => {
     getMyHostedMatches();
   }, []);
@@ -54,15 +56,12 @@ const HostMatchScreen = ({navigation}) => {
       };
 
       fetch(
-        `${apiConfigs.LOCAL_SERVER_API_URL}/Matches/past_matches/${userData?.id}`,
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Matches/index/${userData?.id}`,
         requestOptions,
       )
         .then(response => response.json())
         .then(result => {
           setHostedMatchList(result?.Data);
-
-          const formdata = new FormData();
-          formdata.append('location_id', userData?.location);
 
           const requestOptions = {
             method: 'GET',
@@ -70,15 +69,37 @@ const HostMatchScreen = ({navigation}) => {
           };
 
           fetch(
-            `${apiConfigs.LOCAL_SERVER_API_URL}/Place/area/${userData?.location}`,
+            `${apiConfigs.LOCAL_SERVER_API_URL}/Sports/get_user_sports/${userData?.id}`,
             requestOptions,
           )
             .then(response => response.json())
             .then(result => {
-              setLoader(false);
+              setUserSports(result?.Data);
+              const formData = new FormData();
+              formData.append('user_id', userData?.id);
+
+              const requestOptions = {
+                method: 'POST',
+                body: formData,
+                redirect: 'follow',
+              };
+
+              fetch(
+                `${apiConfigs.LOCAL_SERVER_API_URL}/Area/get_user_area`,
+                requestOptions,
+              )
+                .then(response => response.json())
+                .then(result => {
+                  setLoader(false);
+                  setAreaList(result?.Data);
+                  console.log(result);
+                })
+                .catch(error => {
+                  setLoader(false);
+                  console.error(error);
+                });
 
               console.log(result);
-              setAreaList(result?.Data);
             })
             .catch(error => {
               setLoader(false);
@@ -97,7 +118,11 @@ const HostMatchScreen = ({navigation}) => {
 
   const renderItem = ({item}) => {
     return (
-      <TouchableOpacity style={styles.card}>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => {
+          navigation.navigate('MatchDetailScreen', {id: item?.id});
+        }}>
         <View style={styles.iconView}>
           <Image source={{uri: item?.sports_image}} style={styles.sportIcon1} />
         </View>
@@ -105,7 +130,7 @@ const HostMatchScreen = ({navigation}) => {
           <View style={styles.subView1}>
             <View style={styles.contentView}>
               <Text style={[styles.heading, {width: '80%'}]} numberOfLines={1}>
-                {item.match_name}
+                {item?.match_name?.toUpperCase()}
               </Text>
               <Text style={[styles.subText, {width: '80%'}]} numberOfLines={1}>
                 Posted by: {item.hostedBy}
@@ -135,11 +160,11 @@ const HostMatchScreen = ({navigation}) => {
                 styles.statusView,
                 {
                   backgroundColor:
-                    item.status == 'REQUEST'
+                    item.status == 'Request'
                       ? Color.icon
-                      : item.status == 'ACCEPTED'
+                      : item.status == 'Accept'
                       ? Color.green
-                      : item.status == 'PENDING'
+                      : item.status == 'Pending'
                       ? Color.yellow
                       : Color.main,
                   color: Color.white,
@@ -192,19 +217,129 @@ const HostMatchScreen = ({navigation}) => {
     );
   };
 
-  const renderSports = ({item}) =>
-    item.name == 'More\nSports' ? (
-      <TouchableOpacity style={styles.more}>
-        <Text style={styles.moreText}>{item.name}</Text>
-      </TouchableOpacity>
-    ) : (
-      <TouchableOpacity style={styles.items}>
-        <Image source={item.image} style={styles.sportIcon} />
+  const WarningMessageTimer = () => {
+    const timeoutId = setTimeout(() => {
+      setWarning('');
+    }, 3000);
+    return () => clearTimeout(timeoutId);
+  };
+
+  const hostMatch = async () => {
+    if (!matchName.trim()) {
+      setWarning('Please enter match name.');
+      WarningMessageTimer();
+      console.log('2');
+
+      return;
+    }
+
+    if (!selectedSports.trim()) {
+      setWarning('Please select sport.');
+      WarningMessageTimer();
+      console.log('2');
+
+      return;
+    }
+
+    if (!selectedArea?.id.trim()) {
+      setWarning('Please select area.');
+      WarningMessageTimer();
+      console.log('2');
+
+      return;
+    }
+
+    if (!startTime.trim()) {
+      setWarning('Please select match time.');
+      WarningMessageTimer();
+      console.log('2');
+
+      return;
+    }
+
+    if (!moreDetails.trim()) {
+      setWarning('Please enter more details.');
+      WarningMessageTimer();
+      console.log('2');
+
+      return;
+    }
+
+    try {
+      setLoader(true);
+
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      const formdata = new FormData();
+      formdata.append('user_id', userData?.id);
+      formdata.append('sports_id', selectedSports);
+      formdata.append('area_id', selectedArea?.id);
+      formdata.append('date', moment(startDate).format('YYYY-MM-DD'));
+      formdata.append('no_players', noOfPlayer);
+      formdata.append('description', moreDetails);
+      formdata.append('match_name', matchName);
+      formdata.append('time', startTime);
+
+      console.log('>>>FD>>>>>>', formdata);
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Matches/add`, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+          setActiveTab(1);
+          getMyHostedMatches();
+          console.log(result);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.log(error);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoader(false);
+    }
+  };
+
+  const renderSports = ({item}) => {
+    const isSelected = selectedSports == item.id;
+
+    return (
+      <TouchableOpacity
+        style={styles.items}
+        onPress={() => {
+          // setSelectedSports(prevSelectedItems => {
+          //   if (prevSelectedItems.includes(item?.id)) {
+          //     return prevSelectedItems.filter(itemId => itemId !== item?.id);
+          //   } else {
+          //     if (prevSelectedItems.length < 8) {
+          //       return [...prevSelectedItems, item?.id];
+          //     } else {
+          //       return prevSelectedItems;
+          //     }
+          //   }
+          // });
+          setSelectedSports(item.id);
+        }}>
+        <View style={styles.rawView}>
+          <Image
+            source={isSelected ? IMAGES.Checked : IMAGES.Unchecked}
+            style={isSelected ? styles.checkedIcon : styles.unCheckedIcon}
+          />
+        </View>
+        <Image source={{uri: item.image}} style={styles.sportIcon} />
         <Text style={styles.label} numberOfLines={1}>
-          {item.name}
+          {item.sports}
         </Text>
       </TouchableOpacity>
     );
+  };
 
   const EmptyComponent = () => (
     <View style={styles.emptyContainer}>
@@ -217,6 +352,14 @@ const HostMatchScreen = ({navigation}) => {
     return (
       <View style={styles.item}>
         <Text style={styles.textItem}>{item.area}</Text>
+      </View>
+    );
+  };
+
+  const renderTime = item => {
+    return (
+      <View style={styles.item}>
+        <Text style={styles.textItem}>{item.title}</Text>
       </View>
     );
   };
@@ -267,10 +410,24 @@ const HostMatchScreen = ({navigation}) => {
             extraScrollHeight={20}
             style={{flex: 1, marginTop: scale(10)}}>
             <Text style={styles.title}>NOW LET'S{'\n'}HOST YOUR MATCHES</Text>
+
+            <View style={styles.subView}>
+              <Text style={styles.heading1}>Match Name</Text>
+
+              <TextInput
+                onChangeText={text => {
+                  setMatchName(text);
+                }}
+                value={matchName}
+                style={styles.input1}
+                placeholder="Enter match name"
+              />
+            </View>
+
             <View style={styles.subView}>
               <Text style={styles.heading1}>Choose a Sport</Text>
               <FlatList
-                data={Sports}
+                data={userSports}
                 renderItem={renderSports}
                 keyExtractor={item => item.id.toString()}
                 numColumns={4}
@@ -324,16 +481,27 @@ const HostMatchScreen = ({navigation}) => {
             </View>
             <View style={styles.subView}>
               <Text style={styles.heading1}>Set Time</Text>
-              <TouchableOpacity
-                style={styles.pickerBtn}
-                onPress={() => {
-                  setIsTimeOpen(true);
-                }}>
-                <Text style={styles.value}>
-                  {JSON.stringify(startTime).substring(12, 20)}
-                </Text>
-                <Image source={IMAGES.Down} style={styles.iconStyle} />
-              </TouchableOpacity>
+              <Dropdown
+                style={styles.dropdown}
+                placeholderStyle={styles.placeholderStyle}
+                selectedTextStyle={styles.selectedTextStyle}
+                selectedTextProps={{numberOfLines: 1}}
+                inputSearchStyle={styles.inputSearchStyle}
+                iconStyle={styles.iconStyle}
+                data={MatchTime}
+                search
+                maxHeight={scale(300)}
+                labelField="title"
+                valueField="id"
+                placeholder="Select Time"
+                searchPlaceholder="Search..."
+                value={startTime}
+                onChange={item => {
+                  console.log('>>>>>>>', item);
+                  setStartTime(item.id);
+                }}
+                renderItem={renderTime}
+              />
             </View>
             <View style={styles.subView}>
               <Text style={styles.heading1}>No. of Players (Optional)</Text>
@@ -361,8 +529,13 @@ const HostMatchScreen = ({navigation}) => {
                 multiline
               />
             </View>
+            {warning !== '' && <Text style={styles.warning}>{warning}</Text>}
 
-            <TouchableOpacity onPress={() => {}} style={styles.loginBtn}>
+            <TouchableOpacity
+              onPress={() => {
+                hostMatch();
+              }}
+              style={styles.loginBtn}>
               <Text style={styles.btnText}>HOST MATCH</Text>
             </TouchableOpacity>
           </KeyboardAwareScrollView>
@@ -386,22 +559,6 @@ const HostMatchScreen = ({navigation}) => {
         buttonColor={Color.icon}
         dividerColor={Color.icon}
       />
-      <DatePicker
-        modal
-        open={isTimeOpen}
-        date={startDate}
-        onConfirm={time => {
-          console.log(time);
-          setIsTimeOpen(false);
-          setStartTime(time);
-        }}
-        onCancel={() => {
-          setIsTimeOpen(false);
-        }}
-        mode="time"
-        buttonColor={Color.icon}
-        dividerColor={Color.icon}
-      />
     </View>
   );
 };
@@ -415,6 +572,30 @@ const styles = StyleSheet.create({
   container: {
     padding: scale(20),
     backgroundColor: Color.background,
+  },
+  warning: {
+    color: Color.red,
+    textAlign: 'center',
+    fontSize: scale(14),
+    marginTop: scale(10),
+  },
+  rawView: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    width: '100%',
+  },
+  checkedIcon: {
+    height: scale(16),
+    width: scale(16),
+    resizeMode: 'contain',
+    tintColor: Color.subBg,
+  },
+  unCheckedIcon: {
+    height: scale(16),
+    width: scale(16),
+    resizeMode: 'contain',
+    tintColor: Color.lightGrey,
   },
   pickerBtn: {
     borderWidth: scale(0.5),
@@ -567,9 +748,10 @@ const styles = StyleSheet.create({
     tintColor: Color.icon,
   },
   sportIcon: {
-    height: scale(20),
-    width: scale(20),
+    height: scale(25),
+    width: scale(25),
     resizeMode: 'contain',
+    tintColor: Color.icon,
   },
   mainBox: {
     width: '100%',
@@ -659,7 +841,7 @@ const styles = StyleSheet.create({
   },
   heading: {
     fontSize: scale(14),
-    fontFamily: Fonts.semibold,
+    fontFamily: Fonts.bold,
     color: Color.black,
   },
   subText: {
