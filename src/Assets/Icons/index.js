@@ -79,4 +79,6 @@ export default IMAGES = {
   Star: require('./star.png'),
   Card: require('./credit-card.png'),
   FilledHeart: require('./love.png'),
+  CheckedRadio: require('./radio.png'),
+  UncheckedRadio: require('./radio-button.png'),
 };

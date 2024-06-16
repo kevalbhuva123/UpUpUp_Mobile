@@ -180,7 +180,7 @@ const BookNowScreen = ({navigation, route}) => {
           {item.sports}
         </Text>
         <Image
-          source={isSelected ? IMAGES.Checked : IMAGES.Unchecked}
+          source={isSelected ? IMAGES.CheckedRadio : IMAGES.UncheckedRadio}
           style={isSelected ? styles.checkedIcon : styles.unCheckedIcon}
         />
       </TouchableOpacity>
@@ -234,7 +234,7 @@ const BookNowScreen = ({navigation, route}) => {
           Rs.{item.cost}
         </Text>
         <Image
-          source={isSelected ? IMAGES.Checked : IMAGES.Unchecked}
+          source={isSelected ? IMAGES.CheckedRadio : IMAGES.UncheckedRadio}
           style={isSelected ? styles.checkedIcon : styles.unCheckedIcon}
         />
       </TouchableOpacity>

@@ -161,6 +161,13 @@ const BeTrainerScreen = ({navigation}) => {
 
       return;
     }
+    if (!mobile.trim()) {
+      setWarning('Please enter your mobile number.');
+      WarningMessageTimer();
+      console.log('2');
+
+      return;
+    }
     if (!address.trim()) {
       setWarning('Please enter your address.');
       WarningMessageTimer();
@@ -263,7 +270,7 @@ const BeTrainerScreen = ({navigation}) => {
         }}>
         <View style={styles.rawView}>
           <Image
-            source={isSelected ? IMAGES.Checked : IMAGES.Unchecked}
+            source={isSelected ? IMAGES.CheckedRadio : IMAGES.UncheckedRadio}
             style={isSelected ? styles.checkedIcon : styles.unCheckedIcon}
           />
         </View>
@@ -313,7 +320,6 @@ const BeTrainerScreen = ({navigation}) => {
             placeholderTextColor={Color.lightGrey}
             onChangeText={text => setMobile(text)}
             keyboardType="phone-pad"
-            editable={false}
           />
           <TextInput
             style={styles.input}

@@ -215,7 +215,7 @@ const VendorMyOfferScreen = ({navigation}) => {
           {item.sports}
         </Text>
         <Image
-          source={isSelected ? IMAGES.Checked : IMAGES.Unchecked}
+          source={isSelected ? IMAGES.CheckedRadio : IMAGES.UncheckedRadio}
           style={isSelected ? styles.checkedIcon : styles.unCheckedIcon}
         />
       </TouchableOpacity>
@@ -240,7 +240,7 @@ const VendorMyOfferScreen = ({navigation}) => {
           Rs.{item.cost}
         </Text>
         <Image
-          source={isSelected ? IMAGES.Checked : IMAGES.Unchecked}
+          source={isSelected ? IMAGES.CheckedRadio : IMAGES.UncheckedRadio}
           style={isSelected ? styles.checkedIcon : styles.unCheckedIcon}
         />
       </TouchableOpacity>
