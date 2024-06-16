@@ -1,5 +1,5 @@
-import {Image, StyleSheet, Text, View} from 'react-native';
-import React, {useEffect, useState} from 'react';
+import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import React, {useEffect, useRef, useState} from 'react';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 import CustomHeader from '../../Components/CustomHeader';
 import Color from '../../Constants/Color';
@@ -10,8 +10,11 @@ import StorageService from '../../utlis/StorageService';
 import Fonts from '../../Constants/Fonts';
 import IMAGES from '../../Assets/Icons/index';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import RBSheet from 'react-native-raw-bottom-sheet';
 
 const MatchDetailScreen = ({navigation, route}) => {
+  const refRBSheetPlayers = useRef();
+
   const [Loader, setLoader] = useState(false);
   const [matchDetails, setMatchDetails] = useState();
   useEffect(() => {
@@ -114,12 +117,160 @@ const MatchDetailScreen = ({navigation, route}) => {
           </View>
         </View>
         <View style={[styles.subView]}>
-          <View>
+          <View style={styles.iconTxtView}>
             <Image source={IMAGES.Location} style={styles.icon} />
+            <Text style={styles.subText}>{matchDetails?.match[0]?.area}</Text>
+          </View>
+          <View style={styles.iconTxtView}>
+            <Image source={IMAGES.Calendar} style={styles.icon} />
+            <Text style={styles.subText}>{matchDetails?.match[0]?.date}</Text>
+          </View>
+          <View style={styles.timeView}>
+            <View style={styles.iconTxtView}>
+              <Image source={IMAGES.Clock} style={styles.icon} />
+              <Text style={styles.subText}>{matchDetails?.match[0]?.time}</Text>
+            </View>
+            <View style={styles.timeView2}>
+              <Image
+                source={IMAGES.Morning}
+                style={[
+                  styles.icons,
+                  {
+                    tintColor:
+                      matchDetails?.match[0]?.time == 'Morning'
+                        ? Color.icon
+                        : Color.black,
+                  },
+                ]}
+              />
+              <Image
+                source={IMAGES.Afternoon}
+                style={[
+                  styles.icons,
+                  {
+                    tintColor:
+                      matchDetails?.match[0]?.time == 'Afternoon'
+                        ? Color.icon
+                        : Color.black,
+                  },
+                ]}
+              />
+              <Image
+                source={IMAGES.Evening}
+                style={[
+                  styles.icons,
+                  {
+                    tintColor:
+                      matchDetails?.match[0]?.time == 'Evening'
+                        ? Color.icon
+                        : Color.black,
+                  },
+                ]}
+              />
+              <Image
+                source={IMAGES.Night}
+                style={[
+                  styles.icons,
+                  {
+                    tintColor:
+                      matchDetails?.match[0]?.time == 'Night'
+                        ? Color.icon
+                        : Color.black,
+                  },
+                ]}
+              />
+            </View>
           </View>
         </View>
+        <View style={[styles.subView]}>
+          <Text style={styles.title}>
+            Request Received{' '}
+            <Text style={styles.subText}>
+              {matchDetails?.pending_request +
+                matchDetails?.acc_req +
+                matchDetails?.rej_req}{' '}
+              Requests
+            </Text>
+          </Text>
+          <Text style={styles.title}>
+            Info <Text style={styles.subText}>{matchDetails?.info}</Text>
+          </Text>
+          <Text style={styles.title}>
+            Player{' '}
+            <Text style={styles.subText}>
+              {JSON.stringify(matchDetails?.co_player)}
+            </Text>
+          </Text>
+        </View>
+        <View style={[styles.subView]}>
+          <View style={styles.iconTxtView}>
+            <Text style={[styles.title, {paddingVertical: scale(0)}]}>
+              PENDING
+            </Text>
+            <Text style={[styles.subText, {color: Color.icon}]}>
+              ({matchDetails?.pending_request})
+            </Text>
+          </View>
+          <View style={styles.iconTxtView}>
+            <Text style={[styles.title, {paddingVertical: scale(0)}]}>
+              APPROVED
+            </Text>
+            <Text style={[styles.subText, {color: Color.icon}]}>
+              ({matchDetails?.acc_req})
+            </Text>
+          </View>
+        </View>
+        <TouchableOpacity
+          onPress={() => {
+            refRBSheetPlayers.current.open();
+          }}
+          style={styles.loginBtn}>
+          <Text style={styles.btnText}>MANAGE REQUESTS</Text>
+        </TouchableOpacity>
       </KeyboardAwareScrollView>
       <ActivityLoader loading={Loader} />
+      <RBSheet
+        ref={refRBSheetPlayers}
+        useNativeDriver={false}
+        closeOnPressMask
+        customStyles={{
+          container: {
+            borderTopLeftRadius: scale(10),
+            borderTopRightRadius: scale(10),
+            backgroundColor: Color.white,
+          },
+          wrapper: {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+          },
+          draggableIcon: {
+            backgroundColor: Color.main,
+          },
+        }}
+        customModalProps={{
+          animationType: 'slide',
+          statusBarTranslucent: true,
+        }}
+        customAvoidingViewProps={{
+          enabled: false,
+        }}
+        height={scale(600)}
+        draggable>
+        <View style={{paddingTop: scale(10)}}>
+          <Text style={[styles.rbTitle, {paddingHorizontal: scale(20)}]}>
+            Requests
+          </Text>
+          {/* <FlatList
+            data={coPlayerList}
+            renderItem={renderCoPlayers}
+            keyExtractor={item => item.co_player_id.toString()}
+            contentContainerStyle={{
+              backgroundColor: Color.white,
+              width: '100%',
+              paddingHorizontal: scale(20),
+            }}
+          /> */}
+        </View>
+      </RBSheet>
     </View>
   );
 };
@@ -133,6 +284,28 @@ const styles = StyleSheet.create({
   container: {
     padding: scale(20),
     backgroundColor: Color.background,
+    flexGrow: 1,
+  },
+  rbTitle: {
+    fontFamily: Fonts.bold,
+    fontSize: scale(18),
+    color: Color.black,
+    paddingBottom: scale(20),
+  },
+  loginBtn: {
+    backgroundColor: Color.icon,
+    width: '90%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: scale(12),
+    borderRadius: scale(10),
+    alignSelf: 'center',
+    marginTop: scale(20),
+  },
+  btnText: {
+    color: Color.background,
+    fontSize: scale(14),
+    fontFamily: Fonts.bold,
   },
   subView: {
     width: '100%',
@@ -191,9 +364,44 @@ const styles = StyleSheet.create({
     padding: scale(10),
   },
   icon: {
-    height: scale(20),
-    width: scale(20),
+    height: scale(16),
+    width: scale(16),
     resizeMode: 'contain',
     tintColor: Color.grey,
+  },
+  iconTxtView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: scale(10),
+  },
+  subText: {
+    fontSize: scale(14),
+    fontFamily: Fonts.regular,
+    color: Color.black,
+    paddingLeft: scale(10),
+  },
+  title: {
+    fontSize: scale(14),
+    fontFamily: Fonts.bold,
+    color: Color.black,
+    paddingVertical: scale(5),
+  },
+  timeView: {
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  timeView2: {
+    flexDirection: 'row',
+    width: '40%',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  icons: {
+    width: scale(14),
+    height: scale(14),
+    resizeMode: 'contain',
+    marginRight: scale(5),
   },
 });

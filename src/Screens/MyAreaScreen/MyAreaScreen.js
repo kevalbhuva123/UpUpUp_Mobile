@@ -16,6 +16,8 @@ import apiConfigs from '../../api/apiconfig';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 import {ActivityLoader} from '../../Components/Loader/Loader';
 import {Dropdown} from 'react-native-element-dropdown';
+import StorageService from '../../utlis/StorageService';
+import AlertModal from '../../Components/AlertModal';
 
 const MyAreaScreen = ({navigation}) => {
   const [locationList, setLocationList] = useState([]);
@@ -23,14 +25,20 @@ const MyAreaScreen = ({navigation}) => {
   const [options, setOptions] = useState([]);
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [Loader, setLoader] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMsg, setAlertMsg] = useState('');
 
   useEffect(() => {
     getLocations();
   }, []);
 
-  const getLocations = () => {
+  const getLocations = async () => {
     try {
       setLoader(true);
+
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
 
       const requestOptions = {
         method: 'GET',
@@ -39,12 +47,39 @@ const MyAreaScreen = ({navigation}) => {
 
       fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Place/region`, requestOptions)
         .then(response => response.json())
-        .then(data => {
-          setLoader(false);
+        .then(async data => {
           console.log(data);
           setLocationList(data?.Data);
-          setSelectedLocation(data?.Data[0]);
-          getAreaList(data?.Data[0]?.id);
+          setSelectedLocation(userData?.location);
+          getAreaList(userData?.location);
+
+          const formdata = new FormData();
+          formdata.append('user_id', userData?.id);
+
+          const requestOptions = {
+            method: 'POST',
+            body: formdata,
+            redirect: 'follow',
+          };
+
+          fetch(
+            `${apiConfigs.LOCAL_SERVER_API_URL}/Area/get_user_area`,
+            requestOptions,
+          )
+            .then(response => response.json())
+            .then(result => {
+              setLoader(false);
+              const ids = result?.Data?.map(area => area.id);
+              console.log('>>>>>>>>>>IDS>>>', ids);
+              setSelectedOptions(ids);
+
+              console.log(result);
+            })
+            .catch(error => {
+              setLoader(false);
+
+              console.error(error);
+            });
         })
         .catch(error => {
           setLoader(false);
@@ -87,21 +122,85 @@ const MyAreaScreen = ({navigation}) => {
     }
   };
 
-  const toggleOption = optionId => {
-    if (selectedOptions.includes(optionId)) {
-      setSelectedOptions(selectedOptions.filter(id => id !== optionId));
-    } else {
-      setSelectedOptions([...selectedOptions, optionId]);
+  const updateLocation = async () => {
+    try {
+      setLoader(true);
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      const formdata = new FormData();
+      formdata.append('user_id', userData?.id);
+      formdata.append('area', JSON.stringify(selectedOptions));
+
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Area/edit_user_area`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(async result => {
+          console.log('AREA>>>>>>>>>>>>>>>>>>>>>>>', result);
+          if (result?.ErrorCode == 0) {
+            let formData = new FormData();
+            formData.append('phone_no', userData?.phone_no);
+
+            fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Login/index`, {
+              method: 'POST',
+              body: formData,
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            })
+              .then(response => response.json())
+              .then(async data => {
+                await StorageService.saveItem(
+                  StorageService.STORAGE_KEYS.USER_DETAILS,
+                  data?.Data,
+                );
+                setAlertMsg('Areas Updated Successfully.');
+                setAlertVisible(true);
+              })
+              .catch(error => {
+                // Handle error
+                setLoader(false); // Hide ActivityLoader
+              });
+          }
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoader(false);
     }
   };
 
   const renderItem = ({item}) => {
-    const isSelected = selectedOptions.includes(item.id);
+    const isSelected = selectedOptions?.includes(item.id);
 
     return (
       <TouchableOpacity
         style={[styles.optionItem]}
-        onPress={() => toggleOption(item.id)}>
+        onPress={() =>
+          setSelectedOptions(prevSelectedItems => {
+            if (prevSelectedItems.includes(item?.id)) {
+              return prevSelectedItems.filter(itemId => itemId !== item?.id);
+            } else {
+              if (prevSelectedItems.length < 4) {
+                return [...prevSelectedItems, item?.id];
+              } else {
+                return prevSelectedItems;
+              }
+            }
+          })
+        }>
         <Text style={styles.optionLabel}>{item.area}</Text>
         <Image
           source={isSelected ? IMAGES.Checked : IMAGES.Unchecked}
@@ -142,10 +241,10 @@ const MyAreaScreen = ({navigation}) => {
           valueField="id"
           placeholder="Select item"
           searchPlaceholder="Search..."
-          value={selectedLocation?.id}
+          value={selectedLocation}
           onChange={item => {
             console.log('>>>>>>>', item);
-            setSelectedLocation(item);
+            setSelectedLocation(item?.id);
             setSelectedOptions([]);
             getAreaList(item?.id);
           }}
@@ -161,13 +260,21 @@ const MyAreaScreen = ({navigation}) => {
         />
         <TouchableOpacity
           onPress={() => {
-            navigation.navigate('LoginInfoScreen');
+            updateLocation();
           }}
           style={styles.loginBtn}>
-          <Text style={styles.btnText}>FINISH</Text>
+          <Text style={styles.btnText}>UPDATE</Text>
         </TouchableOpacity>
       </View>
       <ActivityLoader loading={Loader} />
+      <AlertModal
+        modalVisible={alertVisible}
+        onClose={async () => {
+          setAlertVisible(false);
+          navigation.goBack();
+        }}
+        content={alertMsg}
+      />
     </View>
   );
 };
@@ -237,7 +344,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingBottom: scale(15),
+    paddingVertical: scale(10),
+    borderBottomWidth: scale(0.5),
+    borderBlockColor: Color.lightGrey,
   },
 
   optionLabel: {
@@ -267,14 +376,14 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.bold,
   },
   checkedIcon: {
-    height: scale(20),
-    width: scale(20),
+    height: scale(16),
+    width: scale(16),
     resizeMode: 'contain',
     tintColor: Color.subBg,
   },
   unCheckedIcon: {
-    height: scale(20),
-    width: scale(20),
+    height: scale(16),
+    width: scale(16),
     resizeMode: 'contain',
     tintColor: Color.lightGrey,
   },

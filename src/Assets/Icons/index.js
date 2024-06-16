@@ -81,4 +81,5 @@ export default IMAGES = {
   FilledHeart: require('./love.png'),
   CheckedRadio: require('./radio.png'),
   UncheckedRadio: require('./radio-button.png'),
+  Calendar: require('./calendar.png'),
 };

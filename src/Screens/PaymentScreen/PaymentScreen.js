@@ -158,8 +158,7 @@ const PaymentScreen = ({navigation, route}) => {
                 </Text>
                 <Text style={styles.coinText}>
                   {parseInt(upCoin?.bonus_coins) +
-                    parseInt(upCoin?.purchased_coins) +
-                    parseInt(upCoin?.refund_bonus_amount)}
+                    parseInt(upCoin?.purchased_coins)}
                 </Text>
 
                 <TouchableOpacity
@@ -186,8 +185,7 @@ const PaymentScreen = ({navigation, route}) => {
                   <Text style={[styles.coinText, {color: Color.green}]}>
                     -{' '}
                     {parseInt(upCoin?.bonus_coins) +
-                      parseInt(upCoin?.purchased_coins) +
-                      parseInt(upCoin?.refund_bonus_amount)}{' '}
+                      parseInt(upCoin?.purchased_coins)}{' '}
                     Rs.
                   </Text>
 
@@ -219,8 +217,7 @@ const PaymentScreen = ({navigation, route}) => {
                     ? details?.subTotal +
                       serviceCharges -
                       (parseInt(upCoin?.bonus_coins) +
-                        parseInt(upCoin?.purchased_coins) +
-                        parseInt(upCoin?.refund_bonus_amount))
+                        parseInt(upCoin?.purchased_coins))
                     : details?.subTotal + serviceCharges}
                 </Text>
               </View>

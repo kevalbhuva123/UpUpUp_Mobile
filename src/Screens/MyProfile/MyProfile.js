@@ -7,7 +7,7 @@ import {
   View,
   FlatList,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import CustomHeader from '../../Components/CustomHeader';
 import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
@@ -18,6 +18,7 @@ import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhan
 import {ActivityLoader} from '../../Components/Loader/Loader';
 import StorageService from '../../utlis/StorageService';
 import apiConfigs from '../../api/apiconfig';
+import {useFocusEffect} from '@react-navigation/native';
 
 const MyProfile = ({navigation}) => {
   const [sportList, setSportList] = useState([]);
@@ -29,8 +30,15 @@ const MyProfile = ({navigation}) => {
     getInfo();
   }, []);
 
+  useFocusEffect(
+    useCallback(() => {
+      getInfo();
+    }, []),
+  );
+
   const getInfo = async () => {
     try {
+      setLoader(true);
       let userDetails = await StorageService.getItem(
         StorageService.STORAGE_KEYS.USER_DETAILS,
       );
@@ -85,15 +93,6 @@ const MyProfile = ({navigation}) => {
     }
   };
 
-  const options = [
-    {id: 1, label: 'Kaloor'},
-    {id: 2, label: 'Nettoor'},
-    {id: 3, label: 'Kadavantra'},
-    {id: 4, label: 'Palluruthy'},
-    {id: 5, label: 'Ernakulam'},
-    {id: 6, label: 'Fort Kochi'},
-    {id: 7, label: 'Thrissur'},
-  ];
   const renderItem = ({item}) => {
     return (
       <TouchableOpacity style={styles.item} disabled>
@@ -167,7 +166,11 @@ const MyProfile = ({navigation}) => {
               showsVerticalScrollIndicator={false}
             />
             <View style={styles.settingView}>
-              <TouchableOpacity style={styles.settingBtn}>
+              <TouchableOpacity
+                style={styles.settingBtn}
+                onPress={() => {
+                  navigation.navigate('MyAreaScreen');
+                }}>
                 <Image
                   source={IMAGES.Setting}
                   style={[styles.icon, {tintColor: Color.black}]}
