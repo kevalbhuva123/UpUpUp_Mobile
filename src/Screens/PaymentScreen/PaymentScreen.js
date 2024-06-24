@@ -11,6 +11,7 @@ import apiConfigs from '../../api/apiconfig';
 import StorageService from '../../utlis/StorageService';
 import {ActivityLoader} from '../../Components/Loader/Loader';
 import moment from 'moment';
+import RNUpiPayment from 'react-native-upi-payment';
 
 const PaymentScreen = ({navigation, route}) => {
   const [details, setDetails] = useState(route?.params);
@@ -83,6 +84,31 @@ const PaymentScreen = ({navigation, route}) => {
       setLoader(false);
       console.log(error);
     }
+  };
+
+  const upiPayment = async () => {
+    const userData = await StorageService.getItem(
+      StorageService.STORAGE_KEYS.USER_DETAILS,
+    );
+    console.log('CALLED', userData);
+    RNUpiPayment.initializePayment(
+      {
+        vpa: 'bhuvakeval0909@oksbi',
+        payeeName: ownerDetail?.name,
+        amount: isUPcoinSelected
+          ? details?.subTotal +
+            serviceCharges -
+            (parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins))
+          : details?.subTotal + serviceCharges,
+        transactionRef: `upupup-${userData?.id}-upupup-fn`,
+      },
+      () => {
+        console.log('success');
+      },
+      () => {
+        console.log('Failed');
+      },
+    );
   };
 
   return (
@@ -225,7 +251,11 @@ const PaymentScreen = ({navigation, route}) => {
           </View>
         </View>
       </KeyboardAwareScrollView>
-      <TouchableOpacity style={styles.bottomButton} onPress={() => {}}>
+      <TouchableOpacity
+        style={styles.bottomButton}
+        onPress={() => {
+          upiPayment();
+        }}>
         <Text style={styles.buttonText}>PROCEED</Text>
       </TouchableOpacity>
       <ActivityLoader loading={Loader} />

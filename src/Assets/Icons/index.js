@@ -82,4 +82,5 @@ export default IMAGES = {
   CheckedRadio: require('./radio.png'),
   UncheckedRadio: require('./radio-button.png'),
   Calendar: require('./calendar.png'),
+  NoImage: require('./noImage.png'),
 };

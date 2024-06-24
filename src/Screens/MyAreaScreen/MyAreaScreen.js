@@ -18,8 +18,11 @@ import {ActivityLoader} from '../../Components/Loader/Loader';
 import {Dropdown} from 'react-native-element-dropdown';
 import StorageService from '../../utlis/StorageService';
 import AlertModal from '../../Components/AlertModal';
+import {useToast} from 'react-native-toast-notifications';
 
 const MyAreaScreen = ({navigation}) => {
+  const toast = useToast();
+
   const [locationList, setLocationList] = useState([]);
   const [selectedLocation, setSelectedLocation] = useState();
   const [options, setOptions] = useState([]);
@@ -196,6 +199,13 @@ const MyAreaScreen = ({navigation}) => {
               if (prevSelectedItems.length < 4) {
                 return [...prevSelectedItems, item?.id];
               } else {
+                toast.show('Max 4 areas you can select.', {
+                  type: 'danger',
+                  placement: 'top',
+                  duration: 3000,
+                  offset: 30,
+                  animationType: 'slide-in',
+                });
                 return prevSelectedItems;
               }
             }

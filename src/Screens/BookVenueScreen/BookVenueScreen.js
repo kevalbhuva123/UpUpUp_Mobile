@@ -21,8 +21,8 @@ import {ActivityLoader} from '../../Components/Loader/Loader';
 const BookVenueScreen = ({navigation}) => {
   const [venues, setVenues] = useState([]);
   const [venueId, setvenueId] = useState('');
-  const [sports, setsports] = useState('false');
-  const [area, setarea] = useState('false');
+  const [sports, setsports] = useState(0);
+  const [area, setarea] = useState(0);
   const [Loader, setLoader] = useState(false);
 
   useEffect(() => {
@@ -94,10 +94,17 @@ const BookVenueScreen = ({navigation}) => {
         onPress={() => {
           navigation.navigate('VenueDetailScreen', {data: item});
         }}>
-        <Image source={{uri: item.venue_image[0]}} style={styles.venueImage} />
+        <Image
+          source={
+            item?.venue_image[0] ? {uri: item.venue_image[0]} : IMAGES.NoImage
+          }
+          style={styles.venueImage}
+        />
 
         <View style={styles.titleView}>
-          <Text style={styles.heading}>{item.venue}</Text>
+          <Text style={[styles.heading, {width: '80%'}]} numberOfLines={1}>
+            {item.venue}
+          </Text>
           <View style={styles.titleLeft}>
             <Image source={IMAGES.Star} style={styles.star} />
             <Text style={styles.heading}>{item?.rating}</Text>
@@ -138,14 +145,12 @@ const BookVenueScreen = ({navigation}) => {
           </View>
           <TouchableOpacity
             onPress={() => {
-              sports == 'true' ? setsports('false') : setsports('true');
+              sports == 1 ? setsports(0) : setsports(1);
             }}
             style={styles.filterBtn}>
             <Image
-              source={sports == 'true' ? IMAGES.Checked : IMAGES.Unchecked}
-              style={
-                sports == 'true' ? styles.checkedIcon : styles.unCheckedIcon
-              }
+              source={sports == 1 ? IMAGES.Checked : IMAGES.Unchecked}
+              style={sports == 1 ? styles.checkedIcon : styles.unCheckedIcon}
             />
             <Text
               style={[
@@ -157,12 +162,12 @@ const BookVenueScreen = ({navigation}) => {
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
-              area == 'true' ? setarea('false') : setarea('true');
+              area == 1 ? setarea(0) : setarea(1);
             }}
             style={styles.filterBtn}>
             <Image
-              source={area == 'true' ? IMAGES.Checked : IMAGES.Unchecked}
-              style={area == 'true' ? styles.checkedIcon : styles.unCheckedIcon}
+              source={area == 1 ? IMAGES.Checked : IMAGES.Unchecked}
+              style={area == 1 ? styles.checkedIcon : styles.unCheckedIcon}
             />
             <Text
               style={[

@@ -293,6 +293,13 @@ const HostMatchScreen = ({navigation}) => {
         .then(response => response.json())
         .then(result => {
           setLoader(false);
+          setSelectedSports([]);
+          setSelectedArea();
+          setStartDate(new Date());
+          setStartTime();
+          setNoOfPlayer();
+          setMoreDetails();
+          setMatchName();
           setActiveTab(1);
           getMyHostedMatches();
           console.log(result);

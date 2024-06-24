@@ -43,7 +43,9 @@
     "react-native-screens": "^3.29.0",
     "react-native-select-contact": "^1.6.3",
     "react-native-svg": "^15.3.0",
-    "react-native-svg-transformer": "^1.4.0"
+    "react-native-svg-transformer": "^1.4.0",
+    "react-native-toast-notifications": "^3.4.0",
+    "react-native-upi-payment": "^1.0.5"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
