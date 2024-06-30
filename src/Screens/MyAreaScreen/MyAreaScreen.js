@@ -260,14 +260,18 @@ const MyAreaScreen = ({navigation}) => {
           }}
           renderItem={renderLocations}
         />
-        <FlatList
-          data={options}
-          renderItem={renderItem}
-          keyExtractor={item => item.id.toString()}
-          style={{flex: 1}}
-          contentContainerStyle={{paddingTop: scale(20)}}
-          showsVerticalScrollIndicator={false}
-        />
+        <View style={styles.subView}>
+          <FlatList
+            data={options}
+            renderItem={renderItem}
+            keyExtractor={item => item.id.toString()}
+            style={{flex: 1}}
+            contentContainerStyle={{borderRadius: scale(10)}}
+            showsVerticalScrollIndicator={false}
+            numColumns={2}
+          />
+        </View>
+
         <TouchableOpacity
           onPress={() => {
             updateLocation();
@@ -300,6 +304,21 @@ const styles = StyleSheet.create({
     backgroundColor: Color.background,
     paddingHorizontal: scale(20),
     paddingVertical: scale(20),
+  },
+  subView: {
+    flex: 1,
+    backgroundColor: Color.white,
+    shadowColor: Color.black,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: scale(2),
+
+    elevation: 6,
+    borderRadius: scale(10),
+    marginBottom: scale(15),
   },
   dropdown: {
     marginVertical: scale(10),
@@ -354,9 +373,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: scale(10),
+    paddingVertical: scale(15),
     borderBottomWidth: scale(0.5),
-    borderBlockColor: Color.lightGrey,
+    borderBottomColor: Color.lightGrey,
+    width: '50%',
+    borderRightWidth: scale(0.5),
+    borderRightColor: Color.lightGrey,
   },
 
   optionLabel: {

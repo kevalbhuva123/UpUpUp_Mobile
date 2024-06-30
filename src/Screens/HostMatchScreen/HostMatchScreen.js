@@ -333,6 +333,7 @@ const HostMatchScreen = ({navigation}) => {
           //   }
           // });
           setSelectedSports(item.id);
+          setMatchName(item.sports);
         }}>
         <View style={styles.rawView}>
           <Image
@@ -417,19 +418,6 @@ const HostMatchScreen = ({navigation}) => {
             extraScrollHeight={20}
             style={{flex: 1, marginTop: scale(10)}}>
             <Text style={styles.title}>NOW LET'S{'\n'}HOST YOUR MATCHES</Text>
-
-            <View style={styles.subView}>
-              <Text style={styles.heading1}>Match Name</Text>
-
-              <TextInput
-                onChangeText={text => {
-                  setMatchName(text);
-                }}
-                value={matchName}
-                style={styles.input1}
-                placeholder="Enter match name"
-              />
-            </View>
 
             <View style={styles.subView}>
               <Text style={styles.heading1}>Choose a Sport</Text>

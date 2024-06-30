@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {RateFriend} from '../../Constants/StaticData';
@@ -14,17 +14,63 @@ import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
 import {Rating} from 'react-native-ratings'; // Assuming you have a Rating component library installed
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import {ActivityLoader} from '../../Components/Loader/Loader';
+import StorageService from '../../utlis/StorageService';
+import apiConfigs from '../../api/apiconfig';
 
 const MySkillScreen = ({navigation}) => {
+  const [Loader, setLoader] = useState(false);
+  const [mySkillList, setMySkillList] = useState([]);
+
+  useEffect(() => {
+    getSkillList();
+  }, []);
+
+  const getSkillList = async () => {
+    try {
+      setLoader(true);
+
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      console.log('>>>>USER DATA>>>', userData);
+
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Users/skill/${userData?.id}`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+          setMySkillList(result?.Data);
+          console.log(result);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoader(false);
+    }
+  };
+
   const renderSkills = ({item}) => {
+    console.log('>>>>>>>>', item?.image);
     return (
       <TouchableOpacity style={styles.card} onPress={() => {}}>
         <View style={styles.subView}>
-          <Image source={item.image} style={styles.image} />
-          <Text style={styles.heading}>{item.name}</Text>
+          <Image source={{uri: item?.image}} style={styles.image} />
+          <Text style={styles.heading}>{item?.sports}</Text>
         </View>
         <Text style={styles.subText}>Match Played</Text>
-        <Text style={styles.numberText}> {('0' + item.matched).slice(-2)}</Text>
+        <Text style={styles.numberText}> {('0' + item.count).slice(-2)}</Text>
         <View style={styles.separator}></View>
         <Text style={styles.subText}>{'Professional'}</Text>
         <Rating
@@ -47,7 +93,7 @@ const MySkillScreen = ({navigation}) => {
       />
       <View style={styles.master}>
         <FlatList
-          data={RateFriend}
+          data={mySkillList}
           renderItem={renderSkills}
           keyExtractor={item => item.id.toString()}
           numColumns={2}
@@ -58,6 +104,7 @@ const MySkillScreen = ({navigation}) => {
           showsVerticalScrollIndicator={false}
         />
       </View>
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };

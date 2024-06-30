@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {Connections} from '../../Constants/StaticData';
@@ -14,10 +14,55 @@ import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
 import RatingModal from '../../Components/RatingModal';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import StorageService from '../../utlis/StorageService';
+import apiConfigs from '../../api/apiconfig';
+import IMAGES from '../../Assets/Icons/index';
+import {ActivityLoader} from '../../Components/Loader/Loader';
 
 const MyConnectionScreen = ({navigation}) => {
   const [visible, setVisible] = useState(false);
   const [rating, setRating] = useState(0);
+  const [Loader, setLoader] = useState(false);
+  const [connectionList, setConnectionList] = useState([]);
+
+  useEffect(() => {
+    getConnectionApi();
+  }, []);
+
+  const getConnectionApi = async () => {
+    try {
+      setLoader(true);
+
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      console.log('>>>>USER DATA>>>', userData);
+
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Users/co_players/${userData?.id}`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+          setConnectionList(result?.Data);
+          console.log(result);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoader(false);
+    }
+  };
 
   const renderConnections = ({item}) => {
     return (
@@ -26,10 +71,20 @@ const MyConnectionScreen = ({navigation}) => {
         onPress={() => {
           setVisible(true);
         }}>
-        <Image source={item.image} style={styles.image} />
-        <Text style={styles.heading}>{item.name}</Text>
+        <Image
+          source={
+            item?.co_player_image != ''
+              ? {uri: item?.co_player_image}
+              : IMAGES.Profile
+          }
+          style={styles.image}
+        />
+        <Text style={styles.heading}>{item.co_player}</Text>
         <Text style={styles.subText}>Matches with you</Text>
-        <Text style={styles.numberText}> {('0' + item.matched).slice(-2)}</Text>
+        <Text style={styles.numberText}>
+          {' '}
+          {('0' + item.matches_played).slice(-2)}
+        </Text>
         <Text style={styles.statusView}>RATE NOW</Text>
       </TouchableOpacity>
     );
@@ -43,9 +98,9 @@ const MyConnectionScreen = ({navigation}) => {
       />
       <View style={styles.master}>
         <FlatList
-          data={Connections}
+          data={connectionList}
           renderItem={renderConnections}
-          keyExtractor={item => item.id.toString()}
+          keyExtractor={item => item.co_player_id.toString()}
           numColumns={2}
           style={{flexGrow: 1}}
           contentContainerStyle={{
@@ -70,6 +125,7 @@ const MyConnectionScreen = ({navigation}) => {
         }}
         buttonText={'RATE PROFILE'}
       />
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };

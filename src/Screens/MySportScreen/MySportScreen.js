@@ -180,8 +180,8 @@ const MySportScreen = ({navigation}) => {
             return prevItems;
           });
         }}>
-        <View style={styles.rawView}>
-          <Image source={IMAGES.CheckedRadio} style={styles.checkedIcon} />
+        <View style={styles.closeView}>
+          <Image source={IMAGES.Close} style={styles.closeIcon} />
         </View>
         <Image source={{uri: item.image}} style={styles.sportIcon} />
         <Text style={styles.label} numberOfLines={1}>
