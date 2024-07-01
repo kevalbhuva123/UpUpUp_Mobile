@@ -44,6 +44,7 @@ import BusinessAnalytics from '../Screens/BusinessAnalytics';
 import AboutApp from '../Screens/AboutApp';
 import PaymentScreen from '../Screens/PaymentScreen';
 import MatchDetailScreen from '../Screens/MatchDetail/MatchDetailScreen';
+import Notifications from '../Screens/Notifications';
 
 const Stack = createNativeStackNavigator();
 
@@ -101,6 +102,7 @@ const Navigator = () => {
         <Stack.Screen name="AboutApp" component={AboutApp} />
         <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
         <Stack.Screen name="MatchDetailScreen" component={MatchDetailScreen} />
+        <Stack.Screen name="Notifications" component={Notifications} />
       </Stack.Navigator>
     </NavigationContainer>
   );

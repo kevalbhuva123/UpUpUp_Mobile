@@ -36,7 +36,7 @@ const SidebarOptionsForUser = [
   {
     id: 3,
     title: 'Notifications',
-    navigation: '',
+    navigation: 'Notifications',
     icon: IMAGES.Notification,
   },
   {
@@ -87,7 +87,7 @@ const SidebarOptionsForVendor = [
   {
     id: 3,
     title: 'Notifications',
-    navigation: '',
+    navigation: 'Notifications',
     icon: IMAGES.Notification,
   },
   {

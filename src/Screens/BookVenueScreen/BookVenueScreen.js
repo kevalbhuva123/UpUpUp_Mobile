@@ -238,6 +238,14 @@ const styles = StyleSheet.create({
   },
   card: {
     width: '100%',
+    shadowColor: Color.black,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: scale(2),
+
     elevation: 6,
     borderRadius: scale(10),
     backgroundColor: Color.white,
