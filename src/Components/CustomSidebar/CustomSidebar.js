@@ -47,7 +47,7 @@ const SidebarOptionsForUser = [
   },
   {
     id: 5,
-    title: 'Help',
+    title: 'FAQ',
     navigation: 'HelpScreen',
     icon: IMAGES.Call,
   },
@@ -98,7 +98,7 @@ const SidebarOptionsForVendor = [
   },
   {
     id: 5,
-    title: 'Help',
+    title: 'FAQ',
     navigation: 'HelpScreen',
     icon: IMAGES.Call,
   },

@@ -117,12 +117,14 @@ const OTPverifyScreen = ({navigation}) => {
         setOTPVerifySuccessfull(false);
         setmodalVisible(true);
         setAlertMessage(error);
+        setLoader(false);
       }
     } catch (error) {
       console.error('Error verifying OTP:', error);
       setOTPVerifySuccessfull(false);
       setmodalVisible(true);
       setAlertMessage(error);
+      setLoader(false);
     }
   };
 

@@ -6,54 +6,59 @@ import {
   FlatList,
   TouchableOpacity,
   ScrollView,
+  Linking,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import IMAGES from '../../Assets/Icons/index';
 import {scale} from '../../utlis/Scale';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import Fonts from '../../Constants/Fonts';
+import apiConfigs from '../../api/apiconfig';
+import {ActivityLoader} from '../../Components/Loader/Loader';
 
 const HelpScreen = ({navigation}) => {
-  const [data, setData] = useState([
-    {
-      id: 1,
-      Que: 'What is Lorem ipsum?',
-      Ans: 'Lorem ipsum is derived from the Latin dolorem ipsum roughly translated as pain itself.',
-    },
-    {
-      id: 2,
-      Que: 'What is Lorem ipsum?',
-      Ans: 'Lorem ipsum is derived from the Latin dolorem ipsum roughly translated as pain itself.',
-    },
-    {
-      id: 3,
-      Que: 'What is Lorem ipsum?',
-      Ans: 'Lorem ipsum is derived from the Latin dolorem ipsum roughly translated as pain itself.',
-    },
-    {
-      id: 4,
-      Que: 'What is Lorem ipsum?',
-      Ans: 'Lorem ipsum is derived from the Latin dolorem ipsum roughly translated as pain itself.',
-    },
-    {
-      id: 5,
-      Que: 'What is Lorem ipsum?',
-      Ans: 'Lorem ipsum is derived from the Latin dolorem ipsum roughly translated as pain itself.',
-    },
-  ]);
+  const [data, setData] = useState([]);
+  const [Loader, setLoader] = useState(false);
+  const [helpLineNo, setHelpLineNo] = useState();
 
-  const renderQuesList = ({item}) => {
-    <View style={{padding: 10, backgroundColor: 'yellow'}}>
-      <Text style={{fontSize: 18, fontWeight: 'bold'}}>{item.Que}</Text>
-      <Text style={{fontSize: 16}}>{item.Ans}</Text>
-    </View>;
+  useEffect(() => {
+    getFAQList();
+  }, []);
+
+  const getFAQList = async () => {
+    try {
+      setLoader(true);
+
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Help/faq`, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+          setData(result?.Data?.faq);
+          setHelpLineNo(result?.Data?.phone[0]?.phone);
+          setLoader(false);
+
+          console.log(result);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.log(error);
+      setLoader(false);
+    }
   };
 
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
-      <CustomHeader heading={'Help'} onBackPress={() => navigation.goBack()} />
+      <CustomHeader heading={'FAQ'} onBackPress={() => navigation.goBack()} />
       <View style={styles.master}>
         <View style={styles.heading}>
           <Text style={styles.headingText}>Frequently Asked Questions</Text>
@@ -82,18 +87,25 @@ const HelpScreen = ({navigation}) => {
                 <View style={styles.card}>
                   <Text style={styles.dot}>{'\u2B24'}</Text>
                   <View style={styles.subCard}>
-                    <Text style={styles.queText}>{item.Que}</Text>
-                    <Text style={styles.ansText}>{item.Ans}</Text>
+                    <Text style={styles.queText}>{item?.question}</Text>
+                    <Text style={styles.ansText}>{item?.answer}</Text>
                   </View>
                 </View>
               );
             })}
           </ScrollView>
         </View>
-        <TouchableOpacity onPress={() => {}} style={styles.loginBtn}>
+        <TouchableOpacity
+          onPress={() => {
+            Linking.openURL(`tel:${helpLineNo}`).catch(err =>
+              console.error('Error:', err),
+            );
+          }}
+          style={styles.loginBtn}>
           <Text style={styles.btnText}>CALL UP</Text>
         </TouchableOpacity>
       </View>
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };
@@ -109,11 +121,11 @@ const styles = StyleSheet.create({
     backgroundColor: Color.background,
   },
   heading: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    // flexDirection: 'row',
+    // alignItems: 'center',
+    // justifyContent: 'space-between',
     paddingHorizontal: scale(20),
-    paddingVertical: scale(20),
+    paddingTop: scale(20),
   },
   logo: {
     height: scale(60),
@@ -122,9 +134,9 @@ const styles = StyleSheet.create({
     tintColor: Color.icon,
   },
   headingText: {
-    fontSize: scale(14),
+    fontSize: scale(16),
     color: Color.black,
-    fontWeight: '600',
+    fontFamily: Fonts.bold,
   },
   loginBtn: {
     backgroundColor: Color.icon,
@@ -139,8 +151,8 @@ const styles = StyleSheet.create({
   btnText: {
     color: Color.background,
     fontSize: scale(14),
-    fontWeight: '800',
-    letterSpacing: 2,
+    letterSpacing: 1,
+    fontFamily: Fonts.bold,
   },
   card: {
     paddingHorizontal: scale(20),
@@ -161,12 +173,12 @@ const styles = StyleSheet.create({
   queText: {
     fontSize: scale(14),
     color: Color.black,
-    fontWeight: '600',
+    fontFamily: Fonts.bold,
   },
   ansText: {
     fontSize: scale(14),
     color: Color.black,
-    fontWeight: '400',
     paddingTop: scale(5),
+    fontFamily: Fonts.regular,
   },
 });

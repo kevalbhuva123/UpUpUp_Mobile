@@ -190,7 +190,7 @@ const MyAreaScreen = ({navigation}) => {
 
     return (
       <TouchableOpacity
-        style={[styles.optionItem]}
+        style={styles.optionItem}
         onPress={() =>
           setSelectedOptions(prevSelectedItems => {
             if (prevSelectedItems.includes(item?.id)) {
