@@ -40,6 +40,7 @@ const BookNowScreen = ({navigation, route}) => {
   const [selectedCourt, setSelectedCourt] = useState([]);
   const [slots, setSlots] = useState([]);
   const [redeemCode, setRedeemCode] = useState('');
+  const [couponID, setCouponID] = useState('');
   const [coPlayer, setCoPlayer] = useState([]);
   const [coPlayerFromContact, setCoPlayerFromContact] = useState([]);
   const [slotTime, setSlotTime] = useState([]);
@@ -286,6 +287,7 @@ const BookNowScreen = ({navigation, route}) => {
         style={styles.coupon}
         onPress={() => {
           setRedeemCode(item?.coupon_code);
+          setCouponID(item?.coupon_id);
           refRBSheet.current.close();
           if (item?.percentage == 'Yes') {
             setSubTotal(
@@ -417,6 +419,9 @@ const BookNowScreen = ({navigation, route}) => {
         selectedCourt: selectedCourt,
         selectedSport: selectedSport,
         slotTime: slotTime,
+        selectedCoPlayer: coPlayer,
+        selectedCoupon: couponID,
+        actualAmount: selectedCourtPrice * slotTime.length,
       });
     }
   };

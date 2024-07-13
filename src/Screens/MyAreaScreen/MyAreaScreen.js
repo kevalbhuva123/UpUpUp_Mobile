@@ -200,11 +200,14 @@ const MyAreaScreen = ({navigation}) => {
                 return [...prevSelectedItems, item?.id];
               } else {
                 toast.show('Max 4 areas you can select.', {
-                  type: 'danger',
+                  type: 'custom_toast',
                   placement: 'top',
                   duration: 3000,
                   offset: 30,
                   animationType: 'slide-in',
+                  data: {
+                    title: 'Alert !!',
+                  },
                 });
                 return prevSelectedItems;
               }

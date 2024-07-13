@@ -21,8 +21,8 @@ import {ActivityLoader} from '../../Components/Loader/Loader';
 const BookVenueScreen = ({navigation}) => {
   const [venues, setVenues] = useState([]);
   const [venueId, setvenueId] = useState('');
-  const [sports, setsports] = useState(0);
-  const [area, setarea] = useState(0);
+  const [sports, setsports] = useState(1);
+  const [area, setarea] = useState(1);
   const [Loader, setLoader] = useState(false);
 
   useEffect(() => {

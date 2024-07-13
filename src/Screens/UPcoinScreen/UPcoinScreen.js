@@ -17,10 +17,15 @@ import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhan
 import {ActivityLoader} from '../../Components/Loader/Loader';
 import apiConfigs from '../../api/apiconfig';
 import StorageService from '../../utlis/StorageService';
+import RazorpayCheckout from 'react-native-razorpay';
+import AlertModal from '../../Components/AlertModal';
 
 const UPcoinScreen = ({navigation}) => {
   const [Loader, setLoader] = useState(false);
   const [upCoinData, setUpCoinData] = useState();
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMsg, setAlertMsg] = useState('');
+
   useEffect(() => {
     getCoinDetail();
   }, []);
@@ -63,6 +68,42 @@ const UPcoinScreen = ({navigation}) => {
     }
   };
 
+  const buyUPcoins = async () => {
+    const userData = await StorageService.getItem(
+      StorageService.STORAGE_KEYS.USER_DETAILS,
+    );
+    console.log('CALLED', userData);
+
+    var options = {
+      description: 'UPUPUP buy UPcoins',
+      image: IMAGES.LogoText,
+      currency: 'INR',
+      key: 'rzp_test_aB42rLcq2jUrJ6',
+      amount: 500 * 100,
+      name: 'UPUPUP',
+      // order_id: '', //Replace this with an order_id created using Orders API.
+      prefill: {
+        email: userData?.email,
+        contact: userData?.phone_no,
+        name: userData?.name,
+      },
+      theme: {color: Color.main},
+    };
+    RazorpayCheckout.open(options)
+      .then(paymentData => {
+        // handle success
+        console.log(`Success:`, paymentData.razorpay_payment_id);
+        if (paymentData?.razorpay_payment_id) {
+          setAlertMsg('UPcoins added Successfully.');
+          setAlertVisible(true);
+        }
+      })
+      .catch(error => {
+        // handle failure
+        console.log(`Error:`, error.code, error.description);
+      });
+  };
+
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
@@ -71,7 +112,7 @@ const UPcoinScreen = ({navigation}) => {
         onBackPress={() => navigation.goBack()}
       />
       <KeyboardAwareScrollView
-        contentContainerStyle={{flexGrow: 1}}
+        contentContainerStyle={{flexGrow: 1, backgroundColor: Color.background}}
         bounces={false}
         keyboardShouldPersistTaps={'handled'}
         showsVerticalScrollIndicator={false}
@@ -95,18 +136,35 @@ const UPcoinScreen = ({navigation}) => {
           <View style={styles.container}>
             <Image source={IMAGES.Coin} style={styles.subIcon} />
             <Text style={styles.accSecText}>Purchased UPcoins</Text>
-            <Text style={{paddingLeft: scale(60)}}>{upCoinData?.up_coin}</Text>
+            <Text style={[styles.accSecText, {paddingLeft: scale(60)}]}>
+              {upCoinData?.up_coin}
+            </Text>
           </View>
           <View style={styles.container}>
             <Image source={IMAGES.Bonus} style={styles.subIcon} />
             <Text style={styles.accSecText}>Bonus UPcoins</Text>
-            <Text style={{paddingLeft: scale(90)}}>
+            <Text style={[styles.accSecText, {paddingLeft: scale(90)}]}>
               {upCoinData?.bonus_coin}
             </Text>
           </View>
         </View>
+        <TouchableOpacity
+          onPress={() => {
+            buyUPcoins();
+          }}
+          style={styles.loginBtn}>
+          <Text style={styles.btnText}>BUY UPcoins</Text>
+        </TouchableOpacity>
       </KeyboardAwareScrollView>
       <ActivityLoader loading={Loader} />
+      <AlertModal
+        modalVisible={alertVisible}
+        onClose={async () => {
+          setAlertVisible(false);
+          getCoinDetail();
+        }}
+        content={alertMsg}
+      />
     </View>
   );
 };
@@ -122,6 +180,21 @@ const styles = StyleSheet.create({
     backgroundColor: Color.background,
     paddingHorizontal: scale(20),
     paddingVertical: scale(20),
+  },
+  loginBtn: {
+    backgroundColor: Color.icon,
+    width: '90%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: scale(12),
+    borderRadius: scale(10),
+    alignSelf: 'center',
+    marginVertical: scale(20),
+  },
+  btnText: {
+    color: Color.background,
+    fontSize: scale(14),
+    fontFamily: Fonts.bold,
   },
   coinView: {
     width: '100%',

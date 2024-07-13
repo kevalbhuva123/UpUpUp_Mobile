@@ -117,19 +117,25 @@ const MatchDetailScreen = ({navigation, route}) => {
           setLoader(false);
           if (status == 2) {
             toast.show('Request accepted successfully.', {
-              type: 'success',
+              type: 'custom_toast_success',
               placement: 'top',
               duration: 3000,
               offset: 30,
               animationType: 'slide-in',
+              data: {
+                title: 'Success !!',
+              },
             });
           } else {
             toast.show('Request rejected.', {
-              type: 'danger',
+              type: 'custom_toast',
               placement: 'top',
               duration: 3000,
               offset: 30,
               animationType: 'slide-in',
+              data: {
+                title: 'Rejected !!',
+              },
             });
           }
           getMatchDetails();

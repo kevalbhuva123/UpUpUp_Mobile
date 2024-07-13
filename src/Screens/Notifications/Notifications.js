@@ -105,7 +105,11 @@ const Notifications = ({navigation}) => {
 
   const renderItem = ({item}) => {
     return (
-      <TouchableOpacity style={styles.card}>
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => {
+          navigation.navigate('VenueDetailScreen', {data: item});
+        }}>
         <Image
           source={item?.image != '' ? {uri: item?.image} : IMAGES.LogoText}
           style={item?.image != '' ? styles.imgIcon : styles.blank}

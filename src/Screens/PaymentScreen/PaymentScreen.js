@@ -11,7 +11,7 @@ import apiConfigs from '../../api/apiconfig';
 import StorageService from '../../utlis/StorageService';
 import {ActivityLoader} from '../../Components/Loader/Loader';
 import moment from 'moment';
-import RNUpiPayment from 'react-native-upi-payment';
+import RazorpayCheckout from 'react-native-razorpay';
 
 const PaymentScreen = ({navigation, route}) => {
   const [details, setDetails] = useState(route?.params);
@@ -23,6 +23,7 @@ const PaymentScreen = ({navigation, route}) => {
 
   useEffect(() => {
     getUserCoinInfo();
+    console.log('>>>>>>>>', route?.params);
   }, []);
 
   const getUserCoinInfo = async () => {
@@ -67,7 +68,7 @@ const PaymentScreen = ({navigation, route}) => {
             .then(response => response.json())
             .then(result => {
               setLoader(false);
-              setServiceCharges(result?.data?.amount);
+              setServiceCharges(result?.data);
               console.log(result);
             })
             .catch(error => {
@@ -91,24 +92,130 @@ const PaymentScreen = ({navigation, route}) => {
       StorageService.STORAGE_KEYS.USER_DETAILS,
     );
     console.log('CALLED', userData);
-    RNUpiPayment.initializePayment(
-      {
-        vpa: 'bhuvakeval0909@oksbi',
-        payeeName: ownerDetail?.name,
-        amount: isUPcoinSelected
-          ? details?.subTotal +
-            serviceCharges -
-            (parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins))
-          : details?.subTotal + serviceCharges,
-        transactionRef: `upupup-${userData?.id}-upupup-fn`,
+
+    var options = {
+      description: 'UPUPUP venue booking',
+      image: IMAGES.LogoText,
+      currency: 'INR',
+      key: 'rzp_test_aB42rLcq2jUrJ6',
+      amount: isUPcoinSelected
+        ? (details?.subTotal +
+            serviceCharges?.amount -
+            (parseInt(upCoin?.bonus_coins) +
+              parseInt(upCoin?.purchased_coins))) *
+          100
+        : (details?.subTotal + serviceCharges?.amount) * 100,
+      name: 'UPUPUP',
+      // order_id: '', //Replace this with an order_id created using Orders API.
+      prefill: {
+        email: userData?.email,
+        contact: userData?.phone_no,
+        name: userData?.name,
       },
-      () => {
-        console.log('success');
-      },
-      () => {
-        console.log('Failed');
-      },
-    );
+      theme: {color: Color.main},
+    };
+    RazorpayCheckout.open(options)
+      .then(paymentData => {
+        // handle success
+        console.log(`Success:`, paymentData.razorpay_payment_id);
+
+        // const coPlayersIDs = details?.selectedCoPlayer.map(item => item.id);
+
+        // const formdata = new FormData();
+        // formdata.append('user_id', userData?.data);
+        // formdata.append('sports_id', details?.selectedSport[0]);
+        // formdata.append(
+        //   'date',
+        //   moment(details?.selectedDate).format('YYYY-MM-DD'),
+        // );
+        // formdata.append('court_id', details?.selectedCourt[0]);
+        // formdata.append('venue_id', details?.venueData?.id);
+        // formdata.append('co_players', coPlayersIDs);
+        // formdata.append('co_players_contact', '[]');
+        // formdata.append('court_time', details?.slotTime);
+        // formdata.append('capacity', coPlayersIDs?.length);
+        // formdata.append('coupon_id', details?.selectedCoupon);
+        // formdata.append('offer', '');
+        // formdata.append('price', details?.subTotal);
+        // formdata.append('cost', details?.actualAmount);
+        // formdata.append('balance', '0');
+        // formdata.append('mode', '1');
+        // formdata.append('offer_id', '[]');
+        // formdata.append('payment_mode', '1');
+        // formdata.append('upcoin_setting_id', '1');
+        // formdata.append('rupee', details?.subTotal);
+        // formdata.append(
+        //   'coin',
+        //   isUPcoinSelected
+        //     ? parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins)
+        //     : '0',
+        // );
+        // formdata.append('share_location', userData?.location);
+        // formdata.append('service_id', serviceCharges?.id);
+        // formdata.append('service_amount', serviceCharges?.amount);
+        // formdata.append('service_total', serviceCharges?.amount);
+
+        // const requestOptions = {
+        //   method: 'POST',
+        //   body: formdata,
+        //   redirect: 'follow',
+        // };
+
+        // fetch(
+        //   `${apiConfigs.LOCAL_SERVER_API_URL}/Venue/booking_demo_test`,
+        //   requestOptions,
+        // )
+        //   .then(response => response.json())
+        //   .then(result => console.log(result))
+        //   .catch(error => console.error(error));
+
+        // const formdata = new FormData();
+        // formdata.append('user_id', userData?.id);
+        // formdata.append('booking_id', data.razorpay_payment_id);
+        // formdata.append('transaction_id', data.razorpay_payment_id);
+        // formdata.append('payment_id', data.razorpay_payment_id);
+        // formdata.append('payment_mode', '1');
+        // formdata.append('coupon_id', '0');
+        // formdata.append('court_id', '61');
+        // formdata.append('court_time', details?.slotTime);
+        // formdata.append('date', moment(details?.slotTime).format('YYYY-MM-DD'));
+        // formdata.append('share_location', userData?.location);
+        // formdata.append('payment_type', '1');
+        // formdata.append('upcoin_setting_id', '1');
+        // formdata.append(
+        //   'rupee',
+        //   isUPcoinSelected
+        //     ? details?.subTotal +
+        //         serviceCharges?.amount -
+        //         (parseInt(upCoin?.bonus_coins) +
+        //           parseInt(upCoin?.purchased_coins))
+        //     : details?.subTotal + serviceCharges?.amount,
+        // );
+        // formdata.append(
+        //   'coin',
+        //   isUPcoinSelected
+        //     ? parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins)
+        //     : '0',
+        // );
+
+        // const requestOptions = {
+        //   method: 'POST',
+        //   body: formdata,
+        //   redirect: 'follow',
+        // };
+
+        // fetch(
+        //   `${apiConfigs.LOCAL_SERVER_API_URL}/Venue/booking_payment_demo`,
+        //   requestOptions,
+        // )
+        //   .then(response => response.json())
+        //   .then(result => console.log(result))
+        //   .catch(error => console.error(error));
+      })
+      .catch(error => {
+        // handle failure
+        console.log(`Error:`, error.code, error.description);
+      });
   };
 
   return (
@@ -147,12 +254,12 @@ const PaymentScreen = ({navigation, route}) => {
             </View>
             <View style={styles.lineView}>
               <Text style={styles.title}>Service Charge :</Text>
-              <Text style={styles.value}>Rs. {serviceCharges}</Text>
+              <Text style={styles.value}>Rs. {serviceCharges?.amount}</Text>
             </View>
             <View style={styles.lineView}>
               <Text style={styles.title}>Total Amount :</Text>
               <Text style={styles.value}>
-                Rs. {details?.subTotal + serviceCharges}
+                Rs. {details?.subTotal + serviceCharges?.amount}
               </Text>
             </View>
           </View>
@@ -241,10 +348,10 @@ const PaymentScreen = ({navigation, route}) => {
                   Rs.{' '}
                   {isUPcoinSelected
                     ? details?.subTotal +
-                      serviceCharges -
+                      serviceCharges?.amount -
                       (parseInt(upCoin?.bonus_coins) +
                         parseInt(upCoin?.purchased_coins))
-                    : details?.subTotal + serviceCharges}
+                    : details?.subTotal + serviceCharges?.amount}
                 </Text>
               </View>
             </View>

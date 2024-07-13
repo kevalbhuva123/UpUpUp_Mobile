@@ -169,20 +169,23 @@ const MySportScreen = ({navigation}) => {
                 return [...prevItems, item];
               } else {
                 toast.show('Max 8 sports you can select.', {
-                  type: 'danger',
+                  type: 'custom_toast',
                   placement: 'top',
                   duration: 3000,
                   offset: 30,
                   animationType: 'slide-in',
+                  data: {
+                    title: 'Alert !!',
+                  },
                 });
               }
             }
             return prevItems;
           });
         }}>
-        <View style={styles.closeView}>
+        {/* <View style={styles.closeView}>
           <Image source={IMAGES.Close} style={styles.closeIcon} />
-        </View>
+        </View> */}
         <Image source={{uri: item.image}} style={styles.sportIcon} />
         <Text style={styles.label} numberOfLines={1}>
           {item.sports}
