@@ -26,10 +26,14 @@ import StorageService from '../../utlis/StorageService';
 import LinearGradient from 'react-native-linear-gradient';
 import Contacts from 'react-native-contacts';
 import ConfirmationModal from '../../Components/ConfirmationModal';
+import {useToast} from 'react-native-toast-notifications';
 
 const BookNowScreen = ({navigation, route}) => {
+  const toast = useToast();
+
   const refRBSheet = useRef();
   const refRBSheetPlayers = useRef();
+  const refRBSheetContacts = useRef();
 
   const [venueDetails, setVenueDetails] = useState(route?.params?.data);
   const [isFromSDate, setIsFromSDate] = useState(false);
@@ -50,34 +54,32 @@ const BookNowScreen = ({navigation, route}) => {
   const [coPlayerList, setCoPlayerList] = useState([]);
   const [visible, setVisible] = useState(false);
   const [warning, setWarning] = useState('');
-
+  const [contactList, setContactList] = useState([]);
   useEffect(() => {
     getOfferCoupon();
   }, []);
 
   const pickContact = async () => {
-    // if (Platform.OS === 'android') {
-    //   const granted = await PermissionsAndroid.request(
-    //     PermissionsAndroid.PERMISSIONS.READ_CONTACTS,
-    //     {
-    //       title: 'Contacts',
-    //       message: 'This app needs access to your contacts.',
-    //     },
-    //   );
-
-    //   if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
-    //     console.warn('Contacts permission denied');
-    //     return;
-    //   }
-    // }
-    console.log('MMMMMMMMMM');
-    Contacts.openContactForm({})
-      .then(contact => {
-        console.log('>>>>>>', contact);
-        setCoPlayerFromContact(contact);
+    PermissionsAndroid.request(PermissionsAndroid.PERMISSIONS.READ_CONTACTS, {
+      title: 'Contacts',
+      message: 'This app would like to view your contacts.',
+      buttonPositive: 'Please accept bare mortal',
+    })
+      .then(res => {
+        console.log('Permission: ', res);
+        Contacts.getAll()
+          .then(contacts => {
+            // work with contacts
+            console.log(contacts);
+            setContactList(contacts);
+            refRBSheetContacts.current.open();
+          })
+          .catch(e => {
+            console.log(e);
+          });
       })
-      .catch(err => {
-        console.warn('Error picking contact:', err);
+      .catch(error => {
+        console.error('Permission error: ', error);
       });
   };
 
@@ -197,6 +199,10 @@ const BookNowScreen = ({navigation, route}) => {
               items => items?.id !== item?.id,
             );
             setCoPlayer(filteredItems);
+            const filteredItem = coPlayerFromContact.filter(
+              items => items?.id !== item?.id,
+            );
+            setCoPlayerFromContact(filteredItem);
           }
         }}>
         <Image
@@ -342,18 +348,32 @@ const BookNowScreen = ({navigation, route}) => {
   );
 
   const renderCoPlayers = ({item}) => {
+    let isSelected = coPlayer.some(items => items.id == item?.co_player_id);
     return (
       <TouchableOpacity
         style={styles.coPlayerCard}
         onPress={() => {
-          let playerDetail = {
-            id: item?.co_player_id,
-            name: item?.co_player,
-            phone_no: item?.coplayer_phone,
-            profile: item?.co_player_image,
-          };
-          setCoPlayer([...coPlayer, playerDetail]);
-          refRBSheetPlayers.current.close();
+          if (isSelected) {
+            toast.show('Player already Selected.', {
+              type: 'custom_toast',
+              placement: 'top',
+              duration: 3000,
+              offset: 30,
+              animationType: 'slide-in',
+              data: {
+                title: 'Alert !!',
+              },
+            });
+          } else {
+            let playerDetail = {
+              id: item?.co_player_id,
+              name: item?.co_player,
+              phone_no: item?.coplayer_phone,
+              profile: item?.co_player_image,
+            };
+            setCoPlayer([...coPlayer, playerDetail]);
+            refRBSheetPlayers.current.close();
+          }
         }}>
         <LinearGradient
           angle={135}
@@ -367,7 +387,11 @@ const BookNowScreen = ({navigation, route}) => {
               marginBottom: scale(10),
             }}>
             <Image
-              source={{uri: item?.co_player_image}}
+              source={
+                item?.co_player_image != ''
+                  ? {uri: item?.co_player_image}
+                  : IMAGES.Person
+              }
               style={styles.profileIcon}
             />
             <View style={{paddingLeft: scale(20)}}>
@@ -385,6 +409,67 @@ const BookNowScreen = ({navigation, route}) => {
             keyExtractor={(item, index) => item?.sports.toString()}
             numColumns={8}
           />
+        </LinearGradient>
+      </TouchableOpacity>
+    );
+  };
+
+  const renderCoPlayersFromContacts = ({item}) => {
+    let isSelected = coPlayer.some(items => items.id == item?.rawContactId);
+
+    return (
+      <TouchableOpacity
+        style={styles.coPlayerCard}
+        onPress={() => {
+          if (isSelected) {
+            toast.show('Player already Selected.', {
+              type: 'custom_toast',
+              placement: 'top',
+              duration: 3000,
+              offset: 30,
+              animationType: 'slide-in',
+              data: {
+                title: 'Alert !!',
+              },
+            });
+          } else {
+            let playerDetail = {
+              id: item?.rawContactId,
+              name: item?.displayName,
+              phone_no: item?.phoneNumbers[0].number,
+              profile: item?.thumbnailPath,
+            };
+            setCoPlayerFromContact([...coPlayerFromContact, playerDetail]);
+            refRBSheetContacts.current.close();
+          }
+        }}>
+        <LinearGradient
+          angle={135}
+          colors={[Color.main, Color.main, Color.icon]}
+          style={styles.gradientCoPlayer}
+          useAngle={true}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+            }}>
+            <Image
+              source={
+                item?.thumbnailPath != ''
+                  ? {uri: item?.thumbnailPath}
+                  : IMAGES.Person
+              }
+              style={[styles.profileIcon, {marginLeft: scale(10)}]}
+            />
+            <View style={{paddingLeft: scale(20)}}>
+              <Text style={[styles.heading, {color: Color.white}]}>
+                {item?.displayName}
+              </Text>
+              <Text style={[styles.subText, {color: Color.white}]}>
+                Phone No.: {item?.phoneNumbers[0].number}
+              </Text>
+            </View>
+          </View>
         </LinearGradient>
       </TouchableOpacity>
     );
@@ -494,7 +579,7 @@ const BookNowScreen = ({navigation, route}) => {
             </View>
 
             <FlatList
-              data={coPlayer}
+              data={coPlayer.concat(coPlayerFromContact)}
               renderItem={renderPlayers}
               keyExtractor={item => item.id.toString()}
               numColumns={4}
@@ -700,6 +785,47 @@ const BookNowScreen = ({navigation, route}) => {
           />
         </View>
       </RBSheet>
+      <RBSheet
+        ref={refRBSheetContacts}
+        useNativeDriver={false}
+        customStyles={{
+          container: {
+            borderTopLeftRadius: scale(10),
+            borderTopRightRadius: scale(10),
+            backgroundColor: Color.white,
+          },
+          wrapper: {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+          },
+          draggableIcon: {
+            backgroundColor: Color.main,
+          },
+        }}
+        customModalProps={{
+          animationType: 'slide',
+          statusBarTranslucent: true,
+        }}
+        customAvoidingViewProps={{
+          enabled: false,
+        }}
+        height={scale(600)}
+        draggable>
+        <View style={{paddingTop: scale(10)}}>
+          <Text style={[styles.rbTitle, {paddingHorizontal: scale(20)}]}>
+            Select Co-Player from Contacts
+          </Text>
+          <FlatList
+            data={contactList}
+            renderItem={renderCoPlayersFromContacts}
+            keyExtractor={item => item.rawContactId.toString()}
+            contentContainerStyle={{
+              backgroundColor: Color.white,
+              width: '100%',
+              paddingHorizontal: scale(20),
+            }}
+          />
+        </View>
+      </RBSheet>
       <ConfirmationModal
         isVisible={visible}
         onClose={() => setVisible(false)}
@@ -710,7 +836,10 @@ const BookNowScreen = ({navigation, route}) => {
           setVisible(false);
           refRBSheetPlayers.current.open();
         }}
-        asVendor={() => {}}
+        asVendor={() => {
+          setVisible(false);
+          pickContact();
+        }}
       />
     </View>
   );

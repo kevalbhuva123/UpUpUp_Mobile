@@ -5,8 +5,9 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  FlatList,
 } from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import CustomHeader from '../../Components/CustomHeader';
 import Color from '../../Constants/Color';
 import {scale} from '../../utlis/Scale';
@@ -19,13 +20,17 @@ import apiConfigs from '../../api/apiconfig';
 import StorageService from '../../utlis/StorageService';
 import RazorpayCheckout from 'react-native-razorpay';
 import AlertModal from '../../Components/AlertModal';
+import RBSheet from 'react-native-raw-bottom-sheet';
+import {paymentOptions} from '../../Constants/StaticData';
 
 const UPcoinScreen = ({navigation}) => {
+  const refRBSheetCoin = useRef();
+
   const [Loader, setLoader] = useState(false);
   const [upCoinData, setUpCoinData] = useState();
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMsg, setAlertMsg] = useState('');
-
+  const [selectedOption, setSelectedOption] = useState({});
   useEffect(() => {
     getCoinDetail();
   }, []);
@@ -79,7 +84,7 @@ const UPcoinScreen = ({navigation}) => {
       image: IMAGES.LogoText,
       currency: 'INR',
       key: 'rzp_test_aB42rLcq2jUrJ6',
-      amount: 500 * 100,
+      amount: selectedOption?.price * 100,
       name: 'UPUPUP',
       // order_id: '', //Replace this with an order_id created using Orders API.
       prefill: {
@@ -93,10 +98,35 @@ const UPcoinScreen = ({navigation}) => {
       .then(paymentData => {
         // handle success
         console.log(`Success:`, paymentData.razorpay_payment_id);
-        if (paymentData?.razorpay_payment_id) {
-          setAlertMsg('UPcoins added Successfully.');
-          setAlertVisible(true);
-        }
+        setLoader(true);
+        const formdata = new FormData();
+        formdata.append('user_id', userData?.id);
+        formdata.append('buycoin_id', paymentData.razorpay_payment_id);
+        formdata.append('location_id', userData?.location);
+        formdata.append('payment_id', paymentData.razorpay_payment_id);
+        formdata.append('rupee', selectedOption?.price);
+        formdata.append('coin', selectedOption?.coin);
+
+        const requestOptions = {
+          method: 'POST',
+          body: formdata,
+          redirect: 'follow',
+        };
+
+        fetch(
+          `${apiConfigs.LOCAL_SERVER_API_URL}/Upcoin/buy_coin_payment`,
+          requestOptions,
+        )
+          .then(response => response.json())
+          .then(result => {
+            setLoader(false);
+            setAlertMsg('UPcoins added Successfully.');
+            setAlertVisible(true);
+            console.log(result);
+          })
+          .catch(error => {
+            setLoader(false), console.error(error);
+          });
       })
       .catch(error => {
         // handle failure
@@ -104,6 +134,31 @@ const UPcoinScreen = ({navigation}) => {
       });
   };
 
+  const EmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Image source={IMAGES.Empty} style={styles.emptyImage} />
+      <Text style={styles.emptyText}>No data available</Text>
+    </View>
+  );
+
+  const renderOptions = ({item}) => {
+    let isSelected = selectedOption?.id == item?.id;
+    return (
+      <TouchableOpacity
+        style={styles.optionCard}
+        onPress={() => {
+          setSelectedOption(item);
+        }}>
+        <Image
+          source={isSelected ? IMAGES.CheckedRadio : IMAGES.UncheckedRadio}
+          style={isSelected ? styles.radioIcon : styles.unCheckedRadio}
+        />
+        <Text style={styles.optionCardText}>
+          Rs.{item?.price} = {item?.coin} Coin
+        </Text>
+      </TouchableOpacity>
+    );
+  };
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
@@ -150,7 +205,8 @@ const UPcoinScreen = ({navigation}) => {
         </View>
         <TouchableOpacity
           onPress={() => {
-            buyUPcoins();
+            // buyUPcoins();
+            refRBSheetCoin?.current?.open();
           }}
           style={styles.loginBtn}>
           <Text style={styles.btnText}>BUY UPcoins</Text>
@@ -165,6 +221,59 @@ const UPcoinScreen = ({navigation}) => {
         }}
         content={alertMsg}
       />
+      <RBSheet
+        ref={refRBSheetCoin}
+        useNativeDriver={false}
+        closeOnPressMask
+        customStyles={{
+          container: {
+            borderTopLeftRadius: scale(10),
+            borderTopRightRadius: scale(10),
+            backgroundColor: Color.white,
+          },
+          wrapper: {
+            backgroundColor: 'rgba(0,0,0,0.1)',
+          },
+          draggableIcon: {
+            backgroundColor: Color.main,
+          },
+        }}
+        customModalProps={{
+          animationType: 'slide',
+          statusBarTranslucent: true,
+        }}
+        customAvoidingViewProps={{
+          enabled: false,
+        }}
+        height={scale(400)}
+        draggable>
+        <View style={{paddingTop: scale(10)}}>
+          <Text style={[styles.rbTitle, {paddingHorizontal: scale(20)}]}>
+            Select Option
+          </Text>
+          <FlatList
+            data={paymentOptions}
+            renderItem={renderOptions}
+            keyExtractor={item => item.id.toString()}
+            ListEmptyComponent={EmptyComponent}
+            contentContainerStyle={{
+              backgroundColor: Color.white,
+              width: '100%',
+              paddingHorizontal: scale(20),
+              paddingTop: scale(5),
+            }}
+          />
+          <TouchableOpacity
+            onPress={() => {
+              buyUPcoins();
+              refRBSheetCoin?.current?.close();
+            }}
+            disabled={selectedOption?.id ? false : true}
+            style={styles.loginBtn}>
+            <Text style={styles.btnText}>PROCEED</Text>
+          </TouchableOpacity>
+        </View>
+      </RBSheet>
     </View>
   );
 };
@@ -180,6 +289,66 @@ const styles = StyleSheet.create({
     backgroundColor: Color.background,
     paddingHorizontal: scale(20),
     paddingVertical: scale(20),
+  },
+  optionCard: {
+    width: '100%',
+    backgroundColor: Color.white,
+    shadowColor: Color.black,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: scale(2),
+
+    elevation: 6,
+    borderRadius: scale(10),
+    padding: scale(20),
+    marginBottom: scale(15),
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  optionCardText: {
+    fontFamily: Fonts.bold,
+    fontSize: scale(16),
+    color: Color.black,
+    paddingLeft: scale(10),
+  },
+  radioIcon: {
+    height: scale(20),
+    width: scale(20),
+    tintColor: Color.icon,
+    resizeMode: 'contain',
+  },
+  unCheckedRadio: {
+    height: scale(20),
+    width: scale(20),
+    tintColor: Color.lightGrey,
+    resizeMode: 'contain',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyImage: {
+    width: scale(150),
+    height: scale(150),
+    resizeMode: 'contain',
+    marginTop: scale(50),
+    marginBottom: scale(20),
+  },
+  emptyText: {
+    fontSize: scale(14),
+    color: Color.lightGrey,
+    fontFamily: Fonts.semibold,
+    marginBottom: scale(20),
+  },
+  rbTitle: {
+    fontFamily: Fonts.bold,
+    fontSize: scale(18),
+    color: Color.black,
+    paddingBottom: scale(20),
   },
   loginBtn: {
     backgroundColor: Color.icon,

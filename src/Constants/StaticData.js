@@ -734,3 +734,21 @@ export const MatchTime = [
     id: 'Night',
   },
 ];
+
+export const paymentOptions = [
+  {
+    id: 1,
+    price: 500,
+    coin: 600,
+  },
+  {
+    id: 2,
+    price: 1000,
+    coin: 1250,
+  },
+  {
+    id: 3,
+    price: 2000,
+    coin: 2500,
+  },
+];
