@@ -1,12 +1,14 @@
 import {
   FlatList,
   Image,
+  Modal,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {Venues} from '../../Constants/StaticData';
@@ -19,11 +21,15 @@ import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhan
 import {ActivityLoader} from '../../Components/Loader/Loader';
 
 const BookVenueScreen = ({navigation}) => {
+  const buttonRef = useRef();
   const [venues, setVenues] = useState([]);
-  const [venueId, setvenueId] = useState('');
   const [sports, setsports] = useState(1);
   const [area, setarea] = useState(1);
   const [Loader, setLoader] = useState(false);
+  const [buttonRect, setButtonRect] = useState(null);
+  const [moreOptionVisible, setMoreOptionVisible] = useState(false);
+  const [searchVenue, setSearchVenue] = useState('');
+  const [filteredData, setFilteredData] = useState([]);
 
   useEffect(() => {
     fetchVenues();
@@ -32,6 +38,17 @@ const BookVenueScreen = ({navigation}) => {
   useEffect(() => {
     fetchVenues();
   }, [sports, area]);
+
+  useEffect(() => {
+    if (searchVenue == '') {
+      setFilteredData(venues);
+    } else {
+      const newFilteredData = venues.filter(item =>
+        item.venue.toLowerCase().includes(searchVenue.toLowerCase()),
+      );
+      setFilteredData(newFilteredData);
+    }
+  }, [searchVenue, venues]);
 
   const fetchVenues = async () => {
     try {
@@ -59,6 +76,7 @@ const BookVenueScreen = ({navigation}) => {
           setLoader(false);
           if (data.ErrorCode === 0) {
             setVenues(data.Data);
+            setFilteredData(data.Data);
             console.log('succuss', data.Data[0].venue_image[0]);
           } else {
             console.error('Failed to fetch venues:', data.message);
@@ -131,6 +149,125 @@ const BookVenueScreen = ({navigation}) => {
       </TouchableOpacity>
     );
   };
+
+  const Popover = ({visible, onClose, buttonRect}) => {
+    if (!visible) return null;
+
+    const {x, y, width, height} = buttonRect;
+
+    const styles = StyleSheet.create({
+      popoverContainer: {
+        position: 'absolute',
+        top: y + height,
+        right: 20,
+        backgroundColor: Color.white,
+        borderRadius: 5,
+        elevation: 5, // for Android elevation
+        width: '30%',
+      },
+      button: {
+        paddingHorizontal: 15,
+        paddingVertical: 15,
+        borderBottomColor: Color.lightGrey,
+        borderBottomWidth: 0.5,
+      },
+      filterBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 15,
+        paddingVertical: 15,
+        borderBottomColor: Color.lightGrey,
+        borderBottomWidth: 0.5,
+        width: '100%',
+      },
+      checkedIcon: {
+        height: scale(16),
+        width: scale(16),
+        resizeMode: 'contain',
+        tintColor: Color.icon,
+      },
+      unCheckedIcon: {
+        height: scale(16),
+        width: scale(16),
+        resizeMode: 'contain',
+        tintColor: Color.icon,
+      },
+
+      buttonText: {
+        fontFamily: Fonts.bold,
+        color: Color.main,
+        fontSize: scale(11),
+        paddingHorizontal: 10,
+        paddingTop: 10,
+      },
+    });
+
+    return (
+      <Modal
+        visible={visible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={onClose}>
+        <TouchableOpacity
+          style={{flex: 1}}
+          onPress={onClose}
+          activeOpacity={1} // Prevents touches from passing through
+        >
+          <View style={styles.popoverContainer}>
+            <Text style={styles.buttonText}>Filter By</Text>
+            <TouchableOpacity
+              onPress={() => {
+                closePopover();
+                sports == 1 ? setsports(0) : setsports(1);
+              }}
+              style={styles.filterBtn}>
+              <Image
+                source={sports == 1 ? IMAGES.Checked : IMAGES.Unchecked}
+                style={sports == 1 ? styles.checkedIcon : styles.unCheckedIcon}
+              />
+              <Text
+                style={[
+                  styles.heading,
+                  {color: Color.icon, marginLeft: scale(5)},
+                ]}>
+                Sports
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => {
+                closePopover();
+                area == 1 ? setarea(0) : setarea(1);
+              }}
+              style={styles.filterBtn}>
+              <Image
+                source={area == 1 ? IMAGES.Checked : IMAGES.Unchecked}
+                style={area == 1 ? styles.checkedIcon : styles.unCheckedIcon}
+              />
+              <Text
+                style={[
+                  styles.heading,
+                  {color: Color.icon, marginLeft: scale(5)},
+                ]}>
+                Area
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    );
+  };
+
+  const openPopover = () => {
+    buttonRef.current.measure((x, y, width, height, pageX, pageY) => {
+      setButtonRect({x: pageX, y: pageY, width, height});
+      setMoreOptionVisible(true);
+    });
+  };
+
+  const closePopover = () => {
+    setMoreOptionVisible(false);
+  };
+
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
@@ -140,46 +277,28 @@ const BookVenueScreen = ({navigation}) => {
       />
       <View style={styles.master}>
         <View style={styles.filterView}>
-          <View style={styles.bookNow}>
-            <Text style={styles.buttonText}>Filter By</Text>
+          <View style={styles.textInputView}>
+            <TextInput
+              style={styles.input}
+              placeholder="Search Venue..."
+              value={searchVenue}
+              placeholderTextColor={Color.lightGrey}
+              onChangeText={text => {
+                setSearchVenue(text);
+              }}
+            />
+            <Image source={IMAGES.Search} style={styles.checkedIcon} />
           </View>
           <TouchableOpacity
+            ref={buttonRef}
             onPress={() => {
-              sports == 1 ? setsports(0) : setsports(1);
-            }}
-            style={styles.filterBtn}>
-            <Image
-              source={sports == 1 ? IMAGES.Checked : IMAGES.Unchecked}
-              style={sports == 1 ? styles.checkedIcon : styles.unCheckedIcon}
-            />
-            <Text
-              style={[
-                styles.heading,
-                {color: Color.icon, marginLeft: scale(5)},
-              ]}>
-              Sports
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              area == 1 ? setarea(0) : setarea(1);
-            }}
-            style={styles.filterBtn}>
-            <Image
-              source={area == 1 ? IMAGES.Checked : IMAGES.Unchecked}
-              style={area == 1 ? styles.checkedIcon : styles.unCheckedIcon}
-            />
-            <Text
-              style={[
-                styles.heading,
-                {color: Color.icon, marginLeft: scale(5)},
-              ]}>
-              Area
-            </Text>
+              openPopover();
+            }}>
+            <Image source={IMAGES.MoreOptions} style={styles.checkedIcon} />
           </TouchableOpacity>
         </View>
         <FlatList
-          data={venues}
+          data={filteredData}
           renderItem={renderVenues}
           keyExtractor={(item, index) => index.toString()}
           style={{flexGrow: 1}}
@@ -190,6 +309,11 @@ const BookVenueScreen = ({navigation}) => {
         />
       </View>
       <ActivityLoader loading={Loader} />
+      <Popover
+        visible={moreOptionVisible}
+        onClose={closePopover}
+        buttonRect={buttonRect}
+      />
     </View>
   );
 };
@@ -200,9 +324,26 @@ const styles = StyleSheet.create({
   main: {
     flex: 1,
   },
+  input: {
+    width: '90%',
+    fontFamily: Fonts.regular,
+    color: Color.main,
+    fontSize: scale(14),
+    borderRadius: scale(100),
+  },
   master: {
     flex: 1,
     backgroundColor: Color.background,
+  },
+  textInputView: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '90%',
+    borderRadius: scale(100),
+    paddingHorizontal: scale(10),
+    borderColor: Color.main,
+    borderWidth: scale(1),
   },
   filterView: {
     width: '100%',

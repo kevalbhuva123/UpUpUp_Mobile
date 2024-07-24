@@ -12,7 +12,6 @@ import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {scale} from '../../utlis/Scale';
 import Fonts from '../../Constants/Fonts';
-import {MatchTime, Sports, UpComingMyMatches} from '../../Constants/StaticData';
 import IMAGES from '../../Assets/Icons/index';
 import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
@@ -38,10 +37,90 @@ const HostMatchScreen = ({navigation}) => {
   const [selectedSports, setSelectedSports] = useState([]);
   const [warning, setWarning] = useState('');
   const [matchName, setMatchName] = useState('');
+  const [MatchTime, setMatchTime] = useState([]);
+
   useEffect(() => {
     getMyHostedMatches();
+    getCurrentTimeInfo();
   }, []);
 
+  useEffect(() => {
+    getCurrentTimeInfo();
+  }, [startDate]);
+
+  const getCurrentTimeInfo = () => {
+    const morningStart = new Date();
+    morningStart.setHours(6, 0, 0); // 06:00 AM
+
+    const afternoonStart = new Date();
+    afternoonStart.setHours(12, 0, 0); // 12:00 PM
+
+    const eveningStart = new Date();
+    eveningStart.setHours(18, 0, 0); // 06:00 PM
+
+    const nightStart = new Date();
+    nightStart.setHours(22, 0, 0); // 10:00 PM
+
+    // Get the current time
+    const now = startDate;
+
+    // Check if the current time has passed the morning time
+    if (now >= morningStart && now < afternoonStart) {
+      setMatchTime([
+        {
+          title: 'Afternoon',
+          id: 'Afternoon',
+        },
+        {
+          title: 'Evening',
+          id: 'Evening',
+        },
+        {
+          title: 'Night',
+          id: 'Night',
+        },
+      ]);
+    } else if (now >= afternoonStart && now < eveningStart) {
+      setMatchTime([
+        {
+          title: 'Evening',
+          id: 'Evening',
+        },
+        {
+          title: 'Night',
+          id: 'Night',
+        },
+      ]);
+    } else if (now >= eveningStart && now < nightStart) {
+      setMatchTime([
+        {
+          title: 'Night',
+          id: 'Night',
+        },
+      ]);
+    } else if (now >= nightStart && now < morningStart) {
+      setMatchTime([]);
+    } else {
+      setMatchTime([
+        {
+          title: 'Morning',
+          id: 'Morning',
+        },
+        {
+          title: 'Afternoon',
+          id: 'Afternoon',
+        },
+        {
+          title: 'Evening',
+          id: 'Evening',
+        },
+        {
+          title: 'Night',
+          id: 'Night',
+        },
+      ]);
+    }
+  };
   const getMyHostedMatches = async () => {
     try {
       setLoader(true);

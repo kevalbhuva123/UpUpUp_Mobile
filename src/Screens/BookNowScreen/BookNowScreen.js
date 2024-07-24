@@ -55,6 +55,10 @@ const BookNowScreen = ({navigation, route}) => {
   const [visible, setVisible] = useState(false);
   const [warning, setWarning] = useState('');
   const [contactList, setContactList] = useState([]);
+  const [searchContact, setSearchContact] = useState('');
+  const [filteredContact, setFilteredContact] = useState([]);
+  const [filteredCoPlayer, setFilteredCoPlayer] = useState([]);
+
   useEffect(() => {
     getOfferCoupon();
   }, []);
@@ -72,6 +76,7 @@ const BookNowScreen = ({navigation, route}) => {
             // work with contacts
             console.log(contacts);
             setContactList(contacts);
+            setFilteredContact(contacts);
             refRBSheetContacts.current.open();
           })
           .catch(e => {
@@ -125,6 +130,7 @@ const BookNowScreen = ({navigation, route}) => {
               setLoader(false);
               console.log(result);
               setCoPlayerList(result?.Data);
+              setFilteredCoPlayer(result?.Data);
             });
         })
         .catch(error => {
@@ -137,13 +143,14 @@ const BookNowScreen = ({navigation, route}) => {
     }
   };
   const getSlotList = (vID, sID, cID, date) => {
+    console.log('>>>>>', sID[0]);
     try {
       setLoader(true);
       const formdata = new FormData();
       formdata.append('venue_id', vID?.id ? vID?.id : vID);
-      formdata.append('sports_id', sID);
+      formdata.append('sports_id', sID[0]);
       formdata.append('court_id', cID);
-      formdata.append('date', moment(date).format('DD-MM-YYYY'));
+      formdata.append('date', moment(date).format('YYYY-MM-DD'));
 
       const requestOptions = {
         method: 'POST',
@@ -153,7 +160,10 @@ const BookNowScreen = ({navigation, route}) => {
 
       console.log('>>>>>FORM>>>', formdata);
 
-      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Myvenue/slot`, requestOptions)
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Venue/court_slot`,
+        requestOptions,
+      )
         .then(response => response.json())
         .then(result => {
           setLoader(false);
@@ -257,7 +267,12 @@ const BookNowScreen = ({navigation, route}) => {
         style={[
           styles.slotBtn,
           {
-            backgroundColor: isSelected ? Color.subBg : Color.background,
+            backgroundColor:
+              item?.booked_capacity == item?.capacity
+                ? Color.background
+                : isSelected
+                ? Color.subBg
+                : Color.white,
           },
         ]}
         onPress={() => {
@@ -279,7 +294,8 @@ const BookNowScreen = ({navigation, route}) => {
             }
           });
           // setSlotTime(moment(item?.time, 'HH:mm:ss').format('hh:mm A'));
-        }}>
+        }}
+        disabled={item?.booked_capacity == item?.capacity ? true : false}>
         <Text style={styles.slotText}>
           {moment(item?.time, 'HH:mm:ss').format('hh:mm A')}
         </Text>
@@ -373,6 +389,7 @@ const BookNowScreen = ({navigation, route}) => {
             };
             setCoPlayer([...coPlayer, playerDetail]);
             refRBSheetPlayers.current.close();
+            setSearchContact('');
           }
         }}>
         <LinearGradient
@@ -436,11 +453,12 @@ const BookNowScreen = ({navigation, route}) => {
             let playerDetail = {
               id: item?.rawContactId,
               name: item?.displayName,
-              phone_no: item?.phoneNumbers[0].number,
+              phone_no: item?.phoneNumbers[0].number.trim(),
               profile: item?.thumbnailPath,
             };
             setCoPlayerFromContact([...coPlayerFromContact, playerDetail]);
             refRBSheetContacts.current.close();
+            setSearchContact('');
           }
         }}>
         <LinearGradient
@@ -505,18 +523,42 @@ const BookNowScreen = ({navigation, route}) => {
         selectedSport: selectedSport,
         slotTime: slotTime,
         selectedCoPlayer: coPlayer,
+        selectedCoPlayerFromContact: coPlayerFromContact,
         selectedCoupon: couponID,
         actualAmount: selectedCourtPrice * slotTime.length,
       });
     }
   };
 
+  const filterContacts = text => {
+    setSearchContact(text);
+    const newFilteredData = contactList.filter(item =>
+      item?.displayName.toLowerCase().includes(text.toLowerCase()),
+    );
+    setFilteredContact(newFilteredData);
+  };
+
+  const filterCoPlayer = text => {
+    setSearchContact(text);
+    const newFilteredData = coPlayerList.filter(item =>
+      item?.co_player.toLowerCase().includes(text.toLowerCase()),
+    );
+    setFilteredCoPlayer(newFilteredData);
+  };
+
+  const EmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Image source={IMAGES.Empty} style={styles.emptyImage} />
+      <Text style={styles.emptyText}>No data available</Text>
+    </View>
+  );
+
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'Book Now'}
-        onBackPress={() => navigation.goBack()}
+        onBackPress={() => navigation.navigate('BookVenueScreen')}
       />
       <KeyboardAwareScrollView
         contentContainerStyle={{flexGrow: 1}}
@@ -741,6 +783,7 @@ const BookNowScreen = ({navigation, route}) => {
               backgroundColor: Color.white,
               width: '100%',
             }}
+            ListEmptyComponent={EmptyComponent}
           />
         </View>
       </RBSheet>
@@ -773,8 +816,23 @@ const BookNowScreen = ({navigation, route}) => {
           <Text style={[styles.rbTitle, {paddingHorizontal: scale(20)}]}>
             Select Co-Player
           </Text>
+          <View style={styles.textInputView}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search Contact..."
+              value={searchContact}
+              placeholderTextColor={Color.lightGrey}
+              onChangeText={text => {
+                filterCoPlayer(text);
+              }}
+            />
+            <Image
+              source={IMAGES.Search}
+              style={[styles.iconStyle, {tintColor: Color.main}]}
+            />
+          </View>
           <FlatList
-            data={coPlayerList}
+            data={filteredCoPlayer}
             renderItem={renderCoPlayers}
             keyExtractor={item => item.co_player_id.toString()}
             contentContainerStyle={{
@@ -782,6 +840,7 @@ const BookNowScreen = ({navigation, route}) => {
               width: '100%',
               paddingHorizontal: scale(20),
             }}
+            ListEmptyComponent={EmptyComponent}
           />
         </View>
       </RBSheet>
@@ -814,8 +873,23 @@ const BookNowScreen = ({navigation, route}) => {
           <Text style={[styles.rbTitle, {paddingHorizontal: scale(20)}]}>
             Select Co-Player from Contacts
           </Text>
+          <View style={styles.textInputView}>
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search Contact..."
+              value={searchContact}
+              placeholderTextColor={Color.lightGrey}
+              onChangeText={text => {
+                filterContacts(text);
+              }}
+            />
+            <Image
+              source={IMAGES.Search}
+              style={[styles.iconStyle, {tintColor: Color.main}]}
+            />
+          </View>
           <FlatList
-            data={contactList}
+            data={filteredContact}
             renderItem={renderCoPlayersFromContacts}
             keyExtractor={item => item.rawContactId.toString()}
             contentContainerStyle={{
@@ -823,6 +897,7 @@ const BookNowScreen = ({navigation, route}) => {
               width: '100%',
               paddingHorizontal: scale(20),
             }}
+            ListEmptyComponent={EmptyComponent}
           />
         </View>
       </RBSheet>
@@ -855,6 +930,43 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Color.background,
     padding: scale(20),
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyImage: {
+    width: scale(150),
+    height: scale(150),
+    resizeMode: 'contain',
+    marginTop: scale(50),
+    marginBottom: scale(20),
+  },
+  emptyText: {
+    fontSize: scale(14),
+    color: Color.lightGrey,
+    fontFamily: Fonts.semibold,
+    marginBottom: scale(20),
+  },
+  searchInput: {
+    width: '90%',
+    fontFamily: Fonts.regular,
+    color: Color.main,
+    fontSize: scale(14),
+    borderRadius: scale(100),
+  },
+
+  textInputView: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    borderRadius: scale(100),
+    paddingHorizontal: scale(10),
+    borderColor: Color.main,
+    borderWidth: scale(1),
+    marginHorizontal: scale(20),
+    marginBottom: scale(10),
   },
   warning: {
     color: Color.red,
@@ -1074,14 +1186,15 @@ const styles = StyleSheet.create({
     color: Color.black,
   },
   slotBtn: {
-    flex: 1,
-    margin: scale(5),
+    width: '31%',
+    marginVertical: scale(5),
     justifyContent: 'center',
     alignItems: 'center',
     padding: scale(5),
     borderWidth: scale(0.5),
     borderColor: Color.lightGrey,
     borderRadius: scale(100),
+    marginHorizontal: '1%',
   },
   drawerMain: {
     paddingTop: scale(10),

@@ -45,7 +45,7 @@ const VenueDetailScreen = ({navigation, route}) => {
       <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'Venue Detail'}
-        onBackPress={() => navigation.goBack()}
+        onBackPress={() => navigation.navigate('BookVenueScreen')}
       />
       <View style={styles.master}>
         <ScrollView

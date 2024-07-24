@@ -93,129 +93,393 @@ const PaymentScreen = ({navigation, route}) => {
     );
     console.log('CALLED', userData);
 
-    var options = {
-      description: 'UPUPUP venue booking',
-      image: IMAGES.LogoText,
-      currency: 'INR',
-      key: 'rzp_test_aB42rLcq2jUrJ6',
-      amount: isUPcoinSelected
-        ? (details?.subTotal +
+    setLoader(true);
+
+    if (
+      isUPcoinSelected &&
+      parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins) >=
+        details?.subTotal + serviceCharges?.amount
+    ) {
+      const coPlayersIDs = details?.selectedCoPlayer.map(item => item.id);
+      const contactList = details?.selectedCoPlayerFromContact.map(contact => ({
+        contact_name: contact.name,
+        contact_number: contact.phone_no,
+      }));
+
+      const paymentMode = !isUPcoinSelected
+        ? 1
+        : isUPcoinSelected &&
+          parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins) >=
+            details?.subTotal + serviceCharges?.amount
+        ? 2
+        : 3;
+
+      const formdata = new FormData();
+      formdata.append('user_id', userData?.id);
+      formdata.append('sports_id', details?.selectedSport[0]);
+      formdata.append(
+        'date',
+        moment(details?.selectedDate).format('YYYY-MM-DD'),
+      );
+      formdata.append('court_id', details?.selectedCourt[0]);
+      formdata.append('venue_id', details?.venueData?.id);
+      formdata.append('co_players', coPlayersIDs);
+      formdata.append('co_players_contact', contactList);
+      formdata.append('court_time', details?.slotTime);
+      formdata.append('capacity', coPlayersIDs?.length);
+      formdata.append('coupon_id', details?.selectedCoupon);
+      formdata.append('offer', 0);
+      formdata.append(
+        'price',
+        isUPcoinSelected
+          ? parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins) >=
+            details?.subTotal + serviceCharges?.amount
+            ? 0
+            : details?.subTotal +
+              serviceCharges?.amount -
+              (parseInt(upCoin?.bonus_coins) +
+                parseInt(upCoin?.purchased_coins))
+          : details?.subTotal + serviceCharges?.amount,
+      );
+      formdata.append('cost', details?.actualAmount);
+      formdata.append(
+        'balance',
+        isUPcoinSelected
+          ? parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins) >=
+            details?.subTotal + serviceCharges?.amount
+            ? 0
+            : details?.subTotal +
+              serviceCharges?.amount -
+              (parseInt(upCoin?.bonus_coins) +
+                parseInt(upCoin?.purchased_coins))
+          : details?.subTotal + serviceCharges?.amount,
+      );
+      formdata.append('mode', 1);
+      formdata.append('offer_id', '[]');
+      formdata.append('payment_mode', paymentMode);
+      formdata.append('upcoin_setting_id', '1');
+      formdata.append(
+        'rupee',
+        paymentMode == 1
+          ? details?.subTotal + serviceCharges?.amount
+          : paymentMode == 2
+          ? 0
+          : paymentMode == 3
+          ? details?.subTotal +
             serviceCharges?.amount -
-            (parseInt(upCoin?.bonus_coins) +
-              parseInt(upCoin?.purchased_coins))) *
-          100
-        : (details?.subTotal + serviceCharges?.amount) * 100,
-      name: 'UPUPUP',
-      // order_id: '', //Replace this with an order_id created using Orders API.
-      prefill: {
-        email: userData?.email,
-        contact: userData?.phone_no,
-        name: userData?.name,
-      },
-      theme: {color: Color.main},
-    };
-    RazorpayCheckout.open(options)
-      .then(paymentData => {
-        // handle success
-        console.log(`Success:`, paymentData.razorpay_payment_id);
+            (parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins))
+          : 0,
+      );
+      formdata.append(
+        'coin',
+        isUPcoinSelected
+          ? parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins) >=
+            details?.subTotal + serviceCharges?.amount
+            ? details?.subTotal + serviceCharges?.amount
+            : parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins)
+          : 0,
+      );
+      formdata.append('share_location', userData?.location);
+      formdata.append('service_id', serviceCharges?.id);
+      formdata.append('service_amount', serviceCharges?.amount);
+      formdata.append('service_total', serviceCharges?.amount);
 
-        // const coPlayersIDs = details?.selectedCoPlayer.map(item => item.id);
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
 
-        // const formdata = new FormData();
-        // formdata.append('user_id', userData?.data);
-        // formdata.append('sports_id', details?.selectedSport[0]);
-        // formdata.append(
-        //   'date',
-        //   moment(details?.selectedDate).format('YYYY-MM-DD'),
-        // );
-        // formdata.append('court_id', details?.selectedCourt[0]);
-        // formdata.append('venue_id', details?.venueData?.id);
-        // formdata.append('co_players', coPlayersIDs);
-        // formdata.append('co_players_contact', '[]');
-        // formdata.append('court_time', details?.slotTime);
-        // formdata.append('capacity', coPlayersIDs?.length);
-        // formdata.append('coupon_id', details?.selectedCoupon);
-        // formdata.append('offer', '');
-        // formdata.append('price', details?.subTotal);
-        // formdata.append('cost', details?.actualAmount);
-        // formdata.append('balance', '0');
-        // formdata.append('mode', '1');
-        // formdata.append('offer_id', '[]');
-        // formdata.append('payment_mode', '1');
-        // formdata.append('upcoin_setting_id', '1');
-        // formdata.append('rupee', details?.subTotal);
-        // formdata.append(
-        //   'coin',
-        //   isUPcoinSelected
-        //     ? parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins)
-        //     : '0',
-        // );
-        // formdata.append('share_location', userData?.location);
-        // formdata.append('service_id', serviceCharges?.id);
-        // formdata.append('service_amount', serviceCharges?.amount);
-        // formdata.append('service_total', serviceCharges?.amount);
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Venue/booking_demo_test`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          console.log(
+            '============================================================',
+          );
+          const formData = new FormData();
+          formData.append('user_id', userData?.id);
+          formData.append('booking_id', result?.Data);
+          formData.append('transaction_id', result?.Data);
+          formData.append('payment_id', '');
+          formData.append('payment_mode', paymentMode);
+          formData.append('coupon_id', details?.selectedCoupon);
+          formData.append('court_id', details?.selectedCourt[0]);
+          formData.append('court_time', details?.slotTime);
+          formData.append(
+            'date',
+            moment(details?.selectedDate).format('YYYY-MM-DD'),
+          );
+          formData.append('share_location', userData?.location);
+          formData.append('payment_type', paymentMode);
+          formData.append('upcoin_setting_id', '1');
+          formData.append(
+            'rupee',
+            paymentMode == 1
+              ? details?.subTotal + serviceCharges?.amount
+              : paymentMode == 2
+              ? 0
+              : paymentMode == 3
+              ? details?.subTotal +
+                serviceCharges?.amount -
+                (parseInt(upCoin?.bonus_coins) +
+                  parseInt(upCoin?.purchased_coins))
+              : 0,
+          );
+          formdata.append(
+            'coin',
+            isUPcoinSelected
+              ? parseInt(upCoin?.bonus_coins) +
+                  parseInt(upCoin?.purchased_coins) >=
+                details?.subTotal + serviceCharges?.amount
+                ? details?.subTotal + serviceCharges?.amount
+                : parseInt(upCoin?.bonus_coins) +
+                  parseInt(upCoin?.purchased_coins)
+              : 0,
+          );
 
-        // const requestOptions = {
-        //   method: 'POST',
-        //   body: formdata,
-        //   redirect: 'follow',
-        // };
+          const requestOptions = {
+            method: 'POST',
+            body: formData,
+            redirect: 'follow',
+          };
 
-        // fetch(
-        //   `${apiConfigs.LOCAL_SERVER_API_URL}/Venue/booking_demo_test`,
-        //   requestOptions,
-        // )
-        //   .then(response => response.json())
-        //   .then(result => console.log(result))
-        //   .catch(error => console.error(error));
+          fetch(
+            `${apiConfigs.LOCAL_SERVER_API_URL}/Venue/booking_payment_demo`,
+            requestOptions,
+          )
+            .then(response => response.json())
+            .then(result => {
+              setLoader(false);
+              console.log('>>>>>RRRRRR>>>>>', result);
+            })
+            .catch(error => {
+              setLoader(false);
+              console.error(error);
+            });
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } else {
+      var options = {
+        description: 'UPUPUP venue booking',
+        image: IMAGES.LogoText,
+        currency: 'INR',
+        key: 'rzp_test_aB42rLcq2jUrJ6',
+        amount: isUPcoinSelected
+          ? parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins) >=
+            details?.subTotal + serviceCharges?.amount
+            ? 0
+            : (details?.subTotal +
+                serviceCharges?.amount -
+                (parseInt(upCoin?.bonus_coins) +
+                  parseInt(upCoin?.purchased_coins))) *
+              100
+          : (details?.subTotal + serviceCharges?.amount) * 100,
+        name: 'UPUPUP',
+        // order_id: '', //Replace this with an order_id created using Orders API.
+        prefill: {
+          email: userData?.email,
+          contact: userData?.phone_no,
+          name: userData?.name,
+        },
+        theme: {color: Color.main},
+      };
+      RazorpayCheckout.open(options)
+        .then(paymentData => {
+          // handle success
+          console.log(`Success:`, paymentData.razorpay_payment_id);
 
-        // const formdata = new FormData();
-        // formdata.append('user_id', userData?.id);
-        // formdata.append('booking_id', data.razorpay_payment_id);
-        // formdata.append('transaction_id', data.razorpay_payment_id);
-        // formdata.append('payment_id', data.razorpay_payment_id);
-        // formdata.append('payment_mode', '1');
-        // formdata.append('coupon_id', '0');
-        // formdata.append('court_id', '61');
-        // formdata.append('court_time', details?.slotTime);
-        // formdata.append('date', moment(details?.slotTime).format('YYYY-MM-DD'));
-        // formdata.append('share_location', userData?.location);
-        // formdata.append('payment_type', '1');
-        // formdata.append('upcoin_setting_id', '1');
-        // formdata.append(
-        //   'rupee',
-        //   isUPcoinSelected
-        //     ? details?.subTotal +
-        //         serviceCharges?.amount -
-        //         (parseInt(upCoin?.bonus_coins) +
-        //           parseInt(upCoin?.purchased_coins))
-        //     : details?.subTotal + serviceCharges?.amount,
-        // );
-        // formdata.append(
-        //   'coin',
-        //   isUPcoinSelected
-        //     ? parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins)
-        //     : '0',
-        // );
+          const coPlayersIDs = details?.selectedCoPlayer.map(item => item.id);
+          const contactList = details?.selectedCoPlayerFromContact.map(
+            contact => ({
+              contact_name: contact.name,
+              contact_number: contact.phone_no,
+            }),
+          );
 
-        // const requestOptions = {
-        //   method: 'POST',
-        //   body: formdata,
-        //   redirect: 'follow',
-        // };
+          const paymentMode = !isUPcoinSelected
+            ? 1
+            : isUPcoinSelected &&
+              parseInt(upCoin?.bonus_coins) +
+                parseInt(upCoin?.purchased_coins) >=
+                details?.subTotal + serviceCharges?.amount
+            ? 2
+            : 3;
 
-        // fetch(
-        //   `${apiConfigs.LOCAL_SERVER_API_URL}/Venue/booking_payment_demo`,
-        //   requestOptions,
-        // )
-        //   .then(response => response.json())
-        //   .then(result => console.log(result))
-        //   .catch(error => console.error(error));
-      })
-      .catch(error => {
-        // handle failure
-        console.log(`Error:`, error.code, error.description);
-      });
+          const formdata = new FormData();
+          formdata.append('user_id', userData?.id);
+          formdata.append('sports_id', details?.selectedSport[0]);
+          formdata.append(
+            'date',
+            moment(details?.selectedDate).format('YYYY-MM-DD'),
+          );
+          formdata.append('court_id', details?.selectedCourt[0]);
+          formdata.append('venue_id', details?.venueData?.id);
+          formdata.append('co_players', coPlayersIDs);
+          formdata.append('co_players_contact', contactList);
+          formdata.append('court_time', details?.slotTime);
+          formdata.append('capacity', coPlayersIDs?.length);
+          formdata.append('coupon_id', details?.selectedCoupon);
+          formdata.append('offer', 0);
+          formdata.append(
+            'price',
+            isUPcoinSelected
+              ? parseInt(upCoin?.bonus_coins) +
+                  parseInt(upCoin?.purchased_coins) >=
+                details?.subTotal + serviceCharges?.amount
+                ? 0
+                : details?.subTotal +
+                  serviceCharges?.amount -
+                  (parseInt(upCoin?.bonus_coins) +
+                    parseInt(upCoin?.purchased_coins))
+              : details?.subTotal + serviceCharges?.amount,
+          );
+          formdata.append('cost', details?.actualAmount);
+          formdata.append(
+            'balance',
+            isUPcoinSelected
+              ? parseInt(upCoin?.bonus_coins) +
+                  parseInt(upCoin?.purchased_coins) >=
+                details?.subTotal + serviceCharges?.amount
+                ? 0
+                : details?.subTotal +
+                  serviceCharges?.amount -
+                  (parseInt(upCoin?.bonus_coins) +
+                    parseInt(upCoin?.purchased_coins))
+              : details?.subTotal + serviceCharges?.amount,
+          );
+          formdata.append('mode', 1);
+          formdata.append('offer_id', '[]');
+          formdata.append('payment_mode', paymentMode);
+          formdata.append('upcoin_setting_id', '1');
+          formdata.append(
+            'rupee',
+            paymentMode == 1
+              ? details?.subTotal + serviceCharges?.amount
+              : paymentMode == 2
+              ? 0
+              : paymentMode == 3
+              ? details?.subTotal +
+                serviceCharges?.amount -
+                (parseInt(upCoin?.bonus_coins) +
+                  parseInt(upCoin?.purchased_coins))
+              : 0,
+          );
+          formdata.append(
+            'coin',
+            isUPcoinSelected
+              ? parseInt(upCoin?.bonus_coins) +
+                  parseInt(upCoin?.purchased_coins) >=
+                details?.subTotal + serviceCharges?.amount
+                ? details?.subTotal + serviceCharges?.amount
+                : parseInt(upCoin?.bonus_coins) +
+                  parseInt(upCoin?.purchased_coins)
+              : 0,
+          );
+          formdata.append('share_location', userData?.location);
+          formdata.append('service_id', serviceCharges?.id);
+          formdata.append('service_amount', serviceCharges?.amount);
+          formdata.append('service_total', serviceCharges?.amount);
+
+          const requestOptions = {
+            method: 'POST',
+            body: formdata,
+            redirect: 'follow',
+          };
+
+          fetch(
+            `${apiConfigs.LOCAL_SERVER_API_URL}/Venue/booking_demo_test`,
+            requestOptions,
+          )
+            .then(response => response.json())
+            .then(result => {
+              console.log(
+                '============================================================',
+                result,
+              );
+
+              const formdata = new FormData();
+              formdata.append('user_id', userData?.id);
+              formdata.append('booking_id', result?.Data);
+              formdata.append('transaction_id', result?.Data);
+              formdata.append('payment_id', paymentData.razorpay_payment_id);
+              formdata.append('payment_mode', paymentMode);
+              formdata.append('coupon_id', details?.selectedCoupon);
+              formdata.append('court_id', details?.selectedCourt[0]);
+              formdata.append('court_time', JSON.stringify(details?.slotTime));
+              formdata.append(
+                'date',
+                moment(details?.selectedDate).format('YYYY-MM-DD'),
+              );
+              formdata.append('share_location', userData?.location);
+              formdata.append('payment_type', paymentMode);
+              formdata.append('upcoin_setting_id', '1');
+              formdata.append(
+                'rupee',
+                paymentMode == 1
+                  ? details?.subTotal + serviceCharges?.amount
+                  : paymentMode == 2
+                  ? 0
+                  : paymentMode == 3
+                  ? details?.subTotal +
+                    serviceCharges?.amount -
+                    (parseInt(upCoin?.bonus_coins) +
+                      parseInt(upCoin?.purchased_coins))
+                  : 0,
+              );
+              formdata.append(
+                'coin',
+                isUPcoinSelected
+                  ? parseInt(upCoin?.bonus_coins) +
+                      parseInt(upCoin?.purchased_coins) >=
+                    details?.subTotal + serviceCharges?.amount
+                    ? details?.subTotal + serviceCharges?.amount
+                    : parseInt(upCoin?.bonus_coins) +
+                      parseInt(upCoin?.purchased_coins)
+                  : 0,
+              );
+
+              const requestOptions = {
+                method: 'POST',
+                body: formdata,
+                redirect: 'follow',
+              };
+
+              console.log(
+                '>>>>>>>>>>>>>><<><>><FD<F<D>F<D><F</D></D>',
+                formdata,
+              );
+
+              fetch(
+                `${apiConfigs.LOCAL_SERVER_API_URL}/Venue/booking_payment_demo`,
+                requestOptions,
+              )
+                .then(response => response.json())
+                .then(result => {
+                  setLoader(false);
+                  console.log('>>>>>RRRRRR>>>>>', result);
+                })
+                .catch(error => {
+                  setLoader(false);
+                  console.log('>>>>>ERROR>>>>>', error);
+                });
+            })
+            .catch(error => {
+              setLoader(false);
+              console.error(error);
+            });
+        })
+        .catch(error => {
+          // handle failure
+          console.log(`Error:`, error.code, error.description);
+          setLoader(false);
+        });
+    }
   };
 
   return (
@@ -223,7 +487,7 @@ const PaymentScreen = ({navigation, route}) => {
       <ScreenWithCustomBackBehavior />
       <CustomHeader
         heading={'Payment Summary'}
-        onBackPress={() => navigation.goBack()}
+        onBackPress={() => navigation.navigate('BookVenueScreen')}
       />
       <KeyboardAwareScrollView
         contentContainerStyle={{flexGrow: 1}}
@@ -318,7 +582,11 @@ const PaymentScreen = ({navigation, route}) => {
                   <Text style={[styles.coinText, {color: Color.green}]}>
                     -{' '}
                     {parseInt(upCoin?.bonus_coins) +
-                      parseInt(upCoin?.purchased_coins)}{' '}
+                      parseInt(upCoin?.purchased_coins) >=
+                    details?.subTotal + serviceCharges?.amount
+                      ? details?.subTotal + serviceCharges?.amount
+                      : parseInt(upCoin?.bonus_coins) +
+                        parseInt(upCoin?.purchased_coins)}{' '}
                     Rs.
                   </Text>
 
@@ -347,10 +615,14 @@ const PaymentScreen = ({navigation, route}) => {
                 <Text style={styles.coinText}>
                   Rs.{' '}
                   {isUPcoinSelected
-                    ? details?.subTotal +
-                      serviceCharges?.amount -
-                      (parseInt(upCoin?.bonus_coins) +
-                        parseInt(upCoin?.purchased_coins))
+                    ? parseInt(upCoin?.bonus_coins) +
+                        parseInt(upCoin?.purchased_coins) >=
+                      details?.subTotal + serviceCharges?.amount
+                      ? 0
+                      : details?.subTotal +
+                        serviceCharges?.amount -
+                        (parseInt(upCoin?.bonus_coins) +
+                          parseInt(upCoin?.purchased_coins))
                     : details?.subTotal + serviceCharges?.amount}
                 </Text>
               </View>

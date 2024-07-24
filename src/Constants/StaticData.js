@@ -606,14 +606,14 @@ export const HomeData = [
   {
     id: 15,
     image: IMAGES.Feedbacks,
-    name: 'Feedback',
+    name: 'Feedback\n ',
     navigation: 'FeedBackScreen',
     borderColor: Color.yellow,
   },
   {
     id: 16,
     image: IMAGES.Notifications,
-    name: 'FAQ',
+    name: 'FAQ\n ',
     navigation: 'HelpScreen',
     borderColor: Color.yellow,
   },
