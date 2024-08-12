@@ -3,6 +3,7 @@ import {
   Image,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
@@ -24,7 +25,8 @@ const MyConnectionScreen = ({navigation}) => {
   const [rating, setRating] = useState(0);
   const [Loader, setLoader] = useState(false);
   const [connectionList, setConnectionList] = useState([]);
-
+  const [filteredConnection, setFilteredConnection] = useState([]);
+  const [searchConnection, setSearchConnection] = useState('');
   useEffect(() => {
     getConnectionApi();
   }, []);
@@ -52,6 +54,7 @@ const MyConnectionScreen = ({navigation}) => {
         .then(result => {
           setLoader(false);
           setConnectionList(result?.Data);
+          setFilteredConnection(result?.Data);
           console.log(result);
         })
         .catch(error => {
@@ -75,7 +78,7 @@ const MyConnectionScreen = ({navigation}) => {
           source={
             item?.co_player_image != ''
               ? {uri: item?.co_player_image}
-              : IMAGES.Profile
+              : IMAGES.Person
           }
           style={styles.image}
         />
@@ -89,6 +92,14 @@ const MyConnectionScreen = ({navigation}) => {
       </TouchableOpacity>
     );
   };
+
+  const findConnection = text => {
+    setSearchConnection(text);
+    const newFilteredData = connectionList.filter(item =>
+      item?.co_player.toLowerCase().includes(text.toLowerCase()),
+    );
+    setFilteredConnection(newFilteredData);
+  };
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
@@ -97,8 +108,20 @@ const MyConnectionScreen = ({navigation}) => {
         onBackPress={() => navigation.goBack()}
       />
       <View style={styles.master}>
+        <View style={styles.textInputView}>
+          <TextInput
+            style={styles.input}
+            placeholder="Search your Connection..."
+            value={searchConnection}
+            placeholderTextColor={Color.main}
+            onChangeText={text => {
+              findConnection(text);
+            }}
+          />
+          <Image source={IMAGES.Search} style={styles.checkedIcon} />
+        </View>
         <FlatList
-          data={connectionList}
+          data={filteredConnection}
           renderItem={renderConnections}
           keyExtractor={item => item.co_player_id.toString()}
           numColumns={2}
@@ -139,6 +162,32 @@ const styles = StyleSheet.create({
   master: {
     flex: 1,
     backgroundColor: Color.background,
+  },
+  checkedIcon: {
+    height: scale(16),
+    width: scale(16),
+    resizeMode: 'contain',
+    tintColor: Color.icon,
+  },
+  textInputView: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '95%',
+    borderRadius: scale(100),
+    paddingHorizontal: scale(10),
+    borderColor: Color.main,
+    borderWidth: scale(1),
+    alignSelf: 'center',
+    marginVertical: scale(10),
+    backgroundColor: Color.white,
+  },
+  input: {
+    width: '90%',
+    fontFamily: Fonts.regular,
+    color: Color.main,
+    fontSize: scale(14),
+    borderRadius: scale(100),
   },
   image: {
     height: scale(75),

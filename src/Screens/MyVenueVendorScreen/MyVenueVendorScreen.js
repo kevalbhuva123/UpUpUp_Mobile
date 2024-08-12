@@ -34,6 +34,8 @@ const MyVenueVendorScreen = ({navigation}) => {
   const [selectedSport, setSelectedSport] = useState([]);
   const [selectedCourt, setSelectedCourt] = useState([]);
   const [slots, setSlots] = useState([]);
+  const [slotTime, setSlotTime] = useState([]);
+  const [warning, setWarning] = useState('');
 
   useEffect(() => {
     getVenueList();
@@ -72,7 +74,7 @@ const MyVenueVendorScreen = ({navigation}) => {
             result?.Data[0]?.id,
             result?.Data[0]?.venue_sports_2[0]?.sports_id,
             result?.Data[0]?.court[0]?.court_id,
-            moment(startDate).format('DD-MM-YYYY'),
+            startDate,
           );
         })
         .catch(error => {
@@ -92,7 +94,7 @@ const MyVenueVendorScreen = ({navigation}) => {
       formdata.append('venue_id', vID?.id ? vID?.id : vID);
       formdata.append('sports_id', sID);
       formdata.append('court_id', cID);
-      formdata.append('date', moment(date).format('DD-MM-YYYY'));
+      formdata.append('date', moment(date).format('YYYY-MM-DD'));
 
       const requestOptions = {
         method: 'POST',
@@ -102,7 +104,10 @@ const MyVenueVendorScreen = ({navigation}) => {
 
       console.log('>>>>>FORM>>>', formdata);
 
-      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Myvenue/slot`, requestOptions)
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Venue/court_slot`,
+        requestOptions,
+      )
         .then(response => response.json())
         .then(result => {
           setLoader(false);
@@ -175,12 +180,62 @@ const MyVenueVendorScreen = ({navigation}) => {
   };
 
   const renderSlots = ({item}) => {
+    let isSelected = slotTime.includes(item?.time);
+
     return (
-      <TouchableOpacity style={styles.slotBtn}>
-        <Text style={styles.slotText}>{item?.time}</Text>
+      <TouchableOpacity
+        style={[
+          styles.slotBtn,
+          {
+            backgroundColor:
+              item?.booked_capacity == item?.capacity
+                ? Color.background
+                : isSelected
+                ? Color.subBg
+                : Color.white,
+          },
+        ]}
+        onPress={() => {
+          setSlotTime(prevSelectedItems => {
+            if (prevSelectedItems.includes(item?.time)) {
+              return prevSelectedItems.filter(itemId => itemId !== item?.time);
+            } else {
+              return [...prevSelectedItems, item?.time];
+            }
+          });
+        }}
+        disabled={item?.booked_capacity == item?.capacity ? true : false}>
+        <Text style={styles.slotText}>
+          {moment(item?.time, 'HH:mm:ss').format('hh:mm A')}
+        </Text>
       </TouchableOpacity>
     );
   };
+
+  const WarningMessageTimer = () => {
+    const timeoutId = setTimeout(() => {
+      setWarning('');
+    }, 3000);
+    return () => clearTimeout(timeoutId);
+  };
+  const validationFxn = () => {
+    console.log('>>>>>', selectedCourt, selectedSport, slotTime);
+    if (selectedSport.length == 0) {
+      setWarning('Please choose a sport.');
+      WarningMessageTimer();
+      return;
+    } else if (selectedCourt.length == 0) {
+      setWarning('Please choose a court.');
+      WarningMessageTimer();
+      return;
+    } else if (slotTime.length == 0) {
+      setWarning('Please choose a slot.');
+      WarningMessageTimer();
+      return;
+    } else {
+    }
+  };
+
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
@@ -194,75 +249,94 @@ const MyVenueVendorScreen = ({navigation}) => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{
             paddingHorizontal: scale(20),
-            paddingBottom: scale(200),
+            paddingVertical: scale(20),
           }}>
-          <Text style={styles.heading}>Choose a Venue</Text>
-          <Dropdown
-            style={styles.dropdown}
-            placeholderStyle={styles.placeholderStyle}
-            selectedTextStyle={styles.selectedTextStyle}
-            selectedTextProps={{numberOfLines: 1}}
-            inputSearchStyle={styles.inputSearchStyle}
-            iconStyle={styles.iconStyle}
-            data={venueList}
-            search
-            maxHeight={scale(300)}
-            labelField="venue"
-            valueField="id"
-            placeholder="Select item"
-            searchPlaceholder="Search..."
-            value={selectedVenue?.id}
-            onChange={item => {
-              console.log('>>>>>>>', item);
-              setSelectedVenue(item);
-              getSlotList(item?.id, selectedSport, selectedCourt, startDate);
-            }}
-            renderItem={renderVenues}
-          />
-          <Text style={styles.heading}>Select Date</Text>
-          <View
-            style={[
-              styles.sliderView,
-              {flexDirection: 'row', alignItems: 'center'},
-            ]}>
-            <View style={styles.halfView}>
-              <TouchableOpacity
-                style={styles.pickerBtn}
-                onPress={() => {
-                  setIsDateOpen(true);
-                }}>
-                <Text style={styles.value}>
-                  {startDate != ''
-                    ? moment(startDate).format('DD-MM-YYYY')
-                    : moment().format('DD-MM-YYYY')}
-                </Text>
-                <Image source={IMAGES.Down} style={styles.iconStyle} />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <Text style={styles.heading}>Sports</Text>
-          <View style={styles.mainBox}>
-            <FlatList
-              data={selectedVenue?.venue_sports_2}
-              renderItem={renderSports}
-              keyExtractor={item => item.sports_id.toString()}
-              numColumns={4}
-              contentContainerStyle={{
-                backgroundColor: Color.white,
-                width: '100%',
-                borderRadius: scale(10),
+          <View style={styles.subView}>
+            <Text style={styles.heading}>Choose a Venue</Text>
+            <Dropdown
+              style={styles.dropdown}
+              placeholderStyle={styles.placeholderStyle}
+              selectedTextStyle={styles.selectedTextStyle}
+              selectedTextProps={{numberOfLines: 1}}
+              inputSearchStyle={styles.inputSearchStyle}
+              iconStyle={styles.iconStyle}
+              data={venueList}
+              search
+              maxHeight={scale(300)}
+              labelField="venue"
+              valueField="id"
+              placeholder="Select item"
+              searchPlaceholder="Search..."
+              value={selectedVenue?.id}
+              onChange={item => {
+                console.log('>>>>>>>', item);
+                setSelectedVenue(item);
+                getSlotList(item?.id, selectedSport, selectedCourt, startDate);
               }}
+              renderItem={renderVenues}
             />
+          </View>
+
+          <View style={styles.subView}>
+            <Text style={styles.heading}>Pick a Date</Text>
+            <TouchableOpacity
+              style={styles.pickerBtn}
+              onPress={() => {
+                setIsDateOpen(true);
+              }}>
+              <Text style={styles.value}>
+                {moment(startDate).format('dddd')},{' '}
+                {moment(startDate).format('YYYY-MM-DD')}
+              </Text>
+              <Image source={IMAGES.Down} style={styles.iconStyle} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.subView}>
+            <Text style={styles.heading}>Select Sport</Text>
+            <View style={styles.mainBox}>
+              <FlatList
+                data={selectedVenue?.venue_sports_2}
+                renderItem={renderSports}
+                keyExtractor={item => item.sports_id.toString()}
+                numColumns={4}
+                contentContainerStyle={{
+                  backgroundColor: Color.white,
+                  width: '100%',
+                  borderRadius: scale(10),
+                }}
+              />
+            </View>
           </View>
           {selectedVenue?.court?.length > 0 && (
             <>
-              <Text style={styles.heading}>Courts</Text>
+              <View style={styles.subView}>
+                <Text style={styles.heading}>Select Court</Text>
+                <View style={styles.mainBox}>
+                  <FlatList
+                    data={selectedVenue?.court}
+                    renderItem={renderCourt}
+                    keyExtractor={item => item.court_id.toString()}
+                    numColumns={4}
+                    contentContainerStyle={{
+                      backgroundColor: Color.white,
+                      width: '100%',
+                      borderRadius: scale(10),
+                    }}
+                  />
+                </View>
+              </View>
+            </>
+          )}
+
+          {slots.length > 0 && (
+            <View style={styles.subView}>
+              <Text style={styles.heading}>Select Slots</Text>
               <View style={styles.mainBox}>
                 <FlatList
-                  data={selectedVenue?.court}
-                  renderItem={renderCourt}
-                  keyExtractor={item => item.court_id.toString()}
-                  numColumns={4}
+                  data={slots}
+                  renderItem={renderSlots}
+                  keyExtractor={item => item.slot_id.toString()}
+                  numColumns={3}
                   contentContainerStyle={{
                     backgroundColor: Color.white,
                     width: '100%',
@@ -270,23 +344,18 @@ const MyVenueVendorScreen = ({navigation}) => {
                   }}
                 />
               </View>
-            </>
+            </View>
           )}
-          <Text style={styles.heading}>Slots</Text>
-          <View style={styles.mainBox}>
-            <FlatList
-              data={slots}
-              renderItem={renderSlots}
-              keyExtractor={item => item.slot_id.toString()}
-              numColumns={3}
-              contentContainerStyle={{
-                backgroundColor: Color.white,
-                width: '100%',
-                borderRadius: scale(10),
-              }}
-            />
-          </View>
         </ScrollView>
+        {warning !== '' && <Text style={styles.warning}>{warning}</Text>}
+
+        <TouchableOpacity
+          style={styles.bottomButton}
+          onPress={() => {
+            validationFxn();
+          }}>
+          <Text style={styles.buttonText}>BOOK NOW</Text>
+        </TouchableOpacity>
         <DatePicker
           modal
           open={isDateOpen}
@@ -321,12 +390,39 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Color.background,
   },
+  bottomButton: {
+    backgroundColor: Color.icon,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: scale(15),
+  },
+  buttonText: {
+    fontFamily: Fonts.bold,
+    color: Color.white,
+    fontSize: scale(14),
+  },
+  subView: {
+    width: '100%',
+    backgroundColor: Color.white,
+    shadowColor: Color.black,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: scale(2),
+
+    elevation: 6,
+    borderRadius: scale(10),
+    padding: scale(10),
+    marginBottom: scale(15),
+  },
   heading: {
     fontFamily: Fonts.bold,
     fontSize: scale(14),
     color: Color.black,
-    marginTop: scale(20),
-    marginBottom: scale(10),
+    marginBottom: scale(5),
   },
   checkedIcon: {
     height: scale(16),
@@ -339,15 +435,8 @@ const styles = StyleSheet.create({
     backgroundColor: Color.white,
     borderRadius: scale(10),
     padding: scale(10),
-    shadowColor: Color.black,
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: scale(2),
-
-    elevation: 6,
+    borderWidth: scale(0.5),
+    borderColor: Color.lightGrey,
   },
 
   item: {
@@ -384,13 +473,13 @@ const styles = StyleSheet.create({
   },
   loginBtn: {
     backgroundColor: Color.icon,
-    width: '90%',
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: scale(12),
     borderRadius: scale(10),
     alignSelf: 'center',
-    marginVertical: scale(20),
+    marginVertical: scale(40),
   },
   btnText: {
     color: Color.background,
@@ -425,9 +514,10 @@ const styles = StyleSheet.create({
     color: Color.black,
   },
   sportIcon: {
-    height: scale(20),
-    width: scale(20),
+    height: scale(30),
+    width: scale(30),
     resizeMode: 'contain',
+    tintColor: Color.icon,
   },
   more: {
     borderWidth: scale(1),
@@ -499,11 +589,7 @@ const styles = StyleSheet.create({
     tintColor: Color.lightGrey,
     marginTop: scale(3),
   },
-  sportIcon: {
-    height: scale(40),
-    width: scale(40),
-    resizeMode: 'contain',
-  },
+
   warning: {
     color: Color.red,
     textAlign: 'center',
@@ -517,12 +603,13 @@ const styles = StyleSheet.create({
     color: Color.black,
   },
   slotBtn: {
-    flex: 1,
-    margin: scale(5),
+    width: '31%',
+    marginVertical: scale(5),
+    marginHorizontal: '1%',
+
     justifyContent: 'center',
     alignItems: 'center',
     padding: scale(5),
-    backgroundColor: Color.background,
     borderWidth: scale(0.5),
     borderColor: Color.lightGrey,
     borderRadius: scale(100),

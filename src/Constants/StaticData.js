@@ -620,7 +620,7 @@ export const HomeData = [
   {
     id: 17,
     image: IMAGES.HowWorks,
-    name: 'How It\nWorks',
+    name: 'About App\n ',
     navigation: 'AboutApp',
     borderColor: Color.yellow,
   },

@@ -12,6 +12,7 @@ import StorageService from '../../utlis/StorageService';
 import {ActivityLoader} from '../../Components/Loader/Loader';
 import moment from 'moment';
 import RazorpayCheckout from 'react-native-razorpay';
+import AlertModal from '../../Components/AlertModal';
 
 const PaymentScreen = ({navigation, route}) => {
   const [details, setDetails] = useState(route?.params);
@@ -20,10 +21,11 @@ const PaymentScreen = ({navigation, route}) => {
   const [Loader, setLoader] = useState(false);
   const [ownerDetail, setOwnerDetail] = useState();
   const [isUPcoinSelected, setIsUPcoinSelected] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMsg, setAlertMsg] = useState('');
 
   useEffect(() => {
     getUserCoinInfo();
-    console.log('>>>>>>>>', route?.params);
   }, []);
 
   const getUserCoinInfo = async () => {
@@ -114,6 +116,8 @@ const PaymentScreen = ({navigation, route}) => {
         ? 2
         : 3;
 
+      let capacityArray = details?.slotTime.map(() => '1');
+
       const formdata = new FormData();
       formdata.append('user_id', userData?.id);
       formdata.append('sports_id', details?.selectedSport[0]);
@@ -123,10 +127,10 @@ const PaymentScreen = ({navigation, route}) => {
       );
       formdata.append('court_id', details?.selectedCourt[0]);
       formdata.append('venue_id', details?.venueData?.id);
-      formdata.append('co_players', coPlayersIDs);
-      formdata.append('co_players_contact', contactList);
-      formdata.append('court_time', details?.slotTime);
-      formdata.append('capacity', coPlayersIDs?.length);
+      formdata.append('co_players', JSON.stringify(coPlayersIDs));
+      formdata.append('co_players_contact', JSON.stringify(contactList));
+      formdata.append('court_time', JSON.stringify(details?.slotTime));
+      formdata.append('capacity', JSON.stringify(capacityArray));
       formdata.append('coupon_id', details?.selectedCoupon);
       formdata.append('offer', 0);
       formdata.append(
@@ -199,23 +203,23 @@ const PaymentScreen = ({navigation, route}) => {
           console.log(
             '============================================================',
           );
-          const formData = new FormData();
-          formData.append('user_id', userData?.id);
-          formData.append('booking_id', result?.Data);
-          formData.append('transaction_id', result?.Data);
-          formData.append('payment_id', '');
-          formData.append('payment_mode', paymentMode);
-          formData.append('coupon_id', details?.selectedCoupon);
-          formData.append('court_id', details?.selectedCourt[0]);
-          formData.append('court_time', details?.slotTime);
-          formData.append(
+          const formdata = new FormData();
+          formdata.append('user_id', userData?.id);
+          formdata.append('booking_id', result?.Data);
+          formdata.append('transaction_id', result?.Data);
+          formdata.append('payment_id', paymentData.razorpay_payment_id);
+          formdata.append('payment_mode', paymentMode);
+          formdata.append('coupon_id', details?.selectedCoupon);
+          formdata.append('court_id', details?.selectedCourt[0]);
+          formdata.append('court_time', JSON.stringify(details?.slotTime));
+          formdata.append(
             'date',
             moment(details?.selectedDate).format('YYYY-MM-DD'),
           );
-          formData.append('share_location', userData?.location);
-          formData.append('payment_type', paymentMode);
-          formData.append('upcoin_setting_id', '1');
-          formData.append(
+          formdata.append('share_location', userData?.location);
+          formdata.append('payment_type', paymentMode);
+          formdata.append('upcoin_setting_id', '1');
+          formdata.append(
             'rupee',
             paymentMode == 1
               ? details?.subTotal + serviceCharges?.amount
@@ -242,7 +246,7 @@ const PaymentScreen = ({navigation, route}) => {
 
           const requestOptions = {
             method: 'POST',
-            body: formData,
+            body: formdata,
             redirect: 'follow',
           };
 
@@ -254,6 +258,8 @@ const PaymentScreen = ({navigation, route}) => {
             .then(result => {
               setLoader(false);
               console.log('>>>>>RRRRRR>>>>>', result);
+              setAlertMsg('Venue booked Successfully.');
+              setAlertVisible(true);
             })
             .catch(error => {
               setLoader(false);
@@ -311,6 +317,8 @@ const PaymentScreen = ({navigation, route}) => {
             ? 2
             : 3;
 
+          let capacityArray = details?.slotTime.map(() => '1');
+
           const formdata = new FormData();
           formdata.append('user_id', userData?.id);
           formdata.append('sports_id', details?.selectedSport[0]);
@@ -320,10 +328,10 @@ const PaymentScreen = ({navigation, route}) => {
           );
           formdata.append('court_id', details?.selectedCourt[0]);
           formdata.append('venue_id', details?.venueData?.id);
-          formdata.append('co_players', coPlayersIDs);
-          formdata.append('co_players_contact', contactList);
-          formdata.append('court_time', details?.slotTime);
-          formdata.append('capacity', coPlayersIDs?.length);
+          formdata.append('co_players', JSON.stringify(coPlayersIDs));
+          formdata.append('co_players_contact', JSON.stringify(contactList));
+          formdata.append('court_time', JSON.stringify(details?.slotTime));
+          formdata.append('capacity', JSON.stringify(capacityArray));
           formdata.append('coupon_id', details?.selectedCoupon);
           formdata.append('offer', 0);
           formdata.append(
@@ -386,6 +394,7 @@ const PaymentScreen = ({navigation, route}) => {
           formdata.append('service_amount', serviceCharges?.amount);
           formdata.append('service_total', serviceCharges?.amount);
 
+          console.log('>>>>>>>1ST>>>>>>', formdata);
           const requestOptions = {
             method: 'POST',
             body: formdata,
@@ -463,6 +472,8 @@ const PaymentScreen = ({navigation, route}) => {
                 .then(result => {
                   setLoader(false);
                   console.log('>>>>>RRRRRR>>>>>', result);
+                  setAlertMsg('Venue booked Successfully.');
+                  setAlertVisible(true);
                 })
                 .catch(error => {
                   setLoader(false);
@@ -638,6 +649,14 @@ const PaymentScreen = ({navigation, route}) => {
         <Text style={styles.buttonText}>PROCEED</Text>
       </TouchableOpacity>
       <ActivityLoader loading={Loader} />
+      <AlertModal
+        modalVisible={alertVisible}
+        onClose={async () => {
+          setAlertVisible(false);
+          navigation.navigate('HomeScreen');
+        }}
+        content={alertMsg}
+      />
     </View>
   );
 };

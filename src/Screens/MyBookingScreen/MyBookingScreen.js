@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import Color from '../../Constants/Color';
 import CustomHeader from '../../Components/CustomHeader/CustomHeader';
 import {scale} from '../../utlis/Scale';
@@ -15,99 +15,199 @@ import {UpcomingBooking} from '../../Constants/StaticData';
 import IMAGES from '../../Assets/Icons/index';
 import RatingModal from '../../Components/RatingModal';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import {ActivityLoader} from '../../Components/Loader/Loader';
+import apiConfigs from '../../api/apiconfig';
+import StorageService from '../../utlis/StorageService';
+import moment from 'moment';
 
 const MyBookingScreen = ({navigation}) => {
   const [activeTab, setActiveTab] = useState(1);
-  const [visible, setVisible] = useState(false);
-  const [rating, setRating] = useState(0);
+
+  const [Loader, setLoader] = useState(false);
+  const [upcomingBookings, setUpcomingBookings] = useState([]);
+  const [pastBookings, setPastBookings] = useState([]);
+
+  useEffect(() => {
+    getUpcomingBookings();
+  }, []);
+
+  const getUpcomingBookings = async () => {
+    try {
+      setLoader(true);
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      console.log('>>>>USER DATA>>>', userData);
+
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Venue/upcoming_booking/${userData?.id}`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          console.log(result);
+          if (result?.ErrorCode == 0) {
+            setUpcomingBookings(result?.Data);
+          }
+          setLoader(false);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.log(error);
+        });
+    } catch (error) {
+      setLoader(false);
+      console.log(error);
+    }
+  };
+
+  const pastBookingList = async () => {
+    try {
+      setLoader(true);
+      const userData = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.USER_DETAILS,
+      );
+
+      console.log('>>>>USER DATA>>>', userData);
+
+      const requestOptions = {
+        method: 'GET',
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Venue/past_booking/${userData?.id}`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          console.log(result);
+          if (result?.ErrorCode == 0) {
+            setPastBookings(result?.Data);
+          }
+          setLoader(false);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.log(error);
+        });
+    } catch (error) {
+      setLoader(false);
+      console.log(error);
+    }
+  };
 
   const renderItem = ({item}) => {
     return (
       <TouchableOpacity style={styles.card}>
         <View style={styles.iconView}>
-          <Image source={item.image} style={styles.sportIcon} />
+          <Image
+            source={item?.image != '' ? {uri: item?.image} : IMAGES.LogoText}
+            style={styles.sportIcon}
+          />
         </View>
         <View style={styles.contentView}>
-          <Text style={styles.heading}>{item.title}</Text>
-          <Text style={styles.subText}>Posted by: {item.owner}</Text>
+          <Text style={styles.heading} numberOfLines={2}>
+            {item?.venue}
+          </Text>
+          <Text style={styles.subText}>Booked by: {item?.name}</Text>
           <View style={styles.iconTextView}>
             <Image source={IMAGES.Clock} style={styles.icons} />
             <Text style={styles.subText}>
-              {item.startTime}-{item.endTime}
+              {item?.court_timing[0]}-
+              {addOneHour(item?.court_timing[item?.court_timing.length - 1])}
             </Text>
           </View>
           <View style={styles.iconTextView}>
             <Image source={IMAGES.Location} style={styles.icons} />
-            <Text style={styles.subText}>{item.location}</Text>
+            <Text style={styles.subText}>{item?.area}</Text>
           </View>
-          <Text
-            style={[
-              styles.statusView,
-              {
-                backgroundColor:
-                  item.payment == 'PAID' ? Color.icon : Color.yellow,
-                color: item.payment == 'PAID' ? Color.white : Color.black,
-              },
-            ]}>
-            {item.payment}
-          </Text>
         </View>
         <View style={styles.separator}></View>
         <View style={styles.dateView}>
           <Text style={[styles.subText, {color: Color.icon}]}>
-            {item.month}
+            {moment(item?.date).format('MMMM')}
           </Text>
-          <Text style={[styles.heading, {color: Color.main}]}>{item.date}</Text>
-          <Text style={styles.subText}>{item.year}</Text>
+          <Text style={[styles.heading, {color: Color.main}]}>
+            {moment(item?.date).format('DD')}
+          </Text>
+          <Text style={styles.subText}>{moment(item?.date).year()}</Text>
         </View>
       </TouchableOpacity>
     );
   };
   const renderRate = ({item}) => {
     return (
-      <TouchableOpacity
-        style={styles.card}
-        onPress={() => {
-          setVisible(true);
-        }}>
+      <TouchableOpacity style={styles.card}>
         <View style={styles.iconView}>
-          <Image source={item.image} style={styles.sportIcon} />
+          <Image
+            source={item?.image != '' ? {uri: item?.image} : IMAGES.LogoText}
+            style={styles.sportIcon}
+          />
         </View>
         <View style={styles.contentView}>
-          <Text style={styles.heading}>{item.title}</Text>
-          <Text style={styles.subText}>Posted by: {item.owner}</Text>
+          <Text style={styles.heading} numberOfLines={2}>
+            {item?.venue}
+          </Text>
+          <Text style={styles.subText}>Booked by: {item?.name}</Text>
           <View style={styles.iconTextView}>
             <Image source={IMAGES.Clock} style={styles.icons} />
             <Text style={styles.subText}>
-              {item.startTime}-{item.endTime}
+              {item?.court_timing[0]}-
+              {addOneHour(item?.court_timing[item?.court_timing.length - 1])}
             </Text>
           </View>
           <View style={styles.iconTextView}>
             <Image source={IMAGES.Location} style={styles.icons} />
-            <Text style={styles.subText}>{item.location}</Text>
+            <Text style={styles.subText}>{item?.area}</Text>
           </View>
-          <Text
-            style={[
-              styles.statusView,
-              {
-                backgroundColor: Color.main,
-                color: Color.white,
-              },
-            ]}>
-            RATE NOW
-          </Text>
         </View>
         <View style={styles.separator}></View>
         <View style={styles.dateView}>
           <Text style={[styles.subText, {color: Color.icon}]}>
-            {item.month}
+            {moment(item?.date).format('MMMM')}
           </Text>
-          <Text style={[styles.heading, {color: Color.main}]}>{item.date}</Text>
-          <Text style={styles.subText}>{item.year}</Text>
+          <Text style={[styles.heading, {color: Color.main}]}>
+            {moment(item?.date).format('DD')}
+          </Text>
+          <Text style={styles.subText}>{moment(item?.date).year()}</Text>
         </View>
       </TouchableOpacity>
     );
   };
+
+  const addOneHour = time => {
+    let [hours, minutes] = time.split(':');
+    let period = time.slice(-2);
+
+    hours = parseInt(hours, 10);
+    minutes = minutes.slice(0, -3);
+
+    hours += 1;
+
+    if (hours === 12) {
+      period = period === 'AM' ? 'PM' : 'AM';
+    } else if (hours > 12) {
+      hours -= 12;
+      period = period === 'AM' ? 'PM' : 'AM';
+    }
+
+    return `${hours}:${minutes} ${period}`;
+  };
+
+  const EmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Image source={IMAGES.Empty} style={styles.emptyImage} />
+      <Text style={styles.emptyText}>No data available</Text>
+    </View>
+  );
+
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
@@ -121,6 +221,8 @@ const MyBookingScreen = ({navigation}) => {
             style={activeTab == 1 ? styles.tabActiveButton : styles.tabButton}
             onPress={() => {
               setActiveTab(1);
+              setPastBookings([]);
+              getUpcomingBookings();
             }}>
             <Text style={styles.tabText}>Upcoming</Text>
           </TouchableOpacity>
@@ -128,52 +230,41 @@ const MyBookingScreen = ({navigation}) => {
             style={activeTab == 2 ? styles.tabActiveButton : styles.tabButton}
             onPress={() => {
               setActiveTab(2);
+              setUpcomingBookings([]);
+              pastBookingList();
             }}>
-            <Text style={styles.tabText}>Rate a Venue</Text>
+            <Text style={styles.tabText}>History</Text>
           </TouchableOpacity>
         </View>
         {activeTab == 1 ? (
           <FlatList
-            data={UpcomingBooking}
+            data={upcomingBookings}
             renderItem={renderItem}
-            keyExtractor={item => item.id.toString()}
+            keyExtractor={item => item.booking_id.toString()}
             style={{flex: 1}}
             contentContainerStyle={{
               paddingTop: scale(20),
               paddingHorizontal: scale(20),
             }}
             showsVerticalScrollIndicator={false}
+            ListEmptyComponent={EmptyComponent}
           />
         ) : (
           <FlatList
-            data={UpcomingBooking}
+            data={pastBookings}
             renderItem={renderRate}
-            keyExtractor={item => item.id.toString()}
+            keyExtractor={item => item.booking_id.toString()}
             style={{flex: 1}}
             contentContainerStyle={{
               paddingTop: scale(20),
               paddingHorizontal: scale(20),
             }}
             showsVerticalScrollIndicator={false}
+            ListEmptyComponent={EmptyComponent}
           />
         )}
       </View>
-      <RatingModal
-        isVisible={visible}
-        onClose={() => {
-          setVisible(false);
-          setRating(0);
-        }}
-        rating={rating}
-        setRating={rating => {
-          setRating(rating);
-        }}
-        handleRatingSubmit={() => {
-          console.log(rating);
-          setVisible(false);
-        }}
-        buttonText={'RATE VENUE'}
-      />
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };
@@ -187,6 +278,24 @@ const styles = StyleSheet.create({
   master: {
     flex: 1,
     backgroundColor: Color.background,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyImage: {
+    width: scale(150),
+    height: scale(150),
+    resizeMode: 'contain',
+    marginTop: scale(50),
+    marginBottom: scale(20),
+  },
+  emptyText: {
+    fontSize: scale(14),
+    color: Color.lightGrey,
+    fontFamily: Fonts.semibold,
+    marginBottom: scale(20),
   },
   headingView: {
     backgroundColor: Color.white,

@@ -259,16 +259,14 @@ const BookNowScreen = ({navigation, route}) => {
   };
 
   const renderSlots = ({item}) => {
-    let isSelected = slotTime.includes(
-      moment(item?.time, 'HH:mm:ss').format('hh:mm A'),
-    );
+    let isSelected = slotTime.includes(item?.time);
     return (
       <TouchableOpacity
         style={[
           styles.slotBtn,
           {
             backgroundColor:
-              item?.booked_capacity == item?.capacity
+              item?.booked_capacity >= item?.capacity
                 ? Color.background
                 : isSelected
                 ? Color.subBg
@@ -277,26 +275,25 @@ const BookNowScreen = ({navigation, route}) => {
         ]}
         onPress={() => {
           setSlotTime(prevSelectedItems => {
-            if (
-              prevSelectedItems.includes(
-                moment(item?.time, 'HH:mm:ss').format('hh:mm A'),
-              )
-            ) {
-              return prevSelectedItems.filter(
-                itemId =>
-                  itemId !== moment(item?.time, 'HH:mm:ss').format('hh:mm A'),
-              );
+            if (prevSelectedItems.includes(item?.time)) {
+              return prevSelectedItems.filter(itemId => itemId !== item?.time);
             } else {
-              return [
-                ...prevSelectedItems,
-                moment(item?.time, 'HH:mm:ss').format('hh:mm A'),
-              ];
+              return [...prevSelectedItems, item?.time];
             }
           });
           // setSlotTime(moment(item?.time, 'HH:mm:ss').format('hh:mm A'));
         }}
-        disabled={item?.booked_capacity == item?.capacity ? true : false}>
-        <Text style={styles.slotText}>
+        disabled={item?.booked_capacity >= item?.capacity ? true : false}>
+        <Text
+          style={[
+            styles.slotText,
+            {
+              color:
+                item?.booked_capacity >= item?.capacity
+                  ? Color.grey
+                  : Color.black,
+            },
+          ]}>
           {moment(item?.time, 'HH:mm:ss').format('hh:mm A')}
         </Text>
       </TouchableOpacity>
