@@ -28,7 +28,7 @@ const AboutApp = ({navigation}) => {
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
       <CustomHeader
-        heading={'How It Works'}
+        heading={'About App'}
         onBackPress={() => navigation.goBack()}
       />
       <KeyboardAwareScrollView
@@ -38,7 +38,19 @@ const AboutApp = ({navigation}) => {
         showsVerticalScrollIndicator={false}
         extraScrollHeight={20}
         style={{flex: 1}}>
-        <View style={styles.master}></View>
+        <View style={styles.master}>
+          <Text style={styles.text}>
+            {`Welcome to UPUPUP Sports, your ultimate solution for booking sports venues with ease! Whether you're organizing a casual game with friends or planning a tournament, UPUPUP Sports connects you with top venues in your area, allowing you to find the perfect place for your event.
+
+For players: Discover and book sports facilities at your convenience. From football fields to tennis courts, we offer a wide range of options to suit your needs. Simply browse, check availability, and make your reservation in just a few clicks.
+
+For venue owners: List your venue on UPUPUP Sports and reach a wider audience. Easily manage bookings, set your schedule, and attract more customers with our intuitive platform.
+
+With UPUPUP Sports, finding and booking the right venue has never been easier. Join our growing community of sports enthusiasts and venue owners today!
+
+`}
+          </Text>
+        </View>
       </KeyboardAwareScrollView>
     </View>
   );
@@ -55,5 +67,10 @@ const styles = StyleSheet.create({
     backgroundColor: Color.background,
     paddingHorizontal: scale(20),
     paddingVertical: scale(20),
+  },
+  text: {
+    fontSize: scale(14),
+    fontFamily: Fonts.regular,
+    color: Color.main,
   },
 });

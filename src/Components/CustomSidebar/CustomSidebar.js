@@ -54,19 +54,19 @@ const SidebarOptionsForUser = [
   {
     id: 6,
     title: 'About Us',
-    navigation: '',
+    navigation: 'AboutUs',
     icon: IMAGES.AboutUs,
   },
   {
     id: 7,
     title: 'Privacy & Terms',
-    navigation: '',
+    navigation: 'PrivacyTerms',
     icon: IMAGES.Privacy,
   },
   {
     id: 8,
     title: 'About App',
-    navigation: '',
+    navigation: 'AboutApp',
     icon: IMAGES.AboutApp,
   },
 ];
@@ -105,19 +105,19 @@ const SidebarOptionsForVendor = [
   {
     id: 6,
     title: 'About Us',
-    navigation: '',
+    navigation: 'AboutUs',
     icon: IMAGES.AboutUs,
   },
   {
     id: 7,
     title: 'Privacy & Terms',
-    navigation: '',
+    navigation: 'PrivacyTerms',
     icon: IMAGES.Privacy,
   },
   {
     id: 8,
     title: 'About App',
-    navigation: '',
+    navigation: 'AboutApp',
     icon: IMAGES.AboutApp,
   },
 ];

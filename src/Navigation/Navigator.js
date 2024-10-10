@@ -45,6 +45,8 @@ import AboutApp from '../Screens/AboutApp';
 import PaymentScreen from '../Screens/PaymentScreen';
 import MatchDetailScreen from '../Screens/MatchDetail/MatchDetailScreen';
 import Notifications from '../Screens/Notifications';
+import AboutUs from '../Screens/AboutUs';
+import PrivacyTerms from '../Screens/PrivacyTerms/PrivacyTerms';
 
 const Stack = createNativeStackNavigator();
 
@@ -103,6 +105,8 @@ const Navigator = () => {
         <Stack.Screen name="PaymentScreen" component={PaymentScreen} />
         <Stack.Screen name="MatchDetailScreen" component={MatchDetailScreen} />
         <Stack.Screen name="Notifications" component={Notifications} />
+        <Stack.Screen name="AboutUs" component={AboutUs} />
+        <Stack.Screen name="PrivacyTerms" component={PrivacyTerms} />
       </Stack.Navigator>
     </NavigationContainer>
   );
