@@ -275,7 +275,7 @@ const PaymentScreen = ({navigation, route}) => {
         description: 'UPUPUP venue booking',
         image: IMAGES.LogoText,
         currency: 'INR',
-        key: 'rzp_test_aB42rLcq2jUrJ6',
+        key: 'rzp_test_4FcySxlJrgjMv2',
         amount: isUPcoinSelected
           ? parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins) >=
             details?.subTotal + serviceCharges?.amount

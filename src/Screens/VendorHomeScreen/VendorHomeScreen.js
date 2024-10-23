@@ -118,13 +118,13 @@ const VendorHomeScreen = ({navigation}) => {
           showsVerticalScrollIndicator={false}
           numColumns={3}
         />
-        <TouchableOpacity
+        {/* <TouchableOpacity
           style={styles.loginBtn}
           onPress={() => {
             navigation.navigate('BusinessAnalytics');
           }}>
           <Text style={styles.btnText}>Business Analytics</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
       <CustomSidebar
         hamburgerVisible={hamburgerVisible}

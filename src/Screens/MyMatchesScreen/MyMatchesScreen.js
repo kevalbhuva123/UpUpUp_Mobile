@@ -287,6 +287,13 @@ const MyMatchesScreen = ({navigation}) => {
     );
   };
 
+  const EmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Image source={IMAGES.Empty} style={styles.emptyImage} />
+      <Text style={styles.emptyText}>No data available</Text>
+    </View>
+  );
+
   return (
     <View style={styles.main}>
       <ScreenWithCustomBackBehavior />
@@ -324,6 +331,7 @@ const MyMatchesScreen = ({navigation}) => {
               paddingHorizontal: scale(20),
             }}
             showsVerticalScrollIndicator={false}
+            ListEmptyComponent={EmptyComponent}
           />
         ) : (
           <FlatList
@@ -336,6 +344,7 @@ const MyMatchesScreen = ({navigation}) => {
               paddingHorizontal: scale(20),
             }}
             showsVerticalScrollIndicator={false}
+            ListEmptyComponent={EmptyComponent}
           />
         )}
       </View>
@@ -353,6 +362,24 @@ const styles = StyleSheet.create({
   master: {
     flex: 1,
     backgroundColor: Color.background,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyImage: {
+    width: scale(150),
+    height: scale(150),
+    resizeMode: 'contain',
+    marginTop: scale(50),
+    marginBottom: scale(20),
+  },
+  emptyText: {
+    fontSize: scale(14),
+    color: Color.lightGrey,
+    fontFamily: Fonts.semibold,
+    marginBottom: scale(20),
   },
   headingView: {
     backgroundColor: Color.white,

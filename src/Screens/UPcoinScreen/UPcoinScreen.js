@@ -83,7 +83,7 @@ const UPcoinScreen = ({navigation}) => {
       description: 'UPUPUP buy UPcoins',
       image: IMAGES.LogoText,
       currency: 'INR',
-      key: 'rzp_test_aB42rLcq2jUrJ6',
+      key: 'rzp_test_4FcySxlJrgjMv2',
       amount: selectedOption?.price * 100,
       name: 'UPUPUP',
       // order_id: '', //Replace this with an order_id created using Orders API.

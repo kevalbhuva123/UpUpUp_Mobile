@@ -22,19 +22,137 @@ import moment from 'moment';
 import Slider from '@react-native-community/slider';
 import DatePicker from 'react-native-date-picker';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
+import StorageService from '../../utlis/StorageService';
+import {ActivityLoader} from '../../Components/Loader/Loader';
 
 const MyBookingVendor = ({navigation}) => {
-  const [region, setRegion] = useState('');
+  const [venueList, setVenueList] = useState([]);
+  const [Loader, setLoader] = useState(false);
+  const [selectedVenue, setSelectedVenue] = useState('');
+
   const [isDateOpen, setIsDateOpen] = useState(false);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date());
   const [isFromSDate, setIsFromSDate] = useState(false);
   const [isFromEDate, setIsFromEDate] = useState(false);
-  const [isTimeOpen, setIsTimeOpen] = useState(false);
-  const [startTime, setStartTime] = useState('');
-  const [endTime, setEndTime] = useState('');
-  const [isFromSTime, setIsFromSTime] = useState(false);
-  const [isFromETime, setIsFromETime] = useState(false);
+  const [bookingList, setBookingList] = useState([]);
+
+  useEffect(() => {
+    getVenueList();
+  }, []);
+
+  useEffect(() => {
+    getBookingList();
+  }, [startDate, endDate, selectedVenue]);
+
+  const getVenueList = async () => {
+    try {
+      setLoader(true);
+      let vendorDetails = await StorageService.getItem(
+        StorageService.STORAGE_KEYS.VENDOR_DETAILS,
+      );
+
+      console.log('>>>Vendor Details>>>', vendorDetails);
+
+      const formdata = new FormData();
+      formdata.append('user_id', vendorDetails?.user_id);
+      formdata.append('venue_id', '');
+      formdata.append('sports', 'true');
+      formdata.append('area', 'true');
+
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Venue/index`, requestOptions)
+        .then(response => response.json())
+        .then(result => {
+          console.log('>>>>VENUE Result:::', result);
+          setVenueList(result?.Data);
+          setSelectedVenue(result?.Data[0]);
+          getBookingList();
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.log('Error::', error);
+      setLoader(false);
+    }
+  };
+
+  const getBookingList = () => {
+    try {
+      setLoader(true);
+      const formdata = new FormData();
+      formdata.append('venue_id', selectedVenue?.id);
+      formdata.append('start_date', moment(startDate).format('YYYY-MM-DD'));
+      formdata.append('end_date', moment(endDate).format('YYYY-MM-DD'));
+
+      const requestOptions = {
+        method: 'POST',
+        body: formdata,
+        redirect: 'follow',
+      };
+
+      fetch(
+        `${apiConfigs.LOCAL_SERVER_API_URL}/Venue/my_booking_list`,
+        requestOptions,
+      )
+        .then(response => response.json())
+        .then(result => {
+          setLoader(false);
+          // setBookingList([
+          //   {
+          //     venue_booking_id: '1182',
+          //     venue_id: '747',
+          //     booking_id: '1722423079',
+          //     sports_id: '116',
+          //     user_id: '2303',
+          //     court_id: '323',
+          //     date: '2024-07-31',
+          //     payment_id: 'vendor',
+          //     status: '0',
+          //     venue: 'February 11th 2020 test venue',
+          //     court: 'Wooden Court 1',
+          //     sports: 'Badminton',
+          //     sports_image:
+          //       'https://upupup.in/partnerup/pics/icons/badminton.png',
+          //     name: 'MB',
+          //   },
+          //   {
+          //     venue_booking_id: '1181',
+          //     venue_id: '747',
+          //     booking_id: '1722333870',
+          //     sports_id: '116',
+          //     user_id: '2303',
+          //     court_id: '324',
+          //     date: '2024-07-30',
+          //     payment_id: 'pay_OenGAcFU7AdilE',
+          //     status: '1',
+          //     venue: 'February 11th 2020 test venue',
+          //     court: 'Pool 1',
+          //     sports: 'Badminton',
+          //     sports_image:
+          //       'https://upupup.in/partnerup/pics/icons/badminton.png',
+          //     name: 'MB',
+          //   },
+          // ]);
+          setBookingList(result?.Data);
+          console.log('BOOKING>>>>>>>>>>', result);
+        })
+        .catch(error => {
+          setLoader(false);
+          console.error(error);
+        });
+    } catch (error) {
+      console.log('Error::', error);
+      setLoader(false);
+    }
+  };
 
   const renderVenues = item => {
     return (
@@ -44,19 +162,53 @@ const MyBookingVendor = ({navigation}) => {
     );
   };
 
-  const renderItem = ({item}) =>
-    item.name == 'More\nSports' ? (
-      <TouchableOpacity style={styles.more}>
-        <Text style={styles.moreText}>{item.name}</Text>
-      </TouchableOpacity>
-    ) : (
-      <TouchableOpacity style={styles.items}>
-        <Image source={item.image} style={styles.sportIcon} />
-        <Text style={styles.label} numberOfLines={1}>
-          {item.name}
-        </Text>
+  const EmptyComponent = () => (
+    <View style={styles.emptyContainer}>
+      <Image source={IMAGES.Empty} style={styles.emptyImage} />
+      <Text style={styles.emptyText}>No data available</Text>
+    </View>
+  );
+
+  const renderBookings = ({item}) => {
+    return (
+      <TouchableOpacity style={styles.card}>
+        <View style={styles.iconView}>
+          <Image
+            source={
+              item?.sports_image != ''
+                ? {uri: item?.sports_image}
+                : IMAGES.LogoText
+            }
+            style={styles.sportIcon}
+          />
+        </View>
+        <View style={styles.contentView}>
+          <Text style={styles.heading} numberOfLines={2}>
+            {item?.venue}
+          </Text>
+          <Text style={styles.subText}>Booked by: {item?.name}</Text>
+          <View style={styles.iconTextView}>
+            <Image source={IMAGES.Certificate} style={styles.icons} />
+            <Text style={styles.subText}>Book # {item?.booking_id}</Text>
+          </View>
+          <View style={styles.iconTextView}>
+            <Image source={IMAGES.Location} style={styles.icons} />
+            <Text style={styles.subText}>{item?.court}</Text>
+          </View>
+        </View>
+        <View style={styles.separator}></View>
+        <View style={styles.dateView}>
+          <Text style={[styles.subText, {color: Color.icon}]}>
+            {moment(item?.date).format('MMMM')}
+          </Text>
+          <Text style={[styles.heading, {color: Color.main}]}>
+            {moment(item?.date).format('DD')}
+          </Text>
+          <Text style={styles.subText}>{moment(item?.date).year()}</Text>
+        </View>
       </TouchableOpacity>
     );
+  };
 
   return (
     <View style={styles.main}>
@@ -66,37 +218,40 @@ const MyBookingVendor = ({navigation}) => {
         onBackPress={() => navigation.goBack()}
       />
       <View style={styles.master}>
-        <KeyboardAwareScrollView
-          contentContainerStyle={{flexGrow: 1}}
-          bounces={false}
-          keyboardShouldPersistTaps={'handled'}
-          showsVerticalScrollIndicator={false}
-          extraScrollHeight={20}
-          style={{flex: 1}}>
+        <View style={styles.subView}>
+          <Text style={styles.heading}>Choose a Venue</Text>
           <Dropdown
             style={styles.dropdown}
             placeholderStyle={styles.placeholderStyle}
             selectedTextStyle={styles.selectedTextStyle}
+            selectedTextProps={{numberOfLines: 1}}
             inputSearchStyle={styles.inputSearchStyle}
             iconStyle={styles.iconStyle}
-            data={ownerVenues}
+            data={venueList}
             search
             maxHeight={scale(300)}
-            labelField="key"
-            valueField="value"
+            labelField="venue"
+            valueField="id"
             placeholder="Select item"
             searchPlaceholder="Search..."
-            value={region}
+            value={selectedVenue?.id}
             onChange={item => {
-              setRegion(item.value);
+              console.log('>>>>>>>', item);
+              setSelectedVenue(item);
             }}
             renderItem={renderVenues}
           />
+        </View>
+        <View style={styles.subView}>
           <Text style={styles.title}>Choose Time Period</Text>
           <View
             style={[
-              styles.sliderView,
-              {flexDirection: 'row', alignItems: 'center'},
+              {
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingTop: scale(5),
+              },
             ]}>
             <View style={styles.halfView}>
               <Text style={styles.value}>From:</Text>
@@ -127,46 +282,43 @@ const MyBookingVendor = ({navigation}) => {
               </TouchableOpacity>
             </View>
           </View>
-          <Text style={styles.title}>No Bookings</Text>
-        </KeyboardAwareScrollView>
-        <DatePicker
-          modal
-          open={isDateOpen}
-          date={isFromSDate ? startDate : endDate}
-          minimumDate={isFromEDate ? startDate : new Date()}
-          onConfirm={date => {
-            console.log(date);
-            setIsDateOpen(false);
-            isFromSDate ? setStartDate(date) : setEndDate(date);
-            setIsFromEDate(false);
-            setIsFromSDate(false);
-          }}
-          onCancel={() => {
-            setIsDateOpen(false);
-          }}
-          mode="date"
-          buttonColor={Color.icon}
-          dividerColor={Color.icon}
-        />
-        {/* <DatePicker
-          modal
-          open={isTimeOpen}
-          date={isFromSTime ? startDate : endDate}
-          onConfirm={time => {
-            console.log(time);
-            setIsTimeOpen(false);
-            isFromSTime ? setStartTime(time) : setEndTime(time);
-            setIsFromETime(false);
-            setIsFromSTime(false);
-          }}
-          onCancel={() => {
-            setIsTimeOpen(false);
-          }}
-          mode="time"
-          buttonColor={Color.icon}
-          dividerColor={Color.icon}
-        /> */}
+        </View>
       </View>
+      <Text style={[styles.heading, {paddingHorizontal: scale(20)}]}>
+        Booking History:
+      </Text>
+      <FlatList
+        data={bookingList}
+        renderItem={renderBookings}
+        keyExtractor={item => item.booking_id.toString()}
+        style={{flex: 1}}
+        contentContainerStyle={{
+          paddingTop: scale(10),
+          paddingHorizontal: scale(20),
+        }}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={EmptyComponent}
+      />
+      <DatePicker
+        modal
+        open={isDateOpen}
+        date={isFromSDate ? startDate : endDate}
+        minimumDate={isFromEDate ? startDate : new Date()}
+        onConfirm={date => {
+          console.log(date);
+          setIsDateOpen(false);
+          isFromSDate ? setStartDate(date) : setEndDate(date);
+          setIsFromEDate(false);
+          setIsFromSDate(false);
+        }}
+        onCancel={() => {
+          setIsDateOpen(false);
+        }}
+        mode="date"
+        buttonColor={Color.icon}
+        dividerColor={Color.icon}
+      />
+      <ActivityLoader loading={Loader} />
     </View>
   );
 };
@@ -178,17 +330,111 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   master: {
-    flex: 1,
     backgroundColor: Color.background,
+    paddingTop: scale(20),
     paddingHorizontal: scale(20),
+  },
+  card: {
+    elevation: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Color.white,
+    borderRadius: scale(10),
+    marginBottom: scale(15),
+  },
+  sportIcon: {
+    width: scale(50),
+    height: scale(50),
+    resizeMode: 'contain',
+    tintColor: Color.icon,
+  },
+  icons: {
+    width: scale(12),
+    height: scale(12),
+    resizeMode: 'contain',
+    marginRight: scale(5),
+  },
+  iconView: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '30%',
+  },
+  contentView: {
+    width: '50%',
+    justifyContent: 'center',
+    paddingVertical: scale(10),
+    height: scale(120),
+    justifyContent: 'space-between',
+  },
+  dateView: {
+    width: '20%',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  subText: {
+    fontSize: scale(12),
+    fontFamily: Fonts.regular,
+    color: Color.black,
+  },
+  iconTextView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  separator: {
+    height: scale(60),
+    borderWidth: scale(0.5),
+    borderColor: Color.lightGrey,
+  },
+  statusView: {
+    borderRadius: scale(5),
+    textAlign: 'center',
+    width: '65%',
+    fontSize: scale(10),
+    paddingVertical: scale(3),
+    fontFamily: Fonts.bold,
+    marginTop: scale(3),
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyImage: {
+    width: scale(150),
+    height: scale(150),
+    resizeMode: 'contain',
+    marginTop: scale(50),
+    marginBottom: scale(20),
+  },
+  emptyText: {
+    fontSize: scale(14),
+    color: Color.lightGrey,
+    fontFamily: Fonts.semibold,
+    marginBottom: scale(20),
+  },
+  subView: {
+    width: '100%',
+    backgroundColor: Color.white,
+    shadowColor: Color.black,
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: scale(2),
+
+    elevation: 6,
+    borderRadius: scale(10),
+    padding: scale(10),
+    marginBottom: scale(15),
   },
   heading: {
     fontFamily: Fonts.bold,
     fontSize: scale(14),
     color: Color.black,
-    marginTop: scale(20),
-    marginBottom: scale(10),
+    marginBottom: scale(5),
   },
+
   checkedIcon: {
     height: scale(16),
     width: scale(16),
@@ -279,11 +525,7 @@ const styles = StyleSheet.create({
     fontSize: scale(10),
     color: Color.black,
   },
-  sportIcon: {
-    height: scale(20),
-    width: scale(20),
-    resizeMode: 'contain',
-  },
+
   more: {
     borderWidth: scale(1),
     borderColor: Color.subBg,
@@ -317,8 +559,7 @@ const styles = StyleSheet.create({
     backgroundColor: Color.white,
   },
   halfView: {
-    width: '50%',
-    padding: scale(10),
+    width: '49%',
   },
   pickerBtn: {
     borderWidth: scale(0.5),
@@ -338,6 +579,5 @@ const styles = StyleSheet.create({
     fontSize: scale(14),
     color: Color.main,
     fontFamily: Fonts.semibold,
-    paddingTop: scale(20),
   },
 });
