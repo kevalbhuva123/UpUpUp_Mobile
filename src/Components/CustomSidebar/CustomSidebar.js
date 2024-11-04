@@ -172,7 +172,7 @@ const CustomSidebar = props => {
         <TouchableWithoutFeedback>
           <View style={styles.main}>
             <View style={styles.Header}>
-              <Image source={IMAGES.LogoText} style={styles.Logo} />
+              <Image source={IMAGES.LogoTextLight} style={styles.Logo} />
             </View>
             <View style={styles.allView}>
               <View style={{flex: 1}}>
@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
     width: scale(110),
     height: scale(50),
     resizeMode: 'contain',
-    tintColor: Color.background,
+    // tintColor: Color.background,
   },
   headingText: {
     fontSize: scale(14),

@@ -272,7 +272,7 @@ const PaymentScreen = ({navigation, route}) => {
         });
     } else {
       var options = {
-        description: 'UPUPUP venue booking',
+        description: 'UpSports venue booking',
         image: IMAGES.LogoText,
         currency: 'INR',
         key: 'rzp_test_4FcySxlJrgjMv2',
@@ -286,7 +286,7 @@ const PaymentScreen = ({navigation, route}) => {
                   parseInt(upCoin?.purchased_coins))) *
               100
           : (details?.subTotal + serviceCharges?.amount) * 100,
-        name: 'UPUPUP',
+        name: 'UpSports',
         // order_id: '', //Replace this with an order_id created using Orders API.
         prefill: {
           email: userData?.email,

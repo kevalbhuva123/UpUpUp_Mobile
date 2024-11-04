@@ -46,7 +46,7 @@ const ReferEarnScreen = ({navigation}) => {
         .then(async result => {
           setLoader(false);
           await Share.share({
-            title: `UPUPUP App- Let's play together`,
+            title: `UpSports App- Let's play together`,
             message: `Here is my referral code : ${result?.data?.referal_id}. Please use this at a time of login.`,
             url: 'https://www.google.co.in/',
           });

@@ -144,8 +144,7 @@ const LoginScreen = ({navigation}) => {
         disableSelectionMode={() => backAction()}
       />
       <View style={styles.head}>
-        <Image source={IMAGES.Logo} style={styles.logo} />
-        <Image source={IMAGES.LogoText} style={styles.logoText} />
+        <Image source={IMAGES.LogoTextLight} style={styles.logoText} />
       </View>
       <View style={styles.innerView}>
         <KeyboardAwareScrollView
@@ -255,10 +254,9 @@ const styles = StyleSheet.create({
     tintColor: Color.icon,
   },
   logoText: {
-    width: scale(110),
-    height: scale(50),
+    width: scale(180),
+    height: scale(80),
     resizeMode: 'contain',
-    tintColor: Color.background,
   },
   loginBtn: {
     backgroundColor: Color.icon,

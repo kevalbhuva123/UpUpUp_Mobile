@@ -654,7 +654,7 @@ export const VenueHome = [
   {
     id: 5,
     image: IMAGES.Message,
-    name: 'MESSAGE\nUPupup',
+    name: 'MESSAGE\nUpSports',
     navigation: 'HostMatchScreen',
   },
   {

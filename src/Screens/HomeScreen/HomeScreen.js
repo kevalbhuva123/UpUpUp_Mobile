@@ -68,7 +68,7 @@ const HomeScreen = ({navigation}) => {
           <Image source={IMAGES.Menu} style={styles.menu} />
         </TouchableOpacity>
         <Image
-          source={IMAGES.LogoText}
+          source={IMAGES.LogoTextLight}
           style={{width: scale(100), height: scale(30), resizeMode: 'contain'}}
         />
         <TouchableOpacity

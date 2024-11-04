@@ -80,12 +80,12 @@ const UPcoinScreen = ({navigation}) => {
     console.log('CALLED', userData);
 
     var options = {
-      description: 'UPUPUP buy UPcoins',
+      description: 'UpSports buy UPcoins',
       image: IMAGES.LogoText,
       currency: 'INR',
       key: 'rzp_test_4FcySxlJrgjMv2',
       amount: selectedOption?.price * 100,
-      name: 'UPUPUP',
+      name: 'UpSports',
       // order_id: '', //Replace this with an order_id created using Orders API.
       prefill: {
         email: userData?.email,

@@ -1,6 +1,7 @@
 export default IMAGES = {
   Logo: require('./logo.png'),
   LogoText: require('./logoText.png'),
+  LogoTextLight: require('./logoTextLight.png'),
   Back: require('./back.png'),
   Checked: require('./check-box.png'),
   Unchecked: require('./blank-check-box.png'),
@@ -85,4 +86,5 @@ export default IMAGES = {
   NoImage: require('./noImage.png'),
   MoreOptions: require('./moreOptions.png'),
   Search: require('./search.png'),
+  Splash: require('./splash.png'),
 };

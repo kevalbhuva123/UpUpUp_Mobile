@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Image} from 'react-native';
+import {View, Text, StyleSheet, Image, ImageBackground} from 'react-native';
 import Color from '../../Constants/Color';
 import IMAGES from '../../Assets/Icons/index';
 import {scale} from '../../utlis/Scale';
@@ -30,8 +30,9 @@ const SplashScreen = ({navigation}) => {
 
   return (
     <View style={styles.container}>
-      <Image source={IMAGES.Logo} style={styles.logo} />
-      <Image source={IMAGES.LogoText} style={styles.logoText} />
+      <ImageBackground source={IMAGES.Splash} style={styles.background}>
+        <Image source={IMAGES.LogoText} style={styles.logoText} />
+      </ImageBackground>
     </View>
   );
 };
@@ -41,9 +42,13 @@ export default SplashScreen;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Color.white,
+  },
+  background: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: Color.main,
+    resizeMode: 'cover',
   },
   logo: {
     width: scale(120),
@@ -52,9 +57,8 @@ const styles = StyleSheet.create({
     tintColor: Color.icon,
   },
   logoText: {
-    width: scale(170),
-    height: scale(80),
+    width: scale(250),
+    height: scale(130),
     resizeMode: 'contain',
-    tintColor: Color.background,
   },
 });

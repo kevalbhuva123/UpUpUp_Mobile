@@ -143,7 +143,7 @@ const styles = StyleSheet.create({
     height: scale(60),
     width: scale(90),
     resizeMode: 'contain',
-    tintColor: Color.icon,
+    // tintColor: Color.icon,
   },
   loginBtn: {
     backgroundColor: Color.icon,
