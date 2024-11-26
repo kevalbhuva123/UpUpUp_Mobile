@@ -1,4 +1,11 @@
-import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  Image,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {ScreenWithCustomBackBehavior} from '../../Components/Backhandler/Backhandler';
 import CustomHeader from '../../Components/CustomHeader';
@@ -23,6 +30,7 @@ const PaymentScreen = ({navigation, route}) => {
   const [isUPcoinSelected, setIsUPcoinSelected] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMsg, setAlertMsg] = useState('');
+  const [manualDeduction, setManualDeduction] = useState('');
 
   useEffect(() => {
     getUserCoinInfo();
@@ -586,34 +594,61 @@ const PaymentScreen = ({navigation, route}) => {
                 </TouchableOpacity>
               </View>
               {isUPcoinSelected && (
-                <View View style={styles.rawView}>
-                  <Image style={styles.icon} />
+                <>
+                  <View View style={styles.rawView}>
+                    <Image style={styles.icon} />
 
-                  <Text style={[styles.subText, {width: '60%'}]}></Text>
-                  <Text style={[styles.coinText, {color: Color.green}]}>
-                    -{' '}
-                    {parseInt(upCoin?.bonus_coins) +
-                      parseInt(upCoin?.purchased_coins) >=
-                    details?.subTotal + serviceCharges?.amount
-                      ? details?.subTotal + serviceCharges?.amount
-                      : parseInt(upCoin?.bonus_coins) +
-                        parseInt(upCoin?.purchased_coins)}{' '}
-                    Rs.
-                  </Text>
+                    <Text style={[styles.subText, {width: '60%'}]}></Text>
+                    <Text style={[styles.coinText, {color: Color.green}]}>
+                      -{' '}
+                      {manualDeduction == ''
+                        ? parseInt(upCoin?.bonus_coins) +
+                            parseInt(upCoin?.purchased_coins) >=
+                          details?.subTotal + serviceCharges?.amount
+                          ? details?.subTotal + serviceCharges?.amount
+                          : parseInt(upCoin?.bonus_coins) +
+                            parseInt(upCoin?.purchased_coins)
+                        : manualDeduction}{' '}
+                      Rs.
+                    </Text>
 
-                  <TouchableOpacity
-                    onPress={() => {
-                      setIsUPcoinSelected(!isUPcoinSelected);
-                    }}>
-                    <Image
-                      style={
-                        isUPcoinSelected
-                          ? styles.checkedIcon
-                          : styles.unCheckedIcon
-                      }
+                    <TouchableOpacity
+                      onPress={() => {
+                        setIsUPcoinSelected(!isUPcoinSelected);
+                      }}>
+                      <Image
+                        style={
+                          isUPcoinSelected
+                            ? styles.checkedIcon
+                            : styles.unCheckedIcon
+                        }
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  <View View style={styles.rawView}>
+                    <Image style={styles.icon} />
+
+                    <TextInput
+                      onChangeText={text => {
+                        if (text == '') {
+                          setManualDeduction(text);
+                        } else if (
+                          parseInt(text) <
+                            parseInt(upCoin?.bonus_coins) +
+                              parseInt(upCoin?.purchased_coins) &&
+                          parseInt(text) <=
+                            details?.subTotal + serviceCharges?.amount
+                        ) {
+                          setManualDeduction(text);
+                        }
+                      }}
+                      value={manualDeduction}
+                      style={styles.input}
+                      placeholder="How many UpCoins want to use?"
+                      keyboardType="numeric"
                     />
-                  </TouchableOpacity>
-                </View>
+                  </View>
+                </>
               )}
             </View>
             <View style={styles.subView}>
@@ -626,9 +661,13 @@ const PaymentScreen = ({navigation, route}) => {
                 <Text style={styles.coinText}>
                   Rs.{' '}
                   {isUPcoinSelected
-                    ? parseInt(upCoin?.bonus_coins) +
-                        parseInt(upCoin?.purchased_coins) >=
-                      details?.subTotal + serviceCharges?.amount
+                    ? manualDeduction != ''
+                      ? details?.subTotal +
+                        serviceCharges?.amount -
+                        parseInt(manualDeduction)
+                      : parseInt(upCoin?.bonus_coins) +
+                          parseInt(upCoin?.purchased_coins) >=
+                        details?.subTotal + serviceCharges?.amount
                       ? 0
                       : details?.subTotal +
                         serviceCharges?.amount -
@@ -670,6 +709,17 @@ const styles = StyleSheet.create({
   master: {
     flex: 1,
     backgroundColor: Color.background,
+  },
+  input: {
+    width: '85%',
+    backgroundColor: Color.white,
+    fontSize: scale(12),
+    color: Color.black,
+    fontFamily: Fonts.regular,
+    borderRadius: scale(10),
+    borderWidth: scale(0.5),
+    borderColor: Color.lightGrey,
+    padding: scale(10),
   },
   upperView: {
     backgroundColor: Color.main,

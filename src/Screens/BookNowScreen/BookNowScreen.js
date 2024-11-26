@@ -1,4 +1,5 @@
 import {
+  ActivityIndicator,
   FlatList,
   Image,
   PermissionsAndroid,
@@ -57,10 +58,14 @@ const BookNowScreen = ({navigation, route}) => {
   const [contactList, setContactList] = useState([]);
   const [searchContact, setSearchContact] = useState('');
   const [filteredContact, setFilteredContact] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [itemsPerPage] = useState(20);
   const [filteredCoPlayer, setFilteredCoPlayer] = useState([]);
+  const [listOfCourt, setListOfCourt] = useState(route?.params?.data?.court);
 
   useEffect(() => {
     getOfferCoupon();
+    console.log('>>>>>>P DATA??????', route?.params?.data);
   }, []);
 
   const pickContact = async () => {
@@ -76,7 +81,7 @@ const BookNowScreen = ({navigation, route}) => {
             // work with contacts
             console.log(contacts);
             setContactList(contacts);
-            setFilteredContact(contacts);
+            setFilteredContact(contacts.slice(0, itemsPerPage));
             refRBSheetContacts.current.open();
           })
           .catch(e => {
@@ -87,6 +92,28 @@ const BookNowScreen = ({navigation, route}) => {
         console.error('Permission error: ', error);
       });
   };
+
+  const loadMoreData = () => {
+    if (loading) return; // Prevent multiple triggers
+    const currentLength = filteredContact.length;
+    if (currentLength < contactList.length) {
+      setLoading(true);
+      const moreData = contactList.slice(
+        currentLength,
+        currentLength + itemsPerPage,
+      );
+      setFilteredContact(prev => [...prev, ...moreData]);
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const query = searchContact.toLowerCase();
+    const filtered = contactList.filter(item =>
+      item.displayName.toLowerCase().includes(query),
+    );
+    setFilteredContact(filtered.slice(0, itemsPerPage));
+  }, [searchContact, contactList]);
 
   const getOfferCoupon = async () => {
     try {
@@ -187,6 +214,11 @@ const BookNowScreen = ({navigation, route}) => {
         style={styles.items}
         onPress={() => {
           setSelectedSport([item?.sports_id]);
+          const filteredCourts = venueDetails?.court?.filter(court =>
+            court.sports.some(sport => sport.sports_id == item?.sports_id),
+          );
+
+          setListOfCourt(filteredCourts);
         }}>
         <Image source={{uri: item?.image}} style={styles.sportIcon} />
         <Text style={styles.label} numberOfLines={1}>
@@ -309,15 +341,15 @@ const BookNowScreen = ({navigation, route}) => {
           setCouponID(item?.coupon_id);
           refRBSheet.current.close();
           if (item?.percentage == 'Yes') {
-            setSubTotal(
+            var finalPrice =
               selectedCourtPrice * slotTime.length -
-                (selectedCourtPrice * slotTime.length * item?.coupon_amount) /
-                  100,
-            );
+              (selectedCourtPrice * slotTime.length * item?.coupon_amount) /
+                100;
+            setSubTotal(finalPrice <= 0 ? 0 : finalPrice);
           } else {
-            setSubTotal(
-              selectedCourtPrice * slotTime.length - item?.coupon_amount,
-            );
+            var finalPrice =
+              selectedCourtPrice * slotTime.length - item?.coupon_amount;
+            setSubTotal(finalPrice <= 0 ? 0 : finalPrice);
           }
         }}>
         <View style={styles.leftCoupon}>
@@ -450,7 +482,7 @@ const BookNowScreen = ({navigation, route}) => {
             let playerDetail = {
               id: item?.rawContactId,
               name: item?.displayName,
-              phone_no: item?.phoneNumbers[0].number.trim(),
+              phone_no: item?.phoneNumbers[0]?.number.trim(),
               profile: item?.thumbnailPath,
             };
             setCoPlayerFromContact([...coPlayerFromContact, playerDetail]);
@@ -481,7 +513,7 @@ const BookNowScreen = ({navigation, route}) => {
                 {item?.displayName}
               </Text>
               <Text style={[styles.subText, {color: Color.white}]}>
-                Phone No.: {item?.phoneNumbers[0].number}
+                Phone No.: {item?.phoneNumbers[0]?.number}
               </Text>
             </View>
           </View>
@@ -525,14 +557,6 @@ const BookNowScreen = ({navigation, route}) => {
         actualAmount: selectedCourtPrice * slotTime.length,
       });
     }
-  };
-
-  const filterContacts = text => {
-    setSearchContact(text);
-    const newFilteredData = contactList.filter(item =>
-      item?.displayName.toLowerCase().includes(text.toLowerCase()),
-    );
-    setFilteredContact(newFilteredData);
   };
 
   const filterCoPlayer = text => {
@@ -630,11 +654,11 @@ const BookNowScreen = ({navigation, route}) => {
             />
           </View>
 
-          {venueDetails?.court?.length > 0 && selectedSport.length > 0 && (
+          {listOfCourt?.length > 0 && selectedSport.length > 0 && (
             <View style={styles.subView}>
               <Text style={styles.heading}>Choose a Court</Text>
               <FlatList
-                data={venueDetails?.court}
+                data={listOfCourt}
                 renderItem={renderCourt}
                 keyExtractor={item => item.court_id.toString()}
                 numColumns={4}
@@ -836,6 +860,7 @@ const BookNowScreen = ({navigation, route}) => {
               backgroundColor: Color.white,
               width: '100%',
               paddingHorizontal: scale(20),
+              paddingBottom: scale(200),
             }}
             ListEmptyComponent={EmptyComponent}
           />
@@ -877,7 +902,7 @@ const BookNowScreen = ({navigation, route}) => {
               value={searchContact}
               placeholderTextColor={Color.lightGrey}
               onChangeText={text => {
-                filterContacts(text);
+                setSearchContact(text);
               }}
             />
             <Image
@@ -893,8 +918,14 @@ const BookNowScreen = ({navigation, route}) => {
               backgroundColor: Color.white,
               width: '100%',
               paddingHorizontal: scale(20),
+              paddingBottom: scale(200),
             }}
             ListEmptyComponent={EmptyComponent}
+            onEndReached={loadMoreData}
+            onEndReachedThreshold={0.5}
+            ListFooterComponent={
+              loading && <ActivityIndicator size={'small'} color={Color.icon} />
+            }
           />
         </View>
       </RBSheet>

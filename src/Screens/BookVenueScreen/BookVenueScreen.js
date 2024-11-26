@@ -24,7 +24,7 @@ const BookVenueScreen = ({navigation}) => {
   const buttonRef = useRef();
   const [venues, setVenues] = useState([]);
   const [sports, setsports] = useState(1);
-  const [area, setarea] = useState(1);
+  const [area, setarea] = useState(0);
   const [Loader, setLoader] = useState(false);
   const [buttonRect, setButtonRect] = useState(null);
   const [moreOptionVisible, setMoreOptionVisible] = useState(false);
@@ -215,7 +215,7 @@ const BookVenueScreen = ({navigation}) => {
         >
           <View style={styles.popoverContainer}>
             <Text style={styles.buttonText}>Filter By</Text>
-            <TouchableOpacity
+            {/* <TouchableOpacity
               onPress={() => {
                 closePopover();
                 sports == 1 ? setsports(0) : setsports(1);
@@ -232,7 +232,7 @@ const BookVenueScreen = ({navigation}) => {
                 ]}>
                 Sports
               </Text>
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <TouchableOpacity
               onPress={() => {
                 closePopover();
