@@ -157,15 +157,7 @@ const PaymentScreen = ({navigation, route}) => {
       formdata.append('cost', details?.actualAmount);
       formdata.append(
         'balance',
-        isUPcoinSelected
-          ? parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins) >=
-            details?.subTotal + serviceCharges?.amount
-            ? 0
-            : details?.subTotal +
-              serviceCharges?.amount -
-              (parseInt(upCoin?.bonus_coins) +
-                parseInt(upCoin?.purchased_coins))
-          : details?.subTotal + serviceCharges?.amount,
+        parseInt(details?.actualAmount) - parseInt(remainingAmount),
       );
       formdata.append('mode', 1);
       formdata.append('offer_id', '[]');
@@ -316,19 +308,10 @@ const PaymentScreen = ({navigation, route}) => {
           formdata.append('coupon_id', details?.selectedCoupon);
           formdata.append('offer', 0);
           formdata.append('price', parseInt(remainingAmount));
-          formdata.append('cost', details?.actualAmount);
+          formdata.append('cost', parseInt(details?.actualAmount));
           formdata.append(
             'balance',
-            isUPcoinSelected
-              ? parseInt(upCoin?.bonus_coins) +
-                  parseInt(upCoin?.purchased_coins) >=
-                details?.subTotal + serviceCharges?.amount
-                ? 0
-                : details?.subTotal +
-                  serviceCharges?.amount -
-                  (parseInt(upCoin?.bonus_coins) +
-                    parseInt(upCoin?.purchased_coins))
-              : details?.subTotal + serviceCharges?.amount,
+            parseInt(details?.actualAmount) - parseInt(remainingAmount),
           );
           formdata.append('mode', 1);
           formdata.append('offer_id', '[]');
