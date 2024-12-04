@@ -1,5 +1,6 @@
 import {
   ActivityIndicator,
+  Button,
   FlatList,
   Image,
   PermissionsAndroid,
@@ -52,6 +53,7 @@ const BookNowScreen = ({navigation, route}) => {
   const [couponList, setCouponList] = useState([]);
   const [selectedCourtPrice, setSelectedCourtPrice] = useState();
   const [subTotal, setSubTotal] = useState(0);
+  const [discountedAmount, setDiscountedAmount] = useState(0);
   const [coPlayerList, setCoPlayerList] = useState([]);
   const [visible, setVisible] = useState(false);
   const [warning, setWarning] = useState('');
@@ -76,6 +78,7 @@ const BookNowScreen = ({navigation, route}) => {
     })
       .then(res => {
         console.log('Permission: ', res);
+        setLoader(true);
         Contacts.getAll()
           .then(contacts => {
             // work with contacts
@@ -83,9 +86,11 @@ const BookNowScreen = ({navigation, route}) => {
             setContactList(contacts);
             setFilteredContact(contacts.slice(0, itemsPerPage));
             refRBSheetContacts.current.open();
+            setLoader(false);
           })
           .catch(e => {
             console.log(e);
+            setLoader(false);
           });
       })
       .catch(error => {
@@ -187,15 +192,12 @@ const BookNowScreen = ({navigation, route}) => {
 
       console.log('>>>>>FORM>>>', formdata);
 
-      fetch(
-        `${apiConfigs.LOCAL_SERVER_API_URL}/Venue/court_slot`,
-        requestOptions,
-      )
+      fetch(`${apiConfigs.LOCAL_SERVER_API_URL}/Myvenue/myslot`, requestOptions)
         .then(response => response.json())
         .then(result => {
           setLoader(false);
           console.log(result);
-          setSlots(result);
+          setSlots(result?.data);
         })
         .catch(error => {
           setLoader(false);
@@ -290,40 +292,82 @@ const BookNowScreen = ({navigation, route}) => {
     );
   };
 
+  const calculateDiscountedAmounts = selectedSlots => {
+    const totalDiscountedCost = selectedSlots?.reduce((total, slot) => {
+      const discount =
+        (parseInt(slot?.slot_cost) * parseInt(slot?.offer_value)) / 100; // Calculate discount
+      const discountedCost = parseInt(slot.slot_cost) - discount; // Apply discount
+      return parseInt(total) + parseInt(discountedCost); // Accumulate the total
+    }, 0);
+
+    // Update the total discounted cost state
+    setDiscountedAmount(parseInt(totalDiscountedCost));
+  };
+
   const renderSlots = ({item}) => {
-    let isSelected = slotTime.includes(item?.time);
+    let isSelected = slotTime.includes(item);
     return (
       <TouchableOpacity
         style={[
           styles.slotBtn,
           {
             backgroundColor:
-              item?.booked_capacity >= item?.capacity
+              item?.remaining_capacity == 0
                 ? Color.background
                 : isSelected
-                ? Color.subBg
+                ? item?.has_offer == true
+                  ? item?.offer_type == 2
+                    ? Color.subBg
+                    : Color.lightSky
+                  : Color.subBg
                 : Color.white,
+            borderColor:
+              item?.has_offer == true
+                ? item?.offer_type == 2
+                  ? Color.icon
+                  : Color.sky
+                : Color.lightGrey,
           },
         ]}
         onPress={() => {
           setSlotTime(prevSelectedItems => {
-            if (prevSelectedItems.includes(item?.time)) {
-              return prevSelectedItems.filter(itemId => itemId !== item?.time);
+            let updatedSlots;
+
+            if (prevSelectedItems?.some(slot => slot?.id === item?.id)) {
+              updatedSlots = prevSelectedItems.filter(
+                slot => slot.id !== item.id,
+              );
             } else {
-              return [...prevSelectedItems, item?.time];
+              updatedSlots = [...prevSelectedItems, item];
             }
+
+            calculateDiscountedAmounts(updatedSlots);
+
+            return updatedSlots;
           });
-          // setSlotTime(moment(item?.time, 'HH:mm:ss').format('hh:mm A'));
         }}
-        disabled={item?.booked_capacity >= item?.capacity ? true : false}>
+        disabled={item?.remaining_capacity == 0 ? true : false}>
+        {item?.has_offer == true && (
+          <Image
+            source={
+              item?.offer_type == 2 ? IMAGES.HotOffer : IMAGES.NormalOffer
+            }
+            style={{
+              height: scale(14),
+              width: scale(14),
+              resizeMode: 'contain',
+              position: 'absolute',
+              right: 0,
+              top: 0,
+              marginTop: -5,
+            }}
+          />
+        )}
         <Text
           style={[
             styles.slotText,
             {
-              color:
-                item?.booked_capacity >= item?.capacity
-                  ? Color.grey
-                  : Color.black,
+              color: item?.remaining_capacity == 0 ? Color.grey : Color.black,
             },
           ]}>
           {moment(item?.time, 'HH:mm:ss').format('hh:mm A')}
@@ -342,13 +386,10 @@ const BookNowScreen = ({navigation, route}) => {
           refRBSheet.current.close();
           if (item?.percentage == 'Yes') {
             var finalPrice =
-              selectedCourtPrice * slotTime.length -
-              (selectedCourtPrice * slotTime.length * item?.coupon_amount) /
-                100;
+              discountedAmount - (discountedAmount * item?.coupon_amount) / 100;
             setSubTotal(finalPrice <= 0 ? 0 : finalPrice);
           } else {
-            var finalPrice =
-              selectedCourtPrice * slotTime.length - item?.coupon_amount;
+            var finalPrice = discountedAmount - item?.coupon_amount;
             setSubTotal(finalPrice <= 0 ? 0 : finalPrice);
           }
         }}>
@@ -461,7 +502,7 @@ const BookNowScreen = ({navigation, route}) => {
   };
 
   const renderCoPlayersFromContacts = ({item}) => {
-    let isSelected = coPlayer.some(items => items.id == item?.rawContactId);
+    let isSelected = coPlayer.some(items => items?.id == item?.rawContactId);
 
     return (
       <TouchableOpacity
@@ -538,7 +579,7 @@ const BookNowScreen = ({navigation, route}) => {
       setWarning('Please choose a court.');
       WarningMessageTimer();
       return;
-    } else if (slotTime.length == 0) {
+    } else if (slotTime?.length == 0) {
       setWarning('Please choose a slot.');
       WarningMessageTimer();
       return;
@@ -546,15 +587,14 @@ const BookNowScreen = ({navigation, route}) => {
       navigation.navigate('PaymentScreen', {
         venueData: venueDetails,
         selectedDate: startDate,
-        subTotal:
-          redeemCode != '' ? subTotal : selectedCourtPrice * slotTime.length,
+        subTotal: redeemCode != '' ? subTotal : discountedAmount,
         selectedCourt: selectedCourt,
         selectedSport: selectedSport,
         slotTime: slotTime,
         selectedCoPlayer: coPlayer,
         selectedCoPlayerFromContact: coPlayerFromContact,
         selectedCoupon: couponID,
-        actualAmount: selectedCourtPrice * slotTime.length,
+        actualAmount: slotTime.reduce((sum, slot) => sum + slot.slot_cost, 0),
       });
     }
   };
@@ -573,6 +613,53 @@ const BookNowScreen = ({navigation, route}) => {
       <Text style={styles.emptyText}>No data available</Text>
     </View>
   );
+
+  // Increment number of players
+  const incrementPlayers = id => {
+    setSlotTime(prevSlots =>
+      prevSlots.map(slot =>
+        slot.id === id && slot.numberOfPlayers < slot.remaining_capacity
+          ? {...slot, numberOfPlayers: slot.numberOfPlayers + 1}
+          : slot,
+      ),
+    );
+  };
+
+  // Decrement number of players
+  const decrementPlayers = id => {
+    setSlotTime(prevSlots =>
+      prevSlots.map(slot =>
+        slot.id === id && slot.numberOfPlayers > 1
+          ? {...slot, numberOfPlayers: slot.numberOfPlayers - 1}
+          : slot,
+      ),
+    );
+  };
+
+  const renderCounters = ({item}) => {
+    return (
+      <View style={styles.slotContainer}>
+        <Text style={styles.slotText}>
+          {moment(item?.time, 'HH:mm:ss').format('hh:mm A')}
+        </Text>
+        <View style={styles.counter}>
+          <TouchableOpacity
+            onPress={() => decrementPlayers(item.id)}
+            style={styles.decrementBtn}>
+            <Text style={styles.slotText}>-</Text>
+          </TouchableOpacity>
+
+          <Text style={styles.slotText}>{item.numberOfPlayers}</Text>
+          <TouchableOpacity
+            onPress={() => incrementPlayers(item.id)}
+            style={styles.incrementBtn}>
+            <Text style={styles.slotText}>+</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.slotText}>{`Max: ${item.remaining_capacity}`}</Text>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.main}>
@@ -628,7 +715,7 @@ const BookNowScreen = ({navigation, route}) => {
                 alignItems: 'center',
               }}>
               <Text style={[styles.heading, {width: '70%'}]}>
-                Total Players {coPlayer.length + coPlayerFromContact.length}{' '}
+                Invite Players {coPlayer.length + coPlayerFromContact.length}{' '}
                 <Text style={styles.subText}>(Tap to delete)</Text>
               </Text>
               <TouchableOpacity
@@ -679,7 +766,7 @@ const BookNowScreen = ({navigation, route}) => {
                 <FlatList
                   data={slots}
                   renderItem={renderSlots}
-                  keyExtractor={item => item.slot_id.toString()}
+                  keyExtractor={item => item.id.toString()}
                   numColumns={3}
                   contentContainerStyle={{
                     backgroundColor: Color.white,
@@ -689,6 +776,17 @@ const BookNowScreen = ({navigation, route}) => {
                 />
               </View>
             )}
+
+          {slotTime.length > 0 && (
+            <View style={styles.subView}>
+              <Text style={styles.heading}>Select No. of Players</Text>
+              <FlatList
+                data={slotTime?.sort((a, b) => a.time.localeCompare(b.time))}
+                keyExtractor={item => item?.id}
+                renderItem={renderCounters}
+              />
+            </View>
+          )}
           <View style={styles.subView}>
             <Text style={styles.heading}>Redeem Coupon</Text>
             <TouchableOpacity
@@ -714,28 +812,36 @@ const BookNowScreen = ({navigation, route}) => {
               <Text style={styles.subText}>
                 Actual Amount :{' '}
                 <Text style={[styles.subText, {fontFamily: Fonts.semibold}]}>
-                  Rs. {selectedCourtPrice * slotTime.length}
+                  Rs. {slotTime?.reduce((sum, slot) => sum + slot.slot_cost, 0)}
+                </Text>
+              </Text>
+              <Text style={styles.subText}>
+                Discounted Amount :{' '}
+                <Text style={[styles.subText, {fontFamily: Fonts.semibold}]}>
+                  Rs. {discountedAmount}
                 </Text>
               </Text>
               <Text style={styles.subText}>
                 Playing Time :{' '}
                 <Text style={[styles.subText, {fontFamily: Fonts.semibold}]}>
-                  {slotTime.length} Hours
+                  {slotTime.reduce(
+                    (sum, slot) => sum + parseInt(slot.court_intervel),
+                    0,
+                  ) / 60}{' '}
+                  Hours
                 </Text>
               </Text>
-              <Text style={styles.subText}>
+              {/* <Text style={styles.subText}>
                 Start Time :{' '}
                 <Text style={[styles.subText, {fontFamily: Fonts.semibold}]}>
-                  {slotTime.sort()[0]}
+                  {slotTime[0]?.time}
                 </Text>
-              </Text>
+              </Text> */}
 
               <Text style={styles.subTotal}>
                 Sub Total :{' '}
                 <Text style={[styles.subTotal, {fontFamily: Fonts.semibold}]}>
-                  {redeemCode != ''
-                    ? subTotal
-                    : selectedCourtPrice * slotTime.length}
+                  {redeemCode != '' ? subTotal : discountedAmount}
                 </Text>
               </Text>
             </View>
@@ -913,7 +1019,7 @@ const BookNowScreen = ({navigation, route}) => {
           <FlatList
             data={filteredContact}
             renderItem={renderCoPlayersFromContacts}
-            keyExtractor={item => item.rawContactId.toString()}
+            keyExtractor={item => item?.rawContactId?.toString()}
             contentContainerStyle={{
               backgroundColor: Color.white,
               width: '100%',
@@ -958,6 +1064,39 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Color.background,
     padding: scale(20),
+  },
+  decrementBtn: {
+    height: scale(25),
+    width: scale(25),
+    borderRadius: scale(2),
+    backgroundColor: Color.red,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: scale(5),
+  },
+  incrementBtn: {
+    height: scale(25),
+    width: scale(25),
+    borderRadius: scale(2),
+    backgroundColor: Color.green,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: scale(5),
+  },
+  slotContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingVertical: scale(5),
+    marginVertical: scale(2),
+    paddingHorizontal: scale(10),
+    backgroundColor: Color.background,
+    borderRadius: scale(5),
+  },
+  counter: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   emptyContainer: {
     flex: 1,
@@ -1209,7 +1348,7 @@ const styles = StyleSheet.create({
     fontSize: scale(14),
   },
   slotText: {
-    fontFamily: Fonts.regular,
+    fontFamily: Fonts.bold,
     fontSize: scale(12),
     color: Color.black,
   },
@@ -1220,7 +1359,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: scale(5),
     borderWidth: scale(0.5),
-    borderColor: Color.lightGrey,
+
     borderRadius: scale(100),
     marginHorizontal: '1%',
   },

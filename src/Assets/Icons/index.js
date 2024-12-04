@@ -87,4 +87,6 @@ export default IMAGES = {
   MoreOptions: require('./moreOptions.png'),
   Search: require('./search.png'),
   Splash: require('./splash.png'),
+  HotOffer: require('./hot-deal.png'),
+  NormalOffer: require('./discount-badge.png'),
 };

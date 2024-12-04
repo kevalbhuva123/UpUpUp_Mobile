@@ -12,5 +12,7 @@ const Color = {
   violet: '#EE82EE',
   red: '#FF5050',
   grey: '#808080',
+  sky: '#4C8BFF',
+  lightSky: '#87CEFA',
 };
 export default Color;

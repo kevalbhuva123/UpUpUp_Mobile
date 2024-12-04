@@ -142,13 +142,13 @@ const VenueDetailScreen = ({navigation, route}) => {
         <TouchableOpacity
           style={styles.bottomButton}
           onPress={() => {
-            // if (venueDetails?.book_status == 'call') {
-            //   Linking.openURL(`tel:${venueDetails?.phone}`).catch(err =>
-            //     console.error('Error:', err),
-            //   );
-            // } else {
-            navigation.navigate('BookNowScreen', {data: venueDetails});
-            // }
+            if (venueDetails?.book_status == 'call') {
+              Linking.openURL(`tel:${venueDetails?.phone}`).catch(err =>
+                console.error('Error:', err),
+              );
+            } else {
+              navigation.navigate('BookNowScreen', {data: venueDetails});
+            }
           }}>
           <Text style={styles.buttonText}>BOOK NOW</Text>
         </TouchableOpacity>

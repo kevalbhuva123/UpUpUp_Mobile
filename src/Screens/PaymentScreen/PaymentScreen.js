@@ -105,27 +105,36 @@ const PaymentScreen = ({navigation, route}) => {
 
     setLoader(true);
 
-    if (
-      isUPcoinSelected &&
-      parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins) >=
-        details?.subTotal + serviceCharges?.amount
-    ) {
-      const coPlayersIDs = details?.selectedCoPlayer.map(item => item.id);
-      const contactList = details?.selectedCoPlayerFromContact.map(contact => ({
-        contact_name: contact.name,
-        contact_number: contact.phone_no,
-      }));
+    var remainingAmount = isUPcoinSelected
+      ? manualDeduction != ''
+        ? details?.subTotal + serviceCharges?.amount - parseInt(manualDeduction)
+        : parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins) >=
+          details?.subTotal + serviceCharges?.amount
+        ? 0
+        : details?.subTotal +
+          serviceCharges?.amount -
+          (parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins))
+      : details?.subTotal + serviceCharges?.amount;
 
-      const paymentMode = !isUPcoinSelected
-        ? 1
-        : isUPcoinSelected &&
-          parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins) >=
-            details?.subTotal + serviceCharges?.amount
-        ? 2
-        : 3;
+    var coPlayersIDs = details?.selectedCoPlayer.map(item => item.id);
+    var contactList = details?.selectedCoPlayerFromContact.map(contact => ({
+      contact_name: contact.name,
+      contact_number: contact.phone_no,
+    }));
 
-      let capacityArray = details?.slotTime.map(() => '1');
+    var capacityArray = details?.slotTime.map(slot =>
+      String(slot.numberOfPlayers),
+    );
 
+    var paymentMode = !isUPcoinSelected
+      ? 1
+      : isUPcoinSelected &&
+        parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins) >=
+          details?.subTotal + serviceCharges?.amount
+      ? 2
+      : 3;
+
+    if (parseInt(remainingAmount) == 0) {
       const formdata = new FormData();
       formdata.append('user_id', userData?.id);
       formdata.append('sports_id', details?.selectedSport[0]);
@@ -140,19 +149,11 @@ const PaymentScreen = ({navigation, route}) => {
       formdata.append('court_time', JSON.stringify(details?.slotTime));
       formdata.append('capacity', JSON.stringify(capacityArray));
       formdata.append('coupon_id', details?.selectedCoupon);
-      formdata.append('offer', 0);
       formdata.append(
-        'price',
-        isUPcoinSelected
-          ? parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins) >=
-            details?.subTotal + serviceCharges?.amount
-            ? 0
-            : details?.subTotal +
-              serviceCharges?.amount -
-              (parseInt(upCoin?.bonus_coins) +
-                parseInt(upCoin?.purchased_coins))
-          : details?.subTotal + serviceCharges?.amount,
+        'offer',
+        parseInt(details?.actualAmount) - parseInt(details?.subTotal),
       );
+      formdata.append('price', parseInt(remainingAmount));
       formdata.append('cost', details?.actualAmount);
       formdata.append(
         'balance',
@@ -284,16 +285,7 @@ const PaymentScreen = ({navigation, route}) => {
         image: IMAGES.LogoText,
         currency: 'INR',
         key: 'rzp_test_4FcySxlJrgjMv2',
-        amount: isUPcoinSelected
-          ? parseInt(upCoin?.bonus_coins) + parseInt(upCoin?.purchased_coins) >=
-            details?.subTotal + serviceCharges?.amount
-            ? 0
-            : (details?.subTotal +
-                serviceCharges?.amount -
-                (parseInt(upCoin?.bonus_coins) +
-                  parseInt(upCoin?.purchased_coins))) *
-              100
-          : (details?.subTotal + serviceCharges?.amount) * 100,
+        amount: parseInt(remainingAmount) * 100,
         name: 'UpSports',
         // order_id: '', //Replace this with an order_id created using Orders API.
         prefill: {
@@ -307,25 +299,6 @@ const PaymentScreen = ({navigation, route}) => {
         .then(paymentData => {
           // handle success
           console.log(`Success:`, paymentData.razorpay_payment_id);
-
-          const coPlayersIDs = details?.selectedCoPlayer.map(item => item.id);
-          const contactList = details?.selectedCoPlayerFromContact.map(
-            contact => ({
-              contact_name: contact.name,
-              contact_number: contact.phone_no,
-            }),
-          );
-
-          const paymentMode = !isUPcoinSelected
-            ? 1
-            : isUPcoinSelected &&
-              parseInt(upCoin?.bonus_coins) +
-                parseInt(upCoin?.purchased_coins) >=
-                details?.subTotal + serviceCharges?.amount
-            ? 2
-            : 3;
-
-          let capacityArray = details?.slotTime.map(() => '1');
 
           const formdata = new FormData();
           formdata.append('user_id', userData?.id);
@@ -342,19 +315,7 @@ const PaymentScreen = ({navigation, route}) => {
           formdata.append('capacity', JSON.stringify(capacityArray));
           formdata.append('coupon_id', details?.selectedCoupon);
           formdata.append('offer', 0);
-          formdata.append(
-            'price',
-            isUPcoinSelected
-              ? parseInt(upCoin?.bonus_coins) +
-                  parseInt(upCoin?.purchased_coins) >=
-                details?.subTotal + serviceCharges?.amount
-                ? 0
-                : details?.subTotal +
-                  serviceCharges?.amount -
-                  (parseInt(upCoin?.bonus_coins) +
-                    parseInt(upCoin?.purchased_coins))
-              : details?.subTotal + serviceCharges?.amount,
-          );
+          formdata.append('price', parseInt(remainingAmount));
           formdata.append('cost', details?.actualAmount);
           formdata.append(
             'balance',
